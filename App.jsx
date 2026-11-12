@@ -2951,3 +2951,5 @@ export default function App() {
     </div>
   );
 }
+JavaScript
+export default App;
