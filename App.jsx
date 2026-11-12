@@ -492,7 +492,7 @@ const DEFAULT_CLINIC_STATE = {
 // ============================================================================
 // COMPONENTE PRINCIPAL DE LA APLICACIÓN
 // ============================================================================
-export default function App() {
+function App() {
   // Estado de autenticación y sincronización en la nube
   const [user, setUser] = useState(null);
   const [syncStatus, setSyncStatus] = useState('connecting'); // 'connecting' | 'synced' | 'local'
@@ -2955,3 +2955,4 @@ export default function App() {
     </div>
   );
 }
+export default App;
