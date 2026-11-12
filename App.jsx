@@ -15,11 +15,15 @@ import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 // ============================================================================
 // CONFIGURACIÓN DE PERSISTENCIA EN LA NUBE (FIREBASE FIRESTORE + AUTH)
 // ============================================================================
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+  apiKey: "AIzaSyD-fallback-key",
+  authDomain: "origen-medico.firebaseapp.com",
+  projectId: "origen-medico"
+};
 const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
 const auth = app ? getAuth(app) : null;
 const db = app ? getFirestore(app) : null;
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'origen-medico-glp1-bo';
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'origen-medico-glpi-bo';
 
 // ============================================================================
 // EMBLEMA OFICIAL: ORIGEN MÉDICO (ÁRBOL DE LA VIDA DORADO)
