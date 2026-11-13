@@ -353,7 +353,7 @@ const DEFAULT_CLINIC_STATE = {
     clinicName: 'ORIGEN MÉDICO',
     city: 'Santa Cruz de la Sierra, Bolivia',
     address: 'Equipetrol Norte, Calle 8 Este · Consultorio Origen Médico',
-    whatsappNumber: '59170000000',
+    whatsappNumber: '59176007523',
     singleConsultPriceBs: '350 Bs.',
     quarterlyProgramPriceBs: '1.450 Bs.',
     bankInfo: 'Banco Nacional de Bolivia (BNB) · Cta. Cte. 150-0000000 · Origen Médico SRL · NIT 000000000',
