@@ -15,10 +15,13 @@ import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 // ============================================================================
 // CONFIGURACIÓN DE PERSISTENCIA EN LA NUBE (FIREBASE FIRESTORE + AUTH)
 // ============================================================================
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-  apiKey: "AIzaSyD-fallback-key",
+const firebaseConfig = {
+  apiKey: "AIzaSyAs-O7G9rUF6q8lDZcDRaDOam8YHQsw-ic",
   authDomain: "origen-medico.firebaseapp.com",
-  projectId: "origen-medico"
+  projectId: "origen-medico",
+  storageBucket: "origen-medico.firebasestorage.app",
+  messagingSenderId: "111024836345",
+  appId: "1:111024836345:web:010b1c2b96e916c4fadc28"
 };
 const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
 const auth = app ? getAuth(app) : null;
