@@ -181,3 +181,27 @@ El esquema deja espacio para consentimiento informado, alergias/antecedentes, ob
 Se creó `docs/INITIAL_STOCK_CATALOG.md` con un borrador de nombres visibles: THERMO, BELLE, PRIMULA/PRÍMULA (por confirmar), + TESTO, HSN + SILICIO, DETOX MATCHA, LIPO TEA, MAGNESIO BISGLICINATO, OMEGA 3 ULTRAPURE 33/22, CREATINHEX NEURO, CREATINHEX MUJER, VITAMINA A-Z, COLÁGENO ARTROS, VITAMINA D3 2000 UI, TRI MAGNESIO y una segunda presentación de OMEGA 3 que requiere transcripción exacta.
 
 Los precios, cantidades exactas, presentaciones y beneficios no se infieren de las fotografías; deben confirmarse con el inventario y las etiquetas antes de publicación.
+
+
+## Aislamiento de datos entre Preview y producción
+
+La auditoría del documento legado se ejecuta contra la base actual `(default)` y solo devuelve metadatos. Para las primeras altas de prueba no se escribirá en esa base.
+
+- Se reserva la base Firestore nombrada `origen-staging` para los datos de Preview.
+- Vercel tiene `ORIGEN_STAGING_FIRESTORE_DATABASE_ID=origen-staging`, solo en Preview y solo para la rama `mejoras-seguridad-origen`.
+- `api/admin/patients.js` usa la base nombrada, nunca la base `(default)`.
+- `api/_lib/staging-firestore.js` rechaza cualquier entorno distinto de Vercel Preview, rechaza la base `(default)` y exige un ID válido.
+- La función Admin SDK `getFirestore(app, databaseId)` está documentada como API Public Preview; se utiliza solo en el entorno de pruebas, no en Production. <https://firebase.google.com/docs/reference/admin/node/firebase-admin.firestore>
+
+### Configuración manual pendiente
+
+En Firebase Console, proyecto `origen-medico`:
+1. Abrir **Databases & Storage → Firestore**.
+2. Elegir **Add database**.
+3. Elegir Standard edition.
+4. Database ID: `origen-staging`.
+5. Elegir la misma ubicación que la base `(default)` cuando sea posible.
+6. Elegir **Production mode** para las reglas iniciales (denegar acceso desde clientes; la API Admin usa credenciales de servidor).
+7. Crear la base.
+
+Hasta que la base nombrada exista, `GET/POST /api/admin/patients` devolverá un error controlado y no escribirá nada en `(default)`. No se habilitarán altas de pacientes reales en esta etapa.
