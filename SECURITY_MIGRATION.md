@@ -16,7 +16,8 @@ Esta rama contiene una implementación preliminar del backend de administración
 - `api/auth/session.js`: endpoint GET para verificar la identidad y exponer si el token tiene el claim de administrador.
 - `App.jsx`: login con correo/contraseña; no crea sesiones anónimas; el acceso al panel médico depende del claim `admin: true`; el cierre de sesión limpia la copia local.
 - `firestore.rules`: borrador de reglas para un esquema por paciente. No coincide con el esquema de datos legado y no debe publicarse antes de la migración.
-- `firebase-admin` se ejecuta solo en el servidor; Node.js 22.x está configurado para la compatibilidad del SDK.
+- `firebase-admin` se ejecuta solo en el servidor; se fijó en `13.10.0` tras observar `ERR_REQUIRE_ESM` con 14.5.1 en el runtime de Vercel. Node.js 22.x está configurado para la compatibilidad del SDK.
+- Vercel Preview contiene las tres variables privadas restringidas a `mejoras-seguridad-origen`. El endpoint `/api/health` confirmó `firebaseAdmin: ready` sin exponer el JSON de la cuenta de servicio.
 
 ## Variables privadas requeridas en Vercel (Preview primero)
 Configurar como Environment Variables privadas, solo en Preview durante las pruebas:
@@ -43,7 +44,7 @@ El endpoint `POST /api/admin/bootstrap` solo asigna el claim cuando tanto el UID
 - Ninguna regla de cliente debe confiar en un campo `role` enviado por el propio usuario.
 
 ## Secuencia obligatoria antes del despliegue
-1. Configurar variables privadas solo para Preview y verificar los endpoints de administración con la cuenta autorizada.
+1. Variables privadas configuradas solo para Preview y Firebase Admin inicializado correctamente; falta probar el bootstrap del claim `admin: true` con una sesión real de la cuenta autorizada.
 2. Añadir inicio/cierre de sesión con correo y contraseña y estado explícito de carga/no autenticado.
 3. Eliminar el modo anónimo como mecanismo de acceso a expedientes.
 4. Migrar el documento compartido a documentos por paciente; verificar conteos y contenido sin copiar datos ficticios a cuentas reales.
@@ -57,6 +58,6 @@ El endpoint `POST /api/admin/bootstrap` solo asigna el claim cuando tanto el UID
 - Desplegarlas antes de migrar el código y los datos causará errores de lectura/escritura: el documento legado queda denegado intencionalmente.
 - La clave de configuración Firebase del frontend no sustituye las reglas de seguridad. No incluir claves privadas ni JSON de cuentas de servicio en el repositorio.
 - No utilizar datos reales de pacientes durante el desarrollo y las pruebas iniciales.
-- El backend está preparado, pero no es operativo hasta configurar variables privadas en Vercel y probar un deployment de Preview.
+- El backend de Preview ya inicializa Firebase Admin; el endpoint de bootstrap del rol todavía no se ha probado con una sesión real del médico.
 - El portal de pacientes todavía no está habilitado para cuentas individuales; la navegación de paciente solo se conserva para vista previa del médico.
 - El panel médico todavía usa el modelo legado de un documento compartido y la sincronización está bloqueada por las reglas actuales. No cargar pacientes reales ni anunciar la aplicación como lista para uso clínico hasta completar la migración.
