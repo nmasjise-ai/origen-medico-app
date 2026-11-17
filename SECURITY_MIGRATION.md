@@ -13,7 +13,7 @@
 - Modelo Firestore por paciente en `docs/PHASE1_FIRESTORE_MODEL.md`.
 - Reglas objetivo con administrador por claim, vínculo paciente `users/{uid}.patientId`, notas internas separadas y validación de síntomas/diarios/solicitudes.
 - Firebase Emulator Suite, GitHub Actions y pruebas en `tests/*.test.mjs`.
-- Última suite completada y verificada: 13/13 (8 reglas + 5 regresiones del frontend). Se añadieron 7 pruebas de validación de perfil y 4 de aislamiento de base Preview; la suite completa ampliada se ejecutó en GitHub Actions y aprobó 31/31 casos.
+- Última suite completada y verificada en el commit de código: **40/40 pruebas aprobadas** (8 reglas Firestore y 32 pruebas unitarias de invitaciones, mediciones, perfiles, namespace y regresión de almacenamiento).
 - Frontend desconectado del documento compartido `clinic_state` y del almacenamiento clínico en `localStorage`; altas y guardado del flujo legado continúan bloqueados.
 - Se retiraron exportación/restauración del estado de demostración y carga QR Base64.
 - Auditoría protegida: revisa la ruta de datos anterior, raíces de `artifacts` y nombres/cantidades de colecciones principales; nunca devuelve campos de documentos.
@@ -88,7 +88,7 @@ El flujo está limitado al namespace Preview `previewEnvironments/mejoras-seguri
 ## Estado de pruebas y despliegue del módulo de invitaciones
 
 - Firebase Emulator / GitHub Actions: la última ejecución completada antes del cambio que añade el paso de compilación aprobó **40/40 pruebas** (8 de reglas Firestore y 32 unitarias de invitaciones, mediciones, perfiles, namespace y regresión del frontend).
-- Se añadió al workflow un paso adicional `npm run build`; la ejecución del commit que incluye ese paso está pendiente de terminar.
+- El workflow también ejecutó `npm run build` y completó la compilación Vite correctamente en el commit de código verificado.
 - El límite diario de Vercel Free para crear despliegues fue alcanzado durante esta sesión (respuesta 402 `api-deployments-free-per-day`, retry indicado 24 h). Por eso el último commit está guardado en GitHub pero aún no tiene un Preview nuevo asociado.
 - El último Preview READY no incluye todos los cambios de invitación y no debe usarse para probarlos todavía.
 - El PR sigue en borrador, sin merge y sin despliegue de reglas.
