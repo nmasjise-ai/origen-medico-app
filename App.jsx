@@ -1236,17 +1236,17 @@ function App() {
             setAppMode('patient_portal');
           } else {
             setPatientPortalProfile(null);
-            setAppMode('public');
+            setAppMode('login');
           }
         } else {
           setPatientPortalProfile(null);
-          setAppMode('public');
+          setAppMode('login');
         }
       } catch (err) {
         console.error('No se pudo verificar el rol o la cuenta del paciente:', err);
         setIsAdmin(false);
         setPatientPortalProfile(null);
-        setAppMode(patientInvitationToken ? 'activation' : 'public');
+        setAppMode(patientInvitationToken ? 'activation' : 'login');
       } finally {
         setAuthReady(true);
       }
