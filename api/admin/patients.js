@@ -44,6 +44,7 @@ export default async function handler(req, res) {
           ageYears: data.ageYears ?? null,
           status: data.status || "unknown",
           accountStatus: data.accountStatus || "unlinked",
+          invitedEmail: data.invitedEmail || null,
           createdAt: asIso(data.createdAt),
           updatedAt: asIso(data.updatedAt)
         };
