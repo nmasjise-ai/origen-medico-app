@@ -1,10 +1,10 @@
-const { getApps, initializeApp, cert } = require("firebase-admin/app");
-const { getAuth } = require("firebase-admin/auth");
+import { getApps, initializeApp, cert } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 
 const APP_NAME = "origen-medico-admin";
 const PROJECT_ID = "origen-medico";
 
-function getAdminAuth() {
+export function getAdminAuth() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   if (!raw) {
     const error = new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not configured.");
@@ -41,13 +41,13 @@ function getAdminAuth() {
   return getAuth(app);
 }
 
-function getBearerToken(req) {
+export function getBearerToken(req) {
   const header = req.headers.authorization || "";
-  const match = header.match(/^Bearer\s+(.+)$/i);
+  const match = header.match(/^Bearer\\s+(.+)$/i);
   return match ? match[1] : null;
 }
 
-async function verifyRequestUser(req) {
+export async function verifyRequestUser(req) {
   const token = getBearerToken(req);
   if (!token) {
     const error = new Error("Missing bearer token.");
@@ -57,5 +57,3 @@ async function verifyRequestUser(req) {
 
   return getAdminAuth().verifyIdToken(token, true);
 }
-
-module.exports = { getAdminAuth, verifyRequestUser };
