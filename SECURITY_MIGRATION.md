@@ -85,11 +85,11 @@ El flujo está limitado al namespace Preview `previewEnvironments/mejoras-seguri
 
 ## Estado de pruebas y despliegue del módulo de invitaciones
 
-- Firebase Emulator / GitHub Actions: la última ejecución completada antes del cambio que añade el paso de compilación aprobó **40/40 pruebas** (8 de reglas Firestore y 32 unitarias de invitaciones, mediciones, perfiles, namespace y regresión del frontend).
-- El workflow también ejecutó `npm run build` y completó la compilación Vite correctamente en el commit de código verificado.
-- La solicitud manual de despliegue alcanzó el límite diario gratuito de Vercel (`402 api-deployments-free-per-day`), pero el despliegue automático vinculado al último commit de GitHub sí terminó correctamente.
-- Preview actual: `origen-medico-elf3yfqxy-origen-medico.vercel.app`, commit `468c4a5f6e60750e2f06ff1ceb6d8c607803a836`, estado `READY`.
-- La protección de acceso de Vercel puede requerir iniciar sesión con la cuenta autorizada para abrir el Preview.
+- Firebase Emulator / GitHub Actions: el commit de código `d95f64d39fc7d6588ce76a84574b6217ec46eeb5` aprobó **40/40 pruebas** (8 de reglas Firestore y 32 unitarias de invitaciones, mediciones, perfiles, namespace y regresión del frontend).
+- El mismo workflow ejecutó `npm run build` y completó la compilación Vite correctamente.
+- Preview actualmente `READY`: `origen-medico-elf3yfqxy-origen-medico.vercel.app`, commit `468c4a5f6e60750e2f06ff1ceb6d8c607803a836`. Incluye el módulo de invitaciones, pero es anterior al ajuste de código `d95f64d` que conserva `_vercel_share` en los enlaces de activación.
+- El nuevo commit `d95f64d` está en la rama y pasó pruebas/compilación, pero su deployment automático fue bloqueado por el límite diario de Vercel Hobby. La solicitud manual también devolvió `402 api-deployments-free-per-day`.
+- Se generó un enlace temporal de acceso compartible al Preview; el navegador debe abrirlo una vez para guardar la cookie de Vercel. Para esta prueba, después de crear la invitación, cerrar la sesión de ORIGEN y abrir el enlace de activación en el mismo navegador para reutilizar esa cookie. No abrir una ventana incógnita en esta primera prueba.
 - El PR sigue en borrador, sin merge y sin despliegue de reglas.
 
 
