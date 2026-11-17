@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, getIdTokenResult } from 'firebase/auth';
-import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+// Firestore is connected through patient-scoped repositories in the migration phase.
 
 // ============================================================================
 // CONFIGURACIÓN DE PERSISTENCIA EN LA NUBE (FIREBASE FIRESTORE + AUTH)
@@ -25,8 +25,6 @@ const firebaseConfig = {
 };
 const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
 const auth = app ? getAuth(app) : null;
-const db = app ? getFirestore(app) : null;
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'origen-medico-glpi-bo';
 
 // ============================================================================
 // EMBLEMA OFICIAL: ORIGEN MÉDICO (ÁRBOL DE LA VIDA DORADO)
@@ -511,14 +509,9 @@ function App() {
   const [toastMessage, setToastMessage] = useState(null);
 
   // Estado maestro de todo el consultorio
-  const [clinicData, setClinicData] = useState(() => {
-    try {
-      const saved = localStorage.getItem('origen_medico_clinic_v1');
-      return saved ? JSON.parse(saved) : DEFAULT_CLINIC_STATE;
-    } catch {
-      return DEFAULT_CLINIC_STATE;
-    }
-  });
+  // Always start from clearly labeled demo data. Do not load clinical records
+  // from localStorage; the patient-scoped Firestore repository is not active yet.
+  const [clinicData, setClinicData] = useState(DEFAULT_CLINIC_STATE);
 
   // Navegación de modos principales
   const [appMode, setAppMode] = useState('public'); // 'public' | 'login' | 'patient' | 'doctor'
@@ -732,13 +725,16 @@ function App() {
       }
 
       setUser(u);
+      // Remove all legacy clinical cache on every auth transition, including
+      // the administrator session. The old monolithic record is not a source
+      // of truth and must not be restored into browser memory.
+      clearLegacyClinicalCache();
+      setSyncStatus('local');
 
       if (!u) {
         setIsAdmin(false);
         setAuthReady(true);
-        setSyncStatus('local');
         setAppMode('public');
-        clearLegacyClinicalCache();
         return;
       }
 
@@ -746,21 +742,11 @@ function App() {
         const tokenResult = await getIdTokenResult(u);
         const admin = tokenResult.claims.admin === true;
         setIsAdmin(admin);
-        if (admin) {
-          setAppMode('doctor');
-        } else {
-          // An authenticated account without the explicit admin claim must
-          // never retain the old shared clinical state in browser memory.
-          setAppMode('public');
-          clearLegacyClinicalCache();
-          setSyncStatus('local');
-        }
+        setAppMode(admin ? 'doctor' : 'public');
       } catch (err) {
         console.error('No se pudo verificar el rol de la cuenta:', err);
         setIsAdmin(false);
         setAppMode('public');
-        setSyncStatus('local');
-        clearLegacyClinicalCache();
       } finally {
         setAuthReady(true);
       }
@@ -769,55 +755,21 @@ function App() {
     return () => unsub();
   }, []);
 
-  // 2. Suscripción en tiempo real a Firestore (cuando está disponible)
+  // 2. The legacy shared Firestore document is intentionally disconnected.
+  // Clinical sync will only be re-enabled after the individual-patient
+  // repositories, account mappings and end-to-end security checks are complete.
   useEffect(() => {
-    if (!db || !user || !isAdmin) return;
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'main');
-    const unsub = onSnapshot(
-      docRef,
-      (snap) => {
-        if (snap.exists() && snap.data()?.payload) {
-          isRemoteUpdate.current = true;
-          const parsed = JSON.parse(snap.data().payload);
-          setClinicData(parsed);
-          localStorage.setItem('origen_medico_clinic_v1', snap.data().payload);
-        } else {
-          // Inicializar nube con estado base
-          setDoc(docRef, { payload: JSON.stringify(clinicData), updatedAt: new Date().toISOString() }).catch(() => {});
-        }
-        setSyncStatus('synced');
-      },
-      () => {
-        setSyncStatus('local');
-      }
-    );
-    return () => unsub();
+    setSyncStatus('local');
   }, [user, isAdmin]);
 
-  // Helper centralizado para guardar cambios en la nube y localmente sin que el médico programe nada
-  const persistState = (updater) => {
+  // Temporary write guard: never save clinical data to localStorage or to the
+  // legacy shared document. Each module will be switched to its own repository.
+  const persistState = () => {
     if (!isAdmin) {
-      setToastMessage('Inicia sesión con una cuenta autorizada para modificar expedientes.');
+      setToastMessage('Inicia sesión con una cuenta médica autorizada.');
       return;
     }
-    if (syncStatus !== 'synced') {
-      setToastMessage('Modo de demostración: la sincronización clínica no está habilitada. No se guardó ningún cambio.');
-      return;
-    }
-    setClinicData((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      const serialized = JSON.stringify(next);
-      try {
-        localStorage.setItem('origen_medico_clinic_v1', serialized);
-      } catch (e) {
-        console.warn('LocalStorage lleno', e);
-      }
-      if (db && user) {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'main');
-        setDoc(docRef, { payload: serialized, updatedAt: new Date().toISOString() }).catch(() => {});
-      }
-      return next;
-    });
+    setToastMessage('La migración a expedientes individuales sigue en curso. No se guardó ningún cambio.');
   };
 
   // Paciente activo actual
