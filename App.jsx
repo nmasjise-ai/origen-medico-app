@@ -765,6 +765,10 @@ function App() {
       setToastMessage('Inicia sesión con una cuenta autorizada para modificar expedientes.');
       return;
     }
+    if (syncStatus !== 'synced') {
+      setToastMessage('Modo de demostración: la sincronización clínica no está habilitada. No se guardó ningún cambio.');
+      return;
+    }
     setClinicData((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       const serialized = JSON.stringify(next);
@@ -1571,6 +1575,12 @@ function App() {
       {/* ==================================================================== */}
       {appMode === 'patient' && (
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+          {syncStatus !== 'synced' && (
+            <div role="alert" className="rounded-2xl border-2 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+              <strong className="block font-bold">VISTA DE DEMOSTRACIÓN · DATOS FICTICIOS</strong>
+              <span>Este selector y los registros mostrados son ejemplos. No corresponden a pacientes reales y no deben utilizarse para seguimiento clínico. El portal individual estará disponible cuando termine la migración de expedientes.</span>
+            </div>
+          )}
           {/* SELECTOR DE PACIENTE DEMO / REAL + INDICACIÓN DEL DR. MELGAR */}
           <div className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
             <div className="flex items-center gap-3">
@@ -2255,6 +2265,12 @@ function App() {
       {/* ==================================================================== */}
       {appMode === 'doctor' && isAdmin && (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+          {syncStatus !== 'synced' && (
+            <div role="alert" className="rounded-2xl border-2 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+              <strong className="block font-bold">ENTORNO DE DEMOSTRACIÓN · NO USAR CON PACIENTES REALES</strong>
+              <span>Los pacientes, medidas, solicitudes y recetas que aparecen son registros ficticios. La sincronización clínica está deshabilitada mientras migramos a expedientes independientes. No registres ni modifiques información clínica aquí.</span>
+            </div>
+          )}
           {/* CABECERA CLÍNICA & ACCIÓN RÁPIDA + NUEVO PACIENTE */}
           <div className="bg-[#231F1A] text-[#FAF6EE] rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md">
             <div>
@@ -2270,7 +2286,9 @@ function App() {
             <div className="flex flex-wrap gap-2.5">
               <button
                 onClick={() => setShowNewPatientModal(true)}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#DFBD69] hover:bg-[#C59B43] text-[#231F1A] font-bold text-xs sm:text-sm shadow-sm cursor-pointer"
+                disabled={syncStatus !== 'synced'}
+                title={syncStatus !== 'synced' ? 'Disponible cuando la sincronización segura esté activa' : 'Crear un expediente'}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#DFBD69] hover:bg-[#C59B43] disabled:opacity-50 disabled:cursor-not-allowed text-[#231F1A] font-bold text-xs sm:text-sm shadow-sm cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>+ Nuevo Paciente</span>
