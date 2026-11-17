@@ -45,14 +45,13 @@ Interpretación: no se encontró el documento clínico antiguo en la ruta espera
 
 ## Pendientes inmediatos
 
-1. Crear `origen-staging` desde Firebase Console.
-2. Repetir auditoría de colecciones raíz desde la última Preview.
-3. Esperar un despliegue Preview del último commit (la API de Vercel alcanzó el límite diario de despliegues gratuitos durante esta sesión).
-4. Probar emisión, validación, expiración y reemisión de invitaciones con cuentas y datos totalmente ficticios.
-5. Completar pruebas extremo a extremo de activación, verificación de correo, consumo único y sesión paciente.
-6. Construir repositorios para mediciones, tratamiento, nutrición, síntomas y solicitudes.
-7. Probar médico, paciente A, paciente B, nutricionista y recepción.
-8. Mantener las reglas sin publicar hasta validar todos los flujos.
+1. Repetir auditoría de colecciones raíz desde una Preview actualizada.
+2. Esperar un nuevo despliegue Preview del último commit cuando se restablezca la cuota diaria de Vercel.
+3. Probar emisión, validación, expiración y reemisión de invitaciones con cuentas y datos totalmente ficticios.
+4. Completar pruebas extremo a extremo de activación, verificación de correo, consumo único y sesión paciente.
+5. Construir repositorios para mediciones, tratamiento, nutrición, síntomas y solicitudes.
+6. Probar médico, paciente A, paciente B, nutricionista y recepción.
+7. Mantener las reglas sin publicar hasta validar todos los flujos.
 
 ## Bloqueos de seguridad
 
