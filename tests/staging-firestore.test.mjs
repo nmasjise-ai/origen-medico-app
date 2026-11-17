@@ -2,7 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   getPreviewDataNamespace,
-  getPreviewPatientsCollection
+  getPreviewPatientsCollection,
+  getPreviewInvitationsCollection,
+  getPreviewUsersCollection
 } from "../api/_lib/staging-firestore.js";
 
 const validPreview = {
@@ -67,4 +69,42 @@ test("builds the dedicated nested patients collection path", () => {
     ["doc", "mejoras-seguridad-origen"],
     ["subcollection", "patients"]
   ]);
+});
+
+
+test("builds isolated invitation and user mapping collections in Preview", () => {
+  const calls = [];
+  const collection = (name) => {
+    calls.push(["collection", name]);
+    return {
+      doc: (id) => {
+        calls.push(["doc", id]);
+        return {
+          collection: (subcollection) => {
+            calls.push(["subcollection", subcollection]);
+            return { marker: subcollection };
+          }
+        };
+      }
+    };
+  };
+
+  const db = { collection };
+  assert.equal(getPreviewInvitationsCollection(db, validPreview).marker, "invitations");
+  assert.equal(getPreviewUsersCollection(db, validPreview).marker, "users");
+  assert.deepEqual(calls, [
+    ["collection", "previewEnvironments"],
+    ["doc", "mejoras-seguridad-origen"],
+    ["subcollection", "invitations"],
+    ["collection", "previewEnvironments"],
+    ["doc", "mejoras-seguridad-origen"],
+    ["subcollection", "users"]
+  ]);
+});
+
+test("invitation and mapping namespaces reject Production", () => {
+  const db = { collection: () => { throw new Error("must not access database"); } };
+  const production = { ...validPreview, VERCEL_ENV: "production" };
+  assert.throws(() => getPreviewInvitationsCollection(db, production), /Vercel Preview/);
+  assert.throws(() => getPreviewUsersCollection(db, production), /Vercel Preview/);
 });
