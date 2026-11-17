@@ -1216,11 +1216,37 @@ function App() {
         const tokenResult = await getIdTokenResult(u);
         const admin = tokenResult.claims.admin === true;
         setIsAdmin(admin);
-        setAppMode(admin ? 'doctor' : 'public');
+
+        if (admin) {
+          setPatientPortalProfile(null);
+          setAppMode(patientInvitationToken ? 'activation' : 'doctor');
+        } else if (patientInvitationToken) {
+          setAppMode('activation');
+        } else if (tokenResult.claims.email_verified === true) {
+          const idToken = await u.getIdToken();
+          const response = await fetch('/api/patient/session', {
+            method: 'GET',
+            headers: { Authorization: `Bearer ${idToken}` },
+            cache: 'no-store'
+          });
+          const payload = await response.json().catch(() => ({}));
+
+          if (response.ok && payload.linked === true && payload.patient) {
+            setPatientPortalProfile(payload.patient);
+            setAppMode('patient_portal');
+          } else {
+            setPatientPortalProfile(null);
+            setAppMode('public');
+          }
+        } else {
+          setPatientPortalProfile(null);
+          setAppMode('public');
+        }
       } catch (err) {
-        console.error('No se pudo verificar el rol de la cuenta:', err);
+        console.error('No se pudo verificar el rol o la cuenta del paciente:', err);
         setIsAdmin(false);
-        setAppMode('public');
+        setPatientPortalProfile(null);
+        setAppMode(patientInvitationToken ? 'activation' : 'public');
       } finally {
         setAuthReady(true);
       }
