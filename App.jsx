@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Activity, AlertTriangle, ArrowRight, Award, Bell, BookOpen, Calendar,
   Check, CheckCircle2, ChevronDown, ChevronRight, ClipboardCheck, Clock,
@@ -570,7 +570,6 @@ function App() {
     waist: ''
   });
 
-  const isRemoteUpdate = useRef(false);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -1069,52 +1068,6 @@ function App() {
   };
 
   // Subir imagen de QR Simple desde el panel del médico
-  const handleQrImageUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      persistState((prev) => ({
-        ...prev,
-        clinicConfig: { ...prev.clinicConfig, qrImageDataUrl: reader.result }
-      }));
-      showToast('Imagen de QR Simple actualizada correctamente');
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Exportar / Importar copia de seguridad completa en JSON
-  const handleExportBackup = () => {
-    const blob = new Blob([JSON.stringify(clinicData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Respaldo_Origen_Medico_${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Copia de seguridad descargada');
-  };
-
-  const handleImportBackup = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(reader.result);
-        if (parsed.patients && parsed.clinicConfig) {
-          persistState(parsed);
-          showToast('Base de datos restaurada con éxito');
-        } else {
-          showToast('El archivo no corresponde a un respaldo válido');
-        }
-      } catch {
-        showToast('Error al leer el archivo de respaldo');
-      }
-    };
-    reader.readAsText(file);
-  };
-
   // Filtrado de Vademécum
   const filteredVademecum = useMemo(() => {
     return BOLIVIA_VADEMECUM.filter((item) => {
@@ -2830,7 +2783,7 @@ function App() {
                   <label className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-2xl text-xs font-bold ${syncStatus === 'synced' ? 'bg-[#9A742C] text-white cursor-pointer hover:bg-[#7D5C1E]' : 'bg-stone-200 text-stone-500 cursor-not-allowed'}`}>
                     <Upload className="w-4 h-4" />
                     <span>{syncStatus === 'synced' ? 'Subir Imagen QR Simple (PNG/JPG)' : 'Carga de QR temporalmente deshabilitada'}</span>
-                    <input type="file" accept="image/*" onChange={handleQrImageUpload} disabled={syncStatus !== 'synced'} className="hidden" />
+                    <input type="file" accept="image/*" disabled className="hidden" />
                   </label>
                   {syncStatus !== 'synced' && (
                     <p className="text-[11px] text-amber-800">La configuración de pagos se habilitará con el nuevo módulo seguro. No se guardan imágenes en el sistema antiguo.</p>
