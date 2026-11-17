@@ -55,6 +55,64 @@ Las rutas internas se separan deliberadamente: que el paciente pueda leer su pla
 - `publicContent/{documentId}`: información pública expresamente seleccionada; lectura pública, escritura del médico.
 - `intakeLeads/{leadId}`: solicitudes web; lectura/gestión del médico. La creación pública se hará mediante endpoint de servidor con validación y protección contra abuso, no con escritura abierta de Firestore.
 
+## Extensión del modelo para los módulos V1 aprobados
+
+Estas colecciones se prevén desde el diseño para que la tienda y la teleconsulta no obliguen a volver al documento clínico monolítico.
+
+### Equipo y permisos
+
+Los roles se asignarán en backend mediante claims verificados y/o membresías provisionadas por servidor. Nunca se permitirá que una cuenta se asigne permisos editando su propio documento.
+
+| Rol | Acceso previsto |
+|---|---|
+| Administrador médico | Configuración, equipo y todos los expedientes autorizados |
+| Médico | Expedientes asignados/autorizados, notas, tratamientos, recetas, alertas y consultas |
+| Nutricionista | Pacientes asignados y datos necesarios para nutrición; planes y seguimiento nutricional |
+| Recepción | Agenda, contacto, reservas y estado de pago; sin notas, síntomas detallados ni laboratorios |
+| Gestión de tienda | Catálogo, inventario y pedidos; sin expedientes clínicos |
+| Paciente | Solo su expediente, planes compartidos, recetas publicadas, calendario y registros propios |
+| Visitante | Contenido público y catálogo habilitado; sin información clínica |
+
+Los permisos deben aplicarse a nivel de colección/documento/campo o a través de endpoints de servidor, no solo ocultando botones en React.
+
+### Agenda, tratamiento y notificaciones
+
+| Ruta | Contenido | Lectura/escritura |
+|---|---|---|
+| `patients/{id}/appointments/{appointmentId}` | Consulta presencial/virtual, horario, estado y respuestas de confirmación | Paciente: leer y responder campos permitidos; médico/recepción: gestionar según rol |
+| `patients/{id}/scheduleEvents/{eventId}` | Fechas de control y calendario de aplicación prescrito | Paciente: leer; médico: crear/editar |
+| `users/{uid}/notifications/{notificationId}` | Avisos operativos para el usuario | Usuario: leer/marcar visto; servidor: crear |
+| `users/{uid}/pushTokens/{tokenId}` | Token de dispositivo para notificaciones push | Usuario: registrar/eliminar solo su token; servidor: validar |
+| `notificationJobs/{jobId}` | Programación, ejecución, resultado y reintentos de recordatorios | Solo servidor; lectura de estado limitada a médico/admin |
+
+Los avisos al paciente deben ser discretos (por ejemplo, “Tienes un recordatorio de ORIGEN Médico”), evitando diagnóstico, medicamento o síntoma en la pantalla bloqueada. Los avisos urgentes al paciente indicarán atención de emergencia; nunca dependerán de que el profesional responda a una notificación push.
+
+### Consulta virtual
+
+- Una teleconsulta es una cita de tipo `virtual` dentro de `appointments`, con consentimiento versionado, fecha/hora, estado de pago y profesional asignado.
+- La URL de videollamada se genera después de confirmar la cita y se muestra solo al paciente y profesional autorizados.
+- Los datos de pago y comprobantes se almacenan en un módulo separado del expediente; no guardar credenciales bancarias ni datos de tarjeta.
+- El documento de consulta clínica generado se incorpora al expediente, con autor y fecha.
+- El precio inicial de Bs 35 es configuración comercial editable, no una regla de seguridad ni una promesa de disponibilidad.
+
+### Catálogo, solicitudes y pedidos
+
+| Ruta | Contenido | Lectura/escritura |
+|---|---|---|
+| `storeProducts/{productId}` | Producto público aprobado, precio, disponibilidad, descripción e imagen | Público: leer activos; admin/tienda: gestionar |
+| `orders/{orderId}` | Solicitud de compra/reserva, cliente, artículos, entrega y estado | Cliente: leer sus pedidos; backend: crear; tienda/admin: gestionar |
+| `orders/{orderId}/paymentEvents/{eventId}` | Estado de verificación de pago y referencia de comprobante | Cliente: enviar comprobante por flujo validado; tienda/admin: revisar; servidor: registrar |
+| `inventory/{productId}/movements/{movementId}` | Entradas, salidas, lote y vencimiento cuando corresponda | Admin/tienda autorizado |
+
+El catálogo público se limita a productos cuya comercialización esté verificada. Los medicamentos no se publicarán como artículos de compra/reserva sin revisión legal y autorización aplicable. El vademécum se mantiene privado y separado del comercio.
+
+### Solicitudes web
+
+- `intakeLeads` debe diferenciar solicitud de consulta presencial, teleconsulta y contacto general.
+- `orders` debe separar pedidos comerciales de los datos clínicos.
+- Una solicitud pública no crea por sí sola un expediente médico activo ni concede acceso al paciente.
+- Los comprobantes de pago se guardan en almacenamiento privado con URLs firmadas/reglas, no en un campo público del documento.
+
 ## Reglas de identidad
 
 1. Médico: sesión Firebase válida y custom claim `admin: true`.
