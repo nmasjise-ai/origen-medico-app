@@ -68,3 +68,18 @@ Interpretación: no se encontró el documento clínico antiguo en la ruta espera
 Se confirma usar únicamente **correo electrónico y contraseña** mediante Firebase Authentication. El proveedor Email/Password ya está habilitado en el proyecto y el inicio de sesión del médico usa `signInWithEmailAndPassword`.
 
 No se añadirá SMS, OTP de WhatsApp ni Google en esta etapa. El registro de pacientes no será público: la cuenta se activará solo mediante invitación médica de un solo uso y con vencimiento. Tras crear la cuenta, el paciente verificará su correo; el servidor consumirá la invitación y vinculará el UID con el único `patientId` autorizado. La recuperación de contraseña será por correo mediante Firebase. ORIGEN no pedirá ni almacenará contraseñas.
+
+
+## Módulo de invitaciones (Preview)
+
+Se implementó el flujo de invitación con correo y contraseña exclusivamente:
+
+- `api/admin/invitations.js`: emite/reemite invitación solo para médico autorizado y un expediente no vinculado. Token aleatorio de 32 bytes, hash SHA-256 almacenado y vencimiento de 7 días. Reemitir revoca el token anterior.
+- `api/invitations/validate.js`: comprueba token y correo invitado sin devolver información del paciente.
+- `api/invitations/redeem.js`: exige ID token válido, correo verificado, no-admin, correo coincidente y usa transacción para crear el vínculo UID → patientId, actualizar expediente, consumir invitación y registrar auditoría.
+- `api/patient/session.js`: recupera únicamente el expediente asociado al UID autenticado.
+- `App.jsx`: el médico puede introducir correo y copiar enlace de activación. El paciente puede crear cuenta o usar cuenta existente, recibir verificación, reenviar correo, confirmar y acceder a un portal inicial sin datos demo.
+- El enlace lleva el secreto como fragmento URL `#activar=`, no como query string. El envío del enlace se realiza manualmente; Firebase envía el correo de verificación.
+- Firebase Email/Password es el único proveedor usado. No se ha habilitado SMS/WhatsApp OTP ni otros proveedores.
+
+El flujo está limitado al namespace Preview `previewEnvironments/mejoras-seguridad-origen`. Las reglas y la vinculación de producción aún requieren diseño y pruebas específicas antes de habilitar pacientes reales.
