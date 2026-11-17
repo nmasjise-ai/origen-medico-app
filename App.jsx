@@ -849,7 +849,16 @@ function App() {
         throw new Error(payload.error || 'No se pudo crear la invitación.');
       }
 
-      const activationUrl = `${window.location.origin}/#activar=${payload.invitation.token}`;
+      // When Preview is protected by Vercel Authentication, carry only its
+      // short-lived share parameter into the activation link. The invitation
+      // token remains in the URL fragment and is never sent in HTTP requests.
+      const activationUrlObject = new URL(window.location.origin);
+      const previewShareToken = new URLSearchParams(window.location.search).get('_vercel_share');
+      if (previewShareToken) {
+        activationUrlObject.searchParams.set('_vercel_share', previewShareToken);
+      }
+      activationUrlObject.hash = `activar=${payload.invitation.token}`;
+      const activationUrl = activationUrlObject.toString();
       setCloudInviteResult({
         patientId,
         email: payload.invitation.email,
