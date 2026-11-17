@@ -3074,20 +3074,69 @@ function App() {
 
                   <div className="space-y-2">
                     {cloudPatients.map((patient) => (
-                      <div key={patient.id} className="rounded-2xl border border-[#E6D9C0] p-4 space-y-2">
+                      <div key={patient.id} className="rounded-2xl border border-[#E6D9C0] p-4 space-y-3">
                         <div className="flex items-center justify-between gap-2">
                           <strong className="text-sm">{patient.displayName}</strong>
-                          <span className="text-[10px] rounded-full bg-amber-100 text-amber-800 px-2 py-1 font-bold">Pendiente de cuenta</span>
+                          <span className={`text-[10px] rounded-full px-2 py-1 font-bold ${
+                            patient.accountStatus === 'linked'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : patient.accountStatus === 'invited'
+                                ? 'bg-sky-100 text-sky-800'
+                                : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {patient.accountStatus === 'linked' ? 'Cuenta vinculada' : patient.accountStatus === 'invited' ? 'Invitación pendiente' : 'Pendiente de cuenta'}
+                          </span>
                         </div>
                         <p className="text-xs text-[#6F6250]">{patient.phoneE164 || 'Sin teléfono'}{patient.ageYears ? ` · ${patient.ageYears} años` : ''}</p>
-                        <button
-                          type="button"
-                          onClick={() => loadCloudPatientDetails(patient.id)}
-                          disabled={cloudPatientDetailLoading}
-                          className="px-3 py-2 rounded-xl bg-[#231F1A] text-[#DFBD69] text-xs font-bold disabled:opacity-50"
-                        >
-                          {cloudPatientDetailLoading && selectedCloudPatient?.patient?.id === patient.id ? 'Abriendo…' : 'Abrir ficha provisional'}
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => loadCloudPatientDetails(patient.id)}
+                            disabled={cloudPatientDetailLoading}
+                            className="px-3 py-2 rounded-xl bg-[#231F1A] text-[#DFBD69] text-xs font-bold disabled:opacity-50"
+                          >
+                            {cloudPatientDetailLoading && selectedCloudPatient?.patient?.id === patient.id ? 'Abriendo…' : 'Abrir ficha provisional'}
+                          </button>
+                        </div>
+
+                        {patient.accountStatus !== 'linked' && (
+                          <div className="border-t border-[#E6D9C0] pt-3 space-y-2">
+                            <label className="block text-[11px] font-bold text-[#735318]">Correo que usará para ingresar</label>
+                            <input
+                              type="email"
+                              value={cloudInviteEmails[patient.id] ?? patient.invitedEmail ?? ''}
+                              onChange={(event) => setCloudInviteEmails((prev) => ({ ...prev, [patient.id]: event.target.value }))}
+                              placeholder="paciente@correo.com"
+                              className="w-full px-3 py-2 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-xs"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleCreatePatientInvitation(patient.id)}
+                              disabled={cloudInviteLoadingId === patient.id || !isAdmin}
+                              className="w-full py-2.5 rounded-xl bg-[#9A742C] text-white text-xs font-bold disabled:opacity-50"
+                            >
+                              {cloudInviteLoadingId === patient.id ? 'Creando invitación…' : patient.accountStatus === 'invited' ? 'Reemplazar invitación' : 'Crear invitación segura'}
+                            </button>
+                            {cloudInviteResult?.patientId === patient.id && (
+                              <div className="rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] p-3 space-y-2">
+                                <p className="text-[11px] text-[#5C4D3C]">Invitación para <strong>{cloudInviteResult.email}</strong>. Vence: {new Date(cloudInviteResult.expiresAt).toLocaleString('es-BO')}.</p>
+                                <input
+                                  readOnly
+                                  value={cloudInviteResult.activationUrl}
+                                  className="w-full px-2 py-2 rounded-lg border border-[#E6D9C0] bg-white text-[10px]"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={handleCopyInvitationLink}
+                                  className="w-full py-2 rounded-lg bg-[#231F1A] text-[#DFBD69] text-xs font-bold"
+                                >
+                                  Copiar enlace de activación
+                                </button>
+                                <p className="text-[10px] text-[#7A6A54]">El enlace solo se muestra ahora. Compártelo con ese correo; la invitación anterior se invalida al reemplazarla.</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
