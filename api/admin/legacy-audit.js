@@ -96,6 +96,20 @@ export default async function handler(req, res) {
     }
 
     const db = getAdminFirestore();
+
+    // Enumerate top-level collections and return document counts only.
+    // Collection names/counts are schema metadata; no document fields are read.
+    const rootCollectionRefs = await db.listCollections();
+    const rootCollectionSummary = await Promise.all(
+      rootCollectionRefs.slice(0, 100).map(async (collectionRef) => {
+        const aggregate = await collectionRef.count().get();
+        return {
+          collection: collectionRef.id,
+          documents: aggregate.data().count || 0
+        };
+      })
+    );
+
     const artifactDocuments = await db.collection("artifacts").listDocuments();
     const candidateAppIds = new Set([DEFAULT_APP_ID]);
 
@@ -128,6 +142,9 @@ export default async function handler(req, res) {
       parsed: unparsedCount === 0,
       matchingDocuments: found.length,
       scannedArtifactRoots: Math.min(artifactDocuments.length, MAX_ARTIFACT_IDS_TO_SCAN),
+      rootCollectionsScanned: Math.min(rootCollectionRefs.length, 100),
+      rootCollectionsTruncated: rootCollectionRefs.length > 100,
+      rootCollections: rootCollectionSummary,
       defaultPathChecked: true,
       scanTruncated: truncated,
       updatedAt: lastUpdated,
