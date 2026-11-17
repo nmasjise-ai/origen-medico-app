@@ -505,6 +505,10 @@ function App() {
   const [legacyAuditBusy, setLegacyAuditBusy] = useState(false);
   const [legacyAuditResult, setLegacyAuditResult] = useState(null);
   const [legacyAuditError, setLegacyAuditError] = useState('');
+  const [cloudPatients, setCloudPatients] = useState([]);
+  const [cloudPatientsLoading, setCloudPatientsLoading] = useState(false);
+  const [cloudPatientsError, setCloudPatientsError] = useState('');
+  const [cloudPatientSaving, setCloudPatientSaving] = useState(false);
   const [syncStatus, setSyncStatus] = useState('connecting'); // 'connecting' | 'synced' | 'local'
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -562,6 +566,17 @@ function App() {
     activePlan: 'fat_loss'
   });
 
+  // Alta provisional en la base de pruebas aislada (sin tratamiento ni dosis).
+  const [cloudPatientForm, setCloudPatientForm] = useState({
+    displayName: '',
+    phone: '',
+    ageYears: '',
+    weightKg: '',
+    waistCm: '',
+    muscleKg: '',
+    bodyFatPct: ''
+  });
+
   // Formulario nueva bioimpedancia
   const [newMetricForm, setNewMetricForm] = useState({
     weight: '',
@@ -574,6 +589,111 @@ function App() {
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3600);
+  };
+
+  const loadCloudPatients = async (userToUse = user) => {
+    if (!userToUse || !isAdmin) {
+      setCloudPatients([]);
+      return;
+    }
+
+    setCloudPatientsLoading(true);
+    setCloudPatientsError('');
+
+    try {
+      const idToken = await userToUse.getIdToken();
+      const response = await fetch('/api/admin/patients', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${idToken}` },
+        cache: 'no-store'
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (response.status === 503) {
+          throw new Error('La base de pruebas «origen-staging» todavía debe crearse en Firebase. No se ha escrito nada en la base principal.');
+        }
+        throw new Error(payload.error || 'No se pudo consultar la lista de pacientes.');
+      }
+
+      setCloudPatients(Array.isArray(payload.patients) ? payload.patients : []);
+    } catch (err) {
+      console.error('No se pudo cargar la lista de pacientes de prueba:', err);
+      setCloudPatientsError(err.message || 'No se pudo consultar la base de pruebas.');
+      setCloudPatients([]);
+    } finally {
+      setCloudPatientsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      loadCloudPatients(user);
+    } else {
+      setCloudPatients([]);
+      setCloudPatientsError('');
+    }
+  }, [user, isAdmin]);
+
+  const handleCreateCloudPatient = async (event) => {
+    event.preventDefault();
+
+    if (!user || !isAdmin) {
+      setCloudPatientsError('Se requiere una sesión médica autorizada.');
+      return;
+    }
+
+    setCloudPatientSaving(true);
+    setCloudPatientsError('');
+
+    try {
+      const idToken = await user.getIdToken();
+      const initialMeasurement = {
+        weightKg: cloudPatientForm.weightKg,
+        waistCm: cloudPatientForm.waistCm,
+        muscleKg: cloudPatientForm.muscleKg,
+        bodyFatPct: cloudPatientForm.bodyFatPct
+      };
+
+      const response = await fetch('/api/admin/patients', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          displayName: cloudPatientForm.displayName,
+          phone: cloudPatientForm.phone,
+          ageYears: cloudPatientForm.ageYears,
+          initialMeasurement
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (response.status === 503) {
+          throw new Error('La base «origen-staging» aún no está creada en Firebase. No se ha guardado ningún expediente.');
+        }
+        throw new Error(payload.error || 'No se pudo crear el expediente provisional.');
+      }
+
+      setCloudPatientForm({
+        displayName: '',
+        phone: '',
+        ageYears: '',
+        weightKg: '',
+        waistCm: '',
+        muscleKg: '',
+        bodyFatPct: ''
+      });
+      showToast('Expediente provisional creado en la base de pruebas.');
+      await loadCloudPatients(user);
+    } catch (err) {
+      console.error('No se pudo crear el expediente provisional:', err);
+      setCloudPatientsError(err.message || 'No se pudo crear el expediente.');
+    } finally {
+      setCloudPatientSaving(false);
+    }
   };
 
   const handleSignIn = async (event) => {
@@ -2225,9 +2345,9 @@ function App() {
 
             <div className="flex flex-wrap gap-2.5">
               <button
-                onClick={() => setShowNewPatientModal(true)}
-                disabled={syncStatus !== 'synced'}
-                title={syncStatus !== 'synced' ? 'Disponible cuando la sincronización segura esté activa' : 'Crear un expediente'}
+                onClick={() => setDoctorTab('cloud_patients')}
+                disabled={!isAdmin}
+                title="Abrir alta provisional en la base aislada de pruebas"
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#DFBD69] hover:bg-[#C59B43] disabled:opacity-50 disabled:cursor-not-allowed text-[#231F1A] font-bold text-xs sm:text-sm shadow-sm cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" />
@@ -2240,7 +2360,8 @@ function App() {
           <nav className="flex overflow-x-auto gap-2 pb-1">
             {[
               { id: 'triage', label: 'Semáforo Triage & Bandeja', icon: Activity },
-              { id: 'patient_detail', label: 'Expediente Individual', icon: ClipboardCheck },
+              { id: 'cloud_patients', label: 'Pacientes en nube (Pruebas)', icon: Users },
+              { id: 'patient_detail', label: 'Expediente Demo', icon: ClipboardCheck },
               { id: 'vademecum', label: 'Vademécum GLP-1 (31 Marcas Bolivia)', icon: BookOpen },
               { id: 'settings', label: 'Configuración Consultorio (Sin Código)', icon: Settings }
             ].map((tab) => {
@@ -2261,6 +2382,163 @@ function App() {
               );
             })}
           </nav>
+
+          {/* DOCTOR TAB: EXPEDIENTES EN BASE DE PRUEBAS AISLADA */}
+          {doctorTab === 'cloud_patients' && (
+            <div className="space-y-5">
+              <div className="rounded-3xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                <strong className="block font-bold">ENTORNO DE PRUEBAS · NO REGISTRAR PACIENTES REALES</strong>
+                <span>Estos expedientes se guardarán únicamente en la base nombrada «origen-staging». Todavía no crean un usuario ni habilitan el portal del paciente. Usa nombres ficticios para comprobar el flujo.</span>
+              </div>
+
+              {cloudPatientsError && (
+                <div role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                  {cloudPatientsError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <form onSubmit={handleCreateCloudPatient} className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 space-y-4">
+                  <div>
+                    <span className="text-xs font-bold uppercase text-[#9A742C]">Nuevo registro provisional</span>
+                    <h2 className="font-serif text-2xl font-bold">Crear expediente de prueba</h2>
+                    <p className="text-xs text-[#6F6250] mt-1">Perfil básico y medición inicial opcional. No se registran medicamentos ni dosis en este paso.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold mb-1">Nombre de prueba *</label>
+                    <input
+                      required
+                      minLength={2}
+                      maxLength={120}
+                      value={cloudPatientForm.displayName}
+                      onChange={(e) => setCloudPatientForm((prev) => ({ ...prev, displayName: e.target.value }))}
+                      placeholder="Ej. Paciente de prueba 001"
+                      className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold mb-1">WhatsApp (opcional)</label>
+                      <input
+                        value={cloudPatientForm.phone}
+                        onChange={(e) => setCloudPatientForm((prev) => ({ ...prev, phone: e.target.value }))}
+                        placeholder="71234567"
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold mb-1">Edad (opcional)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="120"
+                        value={cloudPatientForm.ageYears}
+                        onChange={(e) => setCloudPatientForm((prev) => ({ ...prev, ageYears: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold mb-1">Peso inicial (kg)</label>
+                      <input
+                        type="number"
+                        min="20"
+                        max="400"
+                        step="0.1"
+                        value={cloudPatientForm.weightKg}
+                        onChange={(e) => setCloudPatientForm((prev) => ({ ...prev, weightKg: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold mb-1">Cintura (cm)</label>
+                      <input
+                        type="number"
+                        min="30"
+                        max="250"
+                        step="0.1"
+                        value={cloudPatientForm.waistCm}
+                        onChange={(e) => setCloudPatientForm((prev) => ({ ...prev, waistCm: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold mb-1">Músculo (kg)</label>
+                      <input
+                        type="number"
+                        min="2"
+                        max="150"
+                        step="0.1"
+                        value={cloudPatientForm.muscleKg}
+                        onChange={(e) => setCloudPatientForm((prev) => ({ ...prev, muscleKg: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold mb-1">Grasa corporal (%)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="75"
+                        step="0.1"
+                        value={cloudPatientForm.bodyFatPct}
+                        onChange={(e) => setCloudPatientForm((prev) => ({ ...prev, bodyFatPct: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={cloudPatientSaving || !user || !isAdmin}
+                    className="w-full py-3 rounded-2xl bg-[#9A742C] text-white text-sm font-bold disabled:opacity-50"
+                  >
+                    {cloudPatientSaving ? 'Guardando en pruebas…' : 'Crear expediente provisional'}
+                  </button>
+                  <p className="text-[11px] text-[#7A6A54]">El expediente quedará como «Pendiente de cuenta». La vinculación de usuario se implementará por separado con una invitación segura.</p>
+                </form>
+
+                <div className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 space-y-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-xs font-bold uppercase text-[#9A742C]">Base de pruebas</span>
+                      <h2 className="font-serif text-2xl font-bold">Expedientes en nube</h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => loadCloudPatients(user)}
+                      disabled={cloudPatientsLoading}
+                      className="px-3 py-2 rounded-xl border border-[#E6D9C0] text-xs font-bold disabled:opacity-50"
+                    >
+                      {cloudPatientsLoading ? 'Actualizando…' : 'Actualizar'}
+                    </button>
+                  </div>
+
+                  {cloudPatientsLoading && <p className="text-sm text-[#6F6250]">Consultando la base de pruebas…</p>}
+
+                  {!cloudPatientsLoading && cloudPatients.length === 0 && !cloudPatientsError && (
+                    <div className="rounded-2xl bg-[#FAF6EE] p-5 text-sm text-[#6F6250]">
+                      Todavía no hay expedientes de prueba en la base aislada.
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {cloudPatients.map((patient) => (
+                      <div key={patient.id} className="rounded-2xl border border-[#E6D9C0] p-4 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <strong className="text-sm">{patient.displayName}</strong>
+                          <span className="text-[10px] rounded-full bg-amber-100 text-amber-800 px-2 py-1 font-bold">Pendiente de cuenta</span>
+                        </div>
+                        <p className="text-xs text-[#6F6250]">{patient.phoneE164 || 'Sin teléfono'}{patient.ageYears ? ` · ${patient.ageYears} años` : ''}</p>
+                        <p className="text-[10px] text-[#8C7A63]">ID: {patient.id}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* DOCTOR TAB 1: SEMÁFORO TRIAGE & SOLICITUDES PENDIENTES */}
           {doctorTab === 'triage' && (
