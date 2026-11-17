@@ -1,5 +1,3 @@
-import { getAdminAuth, verifyRequestUser } from "../_lib/firebase-admin.js";
-
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -17,12 +15,18 @@ export default async function handler(req, res) {
     });
   }
 
+  const header = req.headers.authorization || "";
+  if (!/^Bearer\s+.+$/i.test(header)) {
+    return res.status(401).json({ error: "Missing bearer token." });
+  }
+
   try {
+    // Dynamic import keeps the endpoint invocable and allows safe error handling
+    // if the Firebase Admin SDK or private service-account configuration fails.
+    const { getAdminAuth, verifyRequestUser } = await import("../_lib/firebase-admin.js");
     const decoded = await verifyRequestUser(req);
     const email = (decoded.email || "").trim().toLowerCase();
 
-    // Restricted to the exact UID and email configured privately in Vercel.
-    // No role or UID supplied in the request body is trusted.
     if (decoded.uid !== configuredUid || email !== configuredEmail) {
       return res.status(403).json({ error: "Not authorized to bootstrap the administrator." });
     }
@@ -47,7 +51,7 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     const status = error.statusCode || (error.code === "auth/id-token-revoked" ? 401 : 500);
-    console.error("Administrator bootstrap failed:", error.message);
+    console.error("Administrator bootstrap failed:", error?.name || "Error", error?.code || "");
     return res.status(status).json({
       error: status === 500 ? "Unable to configure the administrator role." : error.message
     });
