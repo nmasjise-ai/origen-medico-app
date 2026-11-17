@@ -16,7 +16,7 @@ Esta rama contiene una implementación preliminar del backend de administración
 - `api/auth/session.js`: endpoint GET para verificar la identidad y exponer si el token tiene el claim de administrador.
 - `App.jsx`: login con correo/contraseña; no crea sesiones anónimas; el acceso al panel médico depende del claim `admin: true`; el cierre de sesión limpia la copia local.
 - `firestore.rules`: reglas detalladas para el esquema por paciente, con perfiles vinculados por `users/{uid}.patientId`, documentos internos del médico, informes de síntomas y registros diarios validados. Son reglas objetivo y no deben publicarse antes de integrar el frontend y superar las pruebas del emulador.
-- `firebase.json` y `tests/firestore.rules.test.mjs`: entorno local de emulación y pruebas de acceso para visitantes, médico, paciente A y paciente B.
+- `firebase.json` y `tests/firestore.rules.test.mjs`: entorno local de emulación y pruebas de acceso para visitantes, médico, paciente A y paciente B. GitHub Actions completó 8/8 pruebas de reglas en el emulador (incluida la segunda ejecución tras endurecer el chequeo del claim).
 - `docs/PHASE1_FIRESTORE_MODEL.md`: modelo de datos, mapeo del documento legado y plan de migración sin importar datos ficticios.
 - `PRODUCT_BACKLOG.md`: hoja de ruta priorizada para nuevas ideas y módulos.
 - `firebase-admin` se ejecuta solo en el servidor; se fijó en `13.10.0` tras observar `ERR_REQUIRE_ESM` con 14.5.1 en el runtime de Vercel. Node.js 22.x está configurado para la compatibilidad del SDK.
