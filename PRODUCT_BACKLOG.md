@@ -26,7 +26,7 @@ Este documento centraliza los requisitos. Las nuevas ideas se registran aquí; s
 - [ ] Línea de tiempo de consultas, mediciones, síntomas, tratamientos, recetas, planes y documentos.
 - [ ] Peso, cintura, IMC calculado, composición corporal y gráficos de evolución.
 - [ ] Tratamiento indicado, dosis prescrita por médico, frecuencia y eventos autorizados. La app nunca ajusta dosis automáticamente.
-- [ ] Carga segura de laboratorios, informes PDF e imágenes.
+- [ ] En V1 no se habilitará carga de archivos de laboratorio, PDF ni fotografías clínicas. Si más adelante se necesita, usar un servicio de almacenamiento separado, límites de tamaño, compresión, retención y permisos específicos; nunca guardar binarios/base64 en Firestore.
 - [ ] Informe de progreso PDF, revisado por profesional antes de compartirlo.
 
 ### Registro de síntomas y alertas
@@ -68,11 +68,11 @@ Este documento centraliza los requisitos. Las nuevas ideas se registran aquí; s
 
 ### Catálogo de productos ORIGEN
 - [ ] Tienda/catálogo público separado del expediente clínico y del vademécum.
-- [ ] Mostrar productos no medicinales cuya comercialización haya sido verificada: nombre, descripción, beneficios permitidos, presentación, precio en Bs, stock, imagen y condiciones de entrega.
+- [ ] Mostrar productos cuya categoría y comercialización hayan sido verificadas: nombre, descripción y beneficios autorizados, presentación, precio en Bs, stock y condiciones de entrega. El catálogo V1 no requiere fotografías de producto almacenadas en Firebase.
 - [ ] Acciones “Comprar/Solicitar” y “Reservar”; iniciar como solicitud revisada por el consultorio, no venta automática.
 - [ ] Pedido, datos de entrega/recogida, pago QR, comprobante y estados: recibido, pendiente de pago, pagado, reservado, listo, entregado o cancelado.
 - [ ] Confirmaciones al comprador y bandeja de pedidos para el consultorio.
-- [ ] Administración sin código para productos, precios, stock, imágenes, promociones y disponibilidad.
+- [ ] Administración sin código para productos, precios, stock, descripciones, beneficios, promociones y disponibilidad. Los datos serán texto/números livianos; no almacenar imágenes en Firestore ni base64.
 - [ ] Inventario básico y, cuando corresponda, lote y vencimiento.
 - [ ] Personal de tienda solo ve datos necesarios para pedidos; no diagnósticos, síntomas ni notas clínicas.
 
@@ -107,7 +107,7 @@ Este documento centraliza los requisitos. Las nuevas ideas se registran aquí; s
 - **Administrador médico (José):** configuración, expedientes y asignación de usuarios.
 - **Médico:** pacientes autorizados; notas, tratamientos, recetas, síntomas y decisiones clínicas.
 - **Nutricionista:** pacientes asignados y datos pertinentes a nutrición; crea planes, no recetas ni pauta farmacológica.
-- **Recepción:** agenda, contacto, confirmaciones y estado de pago; no notas, recetas, síntomas detallados ni laboratorios.
+- **Recepción:** agenda, contacto, confirmaciones y estado de pago; no notas, recetas, síntomas detallados ni datos clínicos no necesarios.
 - **Gestión de tienda:** catálogo, inventario y pedidos; sin acceso a expedientes.
 - **Paciente:** solo su perfil, datos compartidos, planes, recetas publicadas, calendario y registros propios.
 - **Visitante:** contenido público, catálogo habilitado y formularios; sin acceso clínico.
