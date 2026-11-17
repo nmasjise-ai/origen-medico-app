@@ -20,7 +20,7 @@
 - Nueva pantalla «Pacientes en nube (Pruebas)» en el panel médico.
 - `api/admin/patients.js`: listado y creación de perfiles provisionales solo para administrador, con validación estricta, medición inicial opcional y evento de auditoría.
 - `api/_lib/staging-firestore.js`: exige `VERCEL_ENV=preview` y un namespace exacto configurado; rechaza Production.
-- `api/admin/patients.js` solo accede a la base nombrada `origen-staging`; no escribe en la base principal.
+- `api/admin/patients.js` solo accede al namespace `previewEnvironments/mejoras-seguridad-origen/patients` dentro de `(default)`; no escribe en la colección `patients` de producción.
 - Vercel: `ORIGEN_PREVIEW_DATA_NAMESPACE=previewEnvironments/mejoras-seguridad-origen`, variable plain, únicamente en Preview y rama `mejoras-seguridad-origen`.
 - No se creará una segunda base Firestore: el plan Spark no permite bases nombradas adicionales sin activar Blaze. Los datos QA se alojan en un subárbol de la única base `(default)` y la API solo funciona en Preview.
 - Backlog en `PRODUCT_BACKLOG.md`; catálogo MixNutri preliminar en `docs/INITIAL_STOCK_CATALOG.md`; notas regulatorias en `docs/REGULATORY_AND_COMPLIANCE_NOTES.md`.
@@ -36,7 +36,7 @@ Interpretación: no se encontró el documento clínico antiguo en la ruta espera
 
 ## Separación Preview / Production
 
-- La base `(default)` se usa solo para auditoría de metadatos del esquema legado.
+- La base `(default)` conserva la cuota gratuita Spark y aloja el namespace lógico de QA; el API de Preview no usa la colección de producción.
 - Los perfiles provisionales de Preview se escribirán exclusivamente en `previewEnvironments/mejoras-seguridad-origen/patients` dentro de `(default)`.
 - Vercel establece el namespace de pruebas solo para Preview y la rama de seguridad.
 - El endpoint rechaza Production y solo permite el namespace fijo de Preview.
