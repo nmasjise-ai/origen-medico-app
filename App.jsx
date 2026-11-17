@@ -9,7 +9,7 @@ import {
   TrendingDown, TrendingUp, Upload, User, UserPlus, Users, Utensils, X
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, getIdTokenResult } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, reload, signOut, onAuthStateChanged, getIdTokenResult } from 'firebase/auth';
 // Firestore is connected through patient-scoped repositories in the migration phase.
 
 // ============================================================================
@@ -501,7 +501,23 @@ function App() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [authStatusMessage, setAuthStatusMessage] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
+  const [patientInvitationToken] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return new URLSearchParams(window.location.hash.replace(/^#/, '')).get('activar') || '';
+  });
+  const [activationEmail, setActivationEmail] = useState('');
+  const [activationPassword, setActivationPassword] = useState('');
+  const [activationExistingAccount, setActivationExistingAccount] = useState(false);
+  const [activationBusy, setActivationBusy] = useState(false);
+  const [activationMessage, setActivationMessage] = useState('');
+  const [activationError, setActivationError] = useState('');
+  const [activationAwaitingVerification, setActivationAwaitingVerification] = useState(false);
+  const [patientPortalProfile, setPatientPortalProfile] = useState(null);
+  const [cloudInviteEmails, setCloudInviteEmails] = useState({});
+  const [cloudInviteLoadingId, setCloudInviteLoadingId] = useState('');
+  const [cloudInviteResult, setCloudInviteResult] = useState(null);
   const [legacyAuditBusy, setLegacyAuditBusy] = useState(false);
   const [legacyAuditResult, setLegacyAuditResult] = useState(null);
   const [legacyAuditError, setLegacyAuditError] = useState('');
@@ -525,7 +541,7 @@ function App() {
   const [clinicData, setClinicData] = useState(DEFAULT_CLINIC_STATE);
 
   // Navegación de modos principales
-  const [appMode, setAppMode] = useState('public'); // 'public' | 'login' | 'patient' | 'doctor'
+  const [appMode, setAppMode] = useState(() => patientInvitationToken ? 'activation' : 'public'); // 'public' | 'login' | 'activation' | 'patient_portal' | 'patient' (demo) | 'doctor'
   const [activePatientId, setActivePatientId] = useState('pat-sofia');
   const [patientTab, setPatientTab] = useState('today'); // 'today' | 'meals' | 'symptoms' | 'progress' | 'rx'
   const [doctorTab, setDoctorTab] = useState('triage'); // 'triage' | 'patient_detail' | 'vademecum' | 'settings'
