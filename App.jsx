@@ -9,7 +9,7 @@ import {
   TrendingDown, TrendingUp, Upload, User, UserPlus, Users, Utensils, X
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, getIdTokenResult } from 'firebase/auth';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 // ============================================================================
@@ -498,6 +498,12 @@ const DEFAULT_CLINIC_STATE = {
 function App() {
   // Estado de autenticación y sincronización en la nube
   const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authBusy, setAuthBusy] = useState(false);
   const [syncStatus, setSyncStatus] = useState('connecting'); // 'connecting' | 'synced' | 'local'
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -512,7 +518,7 @@ function App() {
   });
 
   // Navegación de modos principales
-  const [appMode, setAppMode] = useState('patient'); // 'public' | 'patient' | 'doctor'
+  const [appMode, setAppMode] = useState('public'); // 'public' | 'login' | 'patient' | 'doctor'
   const [activePatientId, setActivePatientId] = useState('pat-sofia');
   const [patientTab, setPatientTab] = useState('today'); // 'today' | 'meals' | 'symptoms' | 'progress' | 'rx'
   const [doctorTab, setDoctorTab] = useState('triage'); // 'triage' | 'patient_detail' | 'vademecum' | 'settings'
@@ -575,35 +581,130 @@ function App() {
     setTimeout(() => setToastMessage(null), 3600);
   };
 
-  // 1. Autenticación Firebase (con fallback automático y silencioso)
+  const handleSignIn = async (event) => {
+    event.preventDefault();
+    setAuthError('');
+
+    if (!auth) {
+      setAuthError('El servicio de autenticación no está disponible. Inténtalo más tarde.');
+      return;
+    }
+
+    setAuthBusy(true);
+    try {
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        loginEmail.trim(),
+        loginPassword
+      );
+
+      let tokenResult = await getIdTokenResult(credential.user, true);
+
+      // Only the account preconfigured in private Vercel variables can receive admin:true.
+      if (tokenResult.claims.admin !== true) {
+        const idToken = await credential.user.getIdToken();
+        const response = await fetch('/api/admin/bootstrap', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${idToken}` }
+        });
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(
+            response.status === 403
+              ? 'La cuenta ingresó correctamente, pero todavía no tiene autorización de médico.'
+              : payload.error || 'No se pudo verificar el rol del administrador.'
+          );
+        }
+
+        tokenResult = await getIdTokenResult(credential.user, true);
+      }
+
+      if (tokenResult.claims.admin !== true) {
+        throw new Error('La cuenta no tiene un rol médico habilitado.');
+      }
+
+      setIsAdmin(true);
+      setLoginPassword('');
+      setAuthError('');
+      setAppMode('doctor');
+    } catch (err) {
+      console.error('Error de inicio de sesión:', err);
+      const code = err?.code || '';
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+        setAuthError('Correo o contraseña incorrectos.');
+      } else if (code === 'auth/too-many-requests') {
+        setAuthError('Se hicieron demasiados intentos. Espera un momento e inténtalo nuevamente.');
+      } else {
+        setAuthError(err.message || 'No se pudo iniciar sesión.');
+      }
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      setIsAdmin(false);
+      setAppMode('public');
+      setClinicData(DEFAULT_CLINIC_STATE);
+      try {
+        localStorage.removeItem('origen_medico_clinic_v1');
+      } catch (err) {
+        console.warn('No se pudo limpiar el almacenamiento local:', err);
+      }
+    } catch (err) {
+      showToast('No se pudo cerrar la sesión. Inténtalo nuevamente.');
+    }
+  };
+
+  // 1. Autenticación Firebase: nunca crear sesiones anónimas para acceder a datos clínicos.
   useEffect(() => {
     if (!auth) {
       setSyncStatus('local');
+      setAuthReady(true);
       return;
     }
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (err) {
-        console.warn('Fallback local activo:', err);
-        setSyncStatus('local');
-      }
-    };
-    initAuth();
-    const unsub = onAuthStateChanged(auth, (u) => {
+
+    const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
-      if (!u) setSyncStatus('local');
+
+      if (!u) {
+        setIsAdmin(false);
+        setAuthReady(true);
+        setSyncStatus('local');
+        setAppMode('public');
+        try {
+          localStorage.removeItem('origen_medico_clinic_v1');
+        } catch (err) {
+          console.warn('No se pudo limpiar el almacenamiento local:', err);
+        }
+        setClinicData(DEFAULT_CLINIC_STATE);
+        return;
+      }
+
+      try {
+        const tokenResult = await getIdTokenResult(u);
+        const admin = tokenResult.claims.admin === true;
+        setIsAdmin(admin);
+        setAppMode(admin ? 'doctor' : 'public');
+      } catch (err) {
+        console.error('No se pudo verificar el rol de la cuenta:', err);
+        setIsAdmin(false);
+        setAppMode('public');
+      } finally {
+        setAuthReady(true);
+      }
     });
+
     return () => unsub();
   }, []);
 
   // 2. Suscripción en tiempo real a Firestore (cuando está disponible)
   useEffect(() => {
-    if (!db || !user) return;
+    if (!db || !user || !isAdmin) return;
     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'main');
     const unsub = onSnapshot(
       docRef,
@@ -624,11 +725,15 @@ function App() {
       }
     );
     return () => unsub();
-  }, [user]);
+  }, [user, isAdmin]);
 
   // Helper centralizado para guardar cambios en la nube y localmente sin que el médico programe nada
   const persistState = (updater) => {
     setClinicData((prev) => {
+      if (!isAdmin) {
+        setToastMessage('Inicia sesión con una cuenta autorizada para modificar expedientes.');
+        return prev;
+      }
       const next = typeof updater === 'function' ? updater(prev) : updater;
       const serialized = JSON.stringify(next);
       try {
@@ -1023,7 +1128,7 @@ function App() {
         </div>
       )}
 
-      {/* BARRA SUPERIOR DE NAVEGACIÓN Y SELECTOR DE 3 MODOS */}
+      {/* BARRA SUPERIOR DE NAVEGACIÓN CON ACCESOS SEGÚN ROL */}
       <header className="sticky top-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-[#E6D9C0] shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div className="flex items-center justify-between">
@@ -1049,7 +1154,7 @@ function App() {
             </button>
 
             <button
-              onClick={() => setAppMode('patient')}
+              onClick={() => setAppMode(isAdmin ? 'patient' : 'login')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                 appMode === 'patient'
                   ? 'bg-[#9A742C] text-white shadow-sm'
@@ -1060,24 +1165,44 @@ function App() {
               <span>App Paciente</span>
             </button>
 
-            <button
-              onClick={() => setAppMode('doctor')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-                appMode === 'doctor'
-                  ? 'bg-[#231F1A] text-[#DFBD69] shadow-sm'
-                  : 'text-[#5C4D3C] hover:bg-[#FAF6EE]'
-              }`}
-            >
-              <Stethoscope className="w-4 h-4" />
-              <span>Panel Clínico (Dr. Melgar)</span>
-              {(clinicData.webLeads.filter((l) => l.status === 'pending').length +
-                clinicData.rxRequests.filter((r) => r.status === 'pending').length) > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-rose-600 text-white rounded-full">
-                  {clinicData.webLeads.filter((l) => l.status === 'pending').length +
-                    clinicData.rxRequests.filter((r) => r.status === 'pending').length}
-                </span>
-              )}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setAppMode('doctor')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  appMode === 'doctor'
+                    ? 'bg-[#231F1A] text-[#DFBD69] shadow-sm'
+                    : 'text-[#5C4D3C] hover:bg-[#FAF6EE]'
+                }`}
+              >
+                <Stethoscope className="w-4 h-4" />
+                <span>Panel Clínico (Dr. Melgar)</span>
+                {(clinicData.webLeads.filter((l) => l.status === 'pending').length +
+                  clinicData.rxRequests.filter((r) => r.status === 'pending').length) > 0 && (
+                  <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-rose-600 text-white rounded-full">
+                    {clinicData.webLeads.filter((l) => l.status === 'pending').length +
+                      clinicData.rxRequests.filter((r) => r.status === 'pending').length}
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                className="px-3 py-2 rounded-xl border border-[#E6D9C0] text-xs font-semibold text-[#735318] hover:bg-[#FAF6EE]"
+              >
+                Cerrar sesión
+              </button>
+            ) : (
+              <button
+                onClick={() => { setAuthError(''); setAppMode('login'); }}
+                className="px-3 py-2 rounded-xl bg-[#231F1A] text-[#DFBD69] text-xs font-semibold hover:bg-[#3D3326]"
+              >
+                Ingresar
+              </button>
+            )}
           </div>
 
           {/* INDICADOR DE SINCRONIZACIÓN EN LA NUBE */}
@@ -1089,6 +1214,74 @@ function App() {
           </div>
         </div>
       </header>
+
+      {/* ACCESO PRIVADO */}
+      {appMode === 'login' && (
+        <main className="max-w-xl mx-auto px-4 sm:px-6 py-12">
+          <section className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] shadow-sm p-6 sm:p-9 space-y-6">
+            <div className="text-center space-y-2">
+              <OrigenMedicoLogo size={58} />
+              <p className="text-xs font-bold uppercase tracking-wider text-[#9A742C]">Acceso seguro</p>
+              <h1 className="font-serif text-3xl font-bold text-[#231F1A]">Ingresar a ORIGEN Médico</h1>
+              <p className="text-sm text-[#5C4D3C]">
+                Utiliza tu cuenta autorizada. El panel médico solo se habilita después de verificar tu rol en Firebase.
+              </p>
+            </div>
+
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div>
+                <label htmlFor="origen-login-email" className="block text-xs font-bold text-[#735318] mb-1">Correo electrónico</label>
+                <input
+                  id="origen-login-email"
+                  type="email"
+                  autoComplete="username"
+                  required
+                  value={loginEmail}
+                  onChange={(event) => setLoginEmail(event.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm outline-none focus:border-[#9A742C]"
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="origen-login-password" className="block text-xs font-bold text-[#735318] mb-1">Contraseña</label>
+                <input
+                  id="origen-login-password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm outline-none focus:border-[#9A742C]"
+                  placeholder="Tu contraseña"
+                />
+              </div>
+
+              {authError && (
+                <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                  {authError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={authBusy || !authReady}
+                className="w-full rounded-xl bg-[#9A742C] hover:bg-[#7D5C1E] disabled:opacity-60 text-white font-bold py-3 text-sm"
+              >
+                {authBusy ? 'Verificando cuenta…' : 'Ingresar de forma segura'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setAuthError(''); setAppMode('public'); }}
+                className="w-full rounded-xl border border-[#E6D9C0] text-[#735318] font-semibold py-3 text-sm"
+              >
+                Volver al acceso público
+              </button>
+            </form>
+          </section>
+        </main>
+      )}
 
       {/* ==================================================================== */}
       {/* MODO 1: ACCESO PÚBLICO / BETA (CAPTACIÓN & PAGO QR BOLIVIA)          */}
@@ -2026,7 +2219,7 @@ function App() {
       {/* ==================================================================== */}
       {/* MODO 3: PANEL CLÍNICO DEL DR. JOSÉ RODOLFO MELGAR LIZARAZU           */}
       {/* ==================================================================== */}
-      {appMode === 'doctor' && (
+      {appMode === 'doctor' && isAdmin && (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
           {/* CABECERA CLÍNICA & ACCIÓN RÁPIDA + NUEVO PACIENTE */}
           <div className="bg-[#231F1A] text-[#FAF6EE] rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md">
