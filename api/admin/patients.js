@@ -1,7 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
-import { getAdminFirestore, verifyRequestUser } from "./_lib/firebase-admin.js";
-import { getStagingFirestoreDatabaseId } from "./_lib/staging-firestore.js";
-import { normalizeNewPatient } from "./_lib/patient-validation.js";
+import { getAdminFirestore, verifyRequestUser } from "../_lib/firebase-admin.js";
+import { getStagingFirestoreDatabaseId } from "../_lib/staging-firestore.js";
+import { normalizeNewPatient } from "../_lib/patient-validation.js";
 
 const MAX_RESULTS = 100;
 
