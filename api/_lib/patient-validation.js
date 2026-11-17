@@ -19,7 +19,7 @@ function optionalNumber(value, field, min, max, integer = false) {
 function optionalText(value, field, maxLength) {
   if (value === undefined || value === null || value === "") return null;
   if (typeof value !== "string") fail(`El campo ${field} no es válido.`);
-  const normalized = value.trim().replace(/\s+/g, " ");
+  const normalized = value.trim();
   if (normalized.length > maxLength) fail(`El campo ${field} supera el límite permitido.`);
   return normalized || null;
 }

@@ -531,7 +531,7 @@ function App() {
   const [cloudProfileSaving, setCloudProfileSaving] = useState(false);
   const [cloudRecordTab, setCloudRecordTab] = useState('summary');
   const [cloudProfileForm, setCloudProfileForm] = useState({
-    displayName: '', phone: '', birthDate: '', sexAtBirth: '', heightCm: '',
+    displayName: '', phone: '', ageYears: '', birthDate: '', sexAtBirth: '', heightCm: '',
     medicalHistory: '', surgicalHistory: '', familyHistory: '', allergies: '',
     concomitantMedications: ''
   });
@@ -759,6 +759,7 @@ function App() {
       setCloudProfileForm({
         displayName: payload.patient?.displayName || '',
         phone: (payload.patient?.phoneE164 || '').replace(/^\+/, ''),
+        ageYears: payload.patient?.ageYears ?? '',
         birthDate: payload.patient?.birthDate || '',
         sexAtBirth: payload.patient?.sexAtBirth || '',
         heightCm: payload.patient?.heightCm ?? '',
@@ -3385,6 +3386,9 @@ function App() {
                             </label>
                             <label className="text-[10px] font-bold">Teléfono / WhatsApp
                               <input value={cloudProfileForm.phone} onChange={(e) => setCloudProfileForm((p) => ({ ...p, phone: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" placeholder="71234567" />
+                            </label>
+                            <label className="text-[10px] font-bold">Edad (años, si no se conoce fecha de nacimiento)
+                              <input type="number" min="1" max="120" value={cloudProfileForm.ageYears} disabled={Boolean(cloudProfileForm.birthDate)} onChange={(e) => setCloudProfileForm((p) => ({ ...p, ageYears: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs disabled:opacity-60" />
                             </label>
                             <label className="text-[10px] font-bold">Fecha de nacimiento
                               <input type="date" value={cloudProfileForm.birthDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setCloudProfileForm((p) => ({ ...p, birthDate: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
