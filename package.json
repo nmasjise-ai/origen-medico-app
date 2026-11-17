@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test:rules": "firebase emulators:exec --project demo-origen-medico --only firestore \"node --test tests/firestore.rules.test.mjs\"",
+    "test:rules": "firebase emulators:exec --project demo-origen-medico --only firestore \"node --test tests/*.test.mjs\"",
     "emulators:firestore": "firebase emulators:start --project demo-origen-medico --only firestore"
   },
   "dependencies": {
