@@ -15,7 +15,7 @@
     "react-dom": "^18.2.0",
     "lucide-react": "^0.292.0",
     "firebase": "^10.8.0",
-    "firebase-admin": "^14.5.1"
+    "firebase-admin": "13.10.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
