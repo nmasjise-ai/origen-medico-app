@@ -2668,17 +2668,19 @@ function App() {
                             <table className="w-full text-xs text-left">
                               <thead>
                                 <tr className="text-[#8C7A63]">
-                                  <th className="py-2 pr-2">Fecha</th>
-                                  <th className="py-2 pr-2">Peso</th>
-                                  <th className="py-2 pr-2">Cintura</th>
-                                  <th className="py-2 pr-2">Músculo</th>
-                                  <th className="py-2">Grasa</th>
+                                  <th className="py-2 pr-2">Fecha y hora</th>
+                                  <th className="py-2 pr-2">Registro</th>
+                                  <th className="py-2 pr-2">Peso (kg)</th>
+                                  <th className="py-2 pr-2">Cintura (cm)</th>
+                                  <th className="py-2 pr-2">Músculo (kg)</th>
+                                  <th className="py-2">Grasa (%)</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {(selectedCloudPatient.measurements || []).map((measurement) => (
                                   <tr key={measurement.id} className="border-t border-[#E6D9C0]">
-                                    <td className="py-2 pr-2">{measurement.recordedAt ? new Date(measurement.recordedAt).toLocaleDateString('es-BO') : '—'}</td>
+                                    <td className="py-2 pr-2 whitespace-nowrap">{measurement.recordedAt ? new Date(measurement.recordedAt).toLocaleString('es-BO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                                    <td className="py-2 pr-2 whitespace-nowrap">{measurement.source === 'initial_registration' ? 'Inicial' : measurement.source === 'manual_control' ? 'Control' : 'Registro'}</td>
                                     <td className="py-2 pr-2">{measurement.weightKg ?? '—'}</td>
                                     <td className="py-2 pr-2">{measurement.waistCm ?? '—'}</td>
                                     <td className="py-2 pr-2">{measurement.muscleKg ?? '—'}</td>
