@@ -13,7 +13,7 @@
 - Modelo Firestore por paciente en `docs/PHASE1_FIRESTORE_MODEL.md`.
 - Reglas objetivo con administrador por claim, vínculo paciente `users/{uid}.patientId`, notas internas separadas y validación de síntomas/diarios/solicitudes.
 - Firebase Emulator Suite, GitHub Actions y pruebas en `tests/*.test.mjs`.
-- Última suite completada y verificada: 13/13 (8 reglas + 5 regresiones del frontend). Se añadieron 7 pruebas de validación de perfil y 4 de aislamiento de base Preview; la ejecución de CI para el conjunto ampliado está pendiente de confirmación.
+- Última suite completada y verificada: 13/13 (8 reglas + 5 regresiones del frontend). Se añadieron 7 pruebas de validación de perfil y 4 de aislamiento de base Preview; se añadieron también 7 pruebas de mediciones/ID y las pruebas de validación de perfiles y aislamiento; confirmar el resultado de CI para el conjunto completo.
 - Frontend desconectado del documento compartido `clinic_state` y del almacenamiento clínico en `localStorage`; altas y guardado del flujo legado continúan bloqueados.
 - Se retiraron exportación/restauración del estado de demostración y carga QR Base64.
 - Auditoría protegida: revisa la ruta de datos anterior, raíces de `artifacts` y nombres/cantidades de colecciones principales; nunca devuelve campos de documentos.
@@ -47,11 +47,11 @@ Interpretación: no se encontró el documento clínico antiguo en la ruta espera
 
 1. Crear `origen-staging` desde Firebase Console.
 2. Repetir auditoría de colecciones raíz desde la última Preview.
-3. Probar alta/listado solo con registros ficticios de QA.
+3. Probar alta, apertura de ficha, historial de mediciones y nuevo control solo con registros ficticios de QA.
 4. Implementar invitaciones y vínculo seguro `users/{uid}.patientId`.
 5. Construir repositorios para mediciones, tratamiento, nutrición, síntomas y solicitudes.
 6. Reemplazar el expediente demo y selector por la identidad autenticada.
-7. Probar médico, paciente A, paciente B, nutricionista y recepción.
+7. Implementar vínculo de cuentas y probar médico, paciente A, paciente B, nutricionista y recepción.
 8. Mantener las reglas sin publicar hasta validar todos los flujos.
 
 ## Bloqueos de seguridad
