@@ -729,11 +729,11 @@ function App() {
 
   // Helper centralizado para guardar cambios en la nube y localmente sin que el médico programe nada
   const persistState = (updater) => {
+    if (!isAdmin) {
+      setToastMessage('Inicia sesión con una cuenta autorizada para modificar expedientes.');
+      return;
+    }
     setClinicData((prev) => {
-      if (!isAdmin) {
-        setToastMessage('Inicia sesión con una cuenta autorizada para modificar expedientes.');
-        return prev;
-      }
       const next = typeof updater === 'function' ? updater(prev) : updater;
       const serialized = JSON.stringify(next);
       try {
