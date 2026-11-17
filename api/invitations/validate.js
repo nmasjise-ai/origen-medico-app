@@ -3,6 +3,7 @@ import {
   getPreviewInvitationsCollection,
   getPreviewPatientsCollection
 } from "../_lib/staging-firestore.js";
+import { validatePreviewPatientId } from "../_lib/measurement-validation.js";
 import {
   hashInvitationToken,
   invitationIsActive,
@@ -31,7 +32,8 @@ export default async function handler(req, res) {
 
     const invitation = snapshot.data();
     const patients = getPreviewPatientsCollection(db);
-    const patientSnapshot = await patients.doc(invitation.patientId).get();
+    const patientId = validatePreviewPatientId(invitation.patientId);
+    const patientSnapshot = await patients.doc(patientId).get();
 
     if (
       !patientSnapshot.exists ||
