@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.vercel/
+.env
+.env.*
+!.env.example
+# Firebase / Google Cloud private service-account credentials
+*-firebase-adminsdk-*.json
+firebase-admin*.json
+service-account*.json
+*-service-account*.json
+# Firebase Emulator artifacts
+.firebase/
+firebase-debug.log
+firestore-debug.log
+emulator-data/

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Activity, AlertTriangle, ArrowRight, Award, Bell, BookOpen, Calendar,
   Check, CheckCircle2, ChevronDown, ChevronRight, ClipboardCheck, Clock,
@@ -9,8 +9,8 @@ import {
   TrendingDown, TrendingUp, Upload, User, UserPlus, Users, Utensils, X
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, getIdTokenResult } from 'firebase/auth';
+// Firestore is connected through patient-scoped repositories in the migration phase.
 
 // ============================================================================
 // CONFIGURACIÓN DE PERSISTENCIA EN LA NUBE (FIREBASE FIRESTORE + AUTH)
@@ -25,8 +25,6 @@ const firebaseConfig = {
 };
 const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
 const auth = app ? getAuth(app) : null;
-const db = app ? getFirestore(app) : null;
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'origen-medico-glpi-bo';
 
 // ============================================================================
 // EMBLEMA OFICIAL: ORIGEN MÉDICO (ÁRBOL DE LA VIDA DORADO)
@@ -498,21 +496,25 @@ const DEFAULT_CLINIC_STATE = {
 function App() {
   // Estado de autenticación y sincronización en la nube
   const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authBusy, setAuthBusy] = useState(false);
+  const [legacyAuditBusy, setLegacyAuditBusy] = useState(false);
+  const [legacyAuditResult, setLegacyAuditResult] = useState(null);
+  const [legacyAuditError, setLegacyAuditError] = useState('');
   const [syncStatus, setSyncStatus] = useState('connecting'); // 'connecting' | 'synced' | 'local'
   const [toastMessage, setToastMessage] = useState(null);
 
   // Estado maestro de todo el consultorio
-  const [clinicData, setClinicData] = useState(() => {
-    try {
-      const saved = localStorage.getItem('origen_medico_clinic_v1');
-      return saved ? JSON.parse(saved) : DEFAULT_CLINIC_STATE;
-    } catch {
-      return DEFAULT_CLINIC_STATE;
-    }
-  });
+  // Always start from clearly labeled demo data. Do not load clinical records
+  // from localStorage; the patient-scoped Firestore repository is not active yet.
+  const [clinicData, setClinicData] = useState(DEFAULT_CLINIC_STATE);
 
   // Navegación de modos principales
-  const [appMode, setAppMode] = useState('patient'); // 'public' | 'patient' | 'doctor'
+  const [appMode, setAppMode] = useState('public'); // 'public' | 'login' | 'patient' | 'doctor'
   const [activePatientId, setActivePatientId] = useState('pat-sofia');
   const [patientTab, setPatientTab] = useState('today'); // 'today' | 'meals' | 'symptoms' | 'progress' | 'rx'
   const [doctorTab, setDoctorTab] = useState('triage'); // 'triage' | 'patient_detail' | 'vademecum' | 'settings'
@@ -568,80 +570,205 @@ function App() {
     waist: ''
   });
 
-  const isRemoteUpdate = useRef(false);
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3600);
   };
 
-  // 1. Autenticación Firebase (con fallback automático y silencioso)
+  const handleSignIn = async (event) => {
+    event.preventDefault();
+    setAuthError('');
+
+    if (!auth) {
+      setAuthError('El servicio de autenticación no está disponible. Inténtalo más tarde.');
+      return;
+    }
+
+    setAuthBusy(true);
+    try {
+      const credential = await signInWithEmailAndPassword(
+        auth,
+        loginEmail.trim(),
+        loginPassword
+      );
+
+      let tokenResult = await getIdTokenResult(credential.user, true);
+
+      // Only the account preconfigured in private Vercel variables can receive admin:true.
+      if (tokenResult.claims.admin !== true) {
+        const idToken = await credential.user.getIdToken();
+        const response = await fetch('/api/admin/bootstrap', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${idToken}` }
+        });
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(
+            response.status === 403
+              ? 'La cuenta ingresó correctamente, pero todavía no tiene autorización de médico.'
+              : payload.error || 'No se pudo verificar el rol del administrador.'
+          );
+        }
+
+        tokenResult = await getIdTokenResult(credential.user, true);
+      }
+
+      if (tokenResult.claims.admin !== true) {
+        throw new Error('La cuenta no tiene un rol médico habilitado.');
+      }
+
+      setIsAdmin(true);
+      setLoginPassword('');
+      setAuthError('');
+      setAppMode('doctor');
+    } catch (err) {
+      console.error('Error de inicio de sesión:', err);
+      const code = err?.code || '';
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+        setAuthError('Correo o contraseña incorrectos.');
+      } else if (code === 'auth/too-many-requests') {
+        setAuthError('Se hicieron demasiados intentos. Espera un momento e inténtalo nuevamente.');
+      } else {
+        setAuthError(err.message || 'No se pudo iniciar sesión.');
+      }
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      setIsAdmin(false);
+      setAppMode('public');
+      setClinicData(DEFAULT_CLINIC_STATE);
+      try {
+        localStorage.removeItem('origen_medico_clinic_v1');
+      } catch (err) {
+        console.warn('No se pudo limpiar el almacenamiento local:', err);
+      }
+    } catch (err) {
+      showToast('No se pudo cerrar la sesión. Inténtalo nuevamente.');
+    }
+  };
+
+  const handleLegacyAudit = async () => {
+    if (!user || !isAdmin) {
+      setLegacyAuditError('Se requiere una sesión de médico autorizada.');
+      return;
+    }
+
+    setLegacyAuditBusy(true);
+    setLegacyAuditError('');
+    setLegacyAuditResult(null);
+
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/admin/legacy-audit', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${idToken}` },
+        cache: 'no-store'
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'No se pudo revisar el almacenamiento anterior.');
+      }
+
+      setLegacyAuditResult(payload);
+    } catch (err) {
+      console.error('Error en auditoría de datos antiguos:', err);
+      setLegacyAuditError(err.message || 'No se pudo completar la auditoría.');
+    } finally {
+      setLegacyAuditBusy(false);
+    }
+  };
+
+  // 1. Autenticación Firebase: nunca crear sesiones anónimas para acceder a datos clínicos.
   useEffect(() => {
     if (!auth) {
       setSyncStatus('local');
+      setAuthReady(true);
       return;
     }
-    const initAuth = async () => {
+
+    const clearLegacyClinicalCache = () => {
       try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
+        localStorage.removeItem('origen_medico_clinic_v1');
       } catch (err) {
-        console.warn('Fallback local activo:', err);
-        setSyncStatus('local');
+        console.warn('No se pudo limpiar el almacenamiento local:', err);
       }
+      setClinicData(DEFAULT_CLINIC_STATE);
     };
-    initAuth();
-    const unsub = onAuthStateChanged(auth, (u) => {
+
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      // Older versions created persistent anonymous sessions. They must not
+      // be treated as an account or be allowed to keep legacy clinical cache.
+      if (u?.isAnonymous) {
+        setUser(null);
+        setIsAdmin(false);
+        setAuthReady(false);
+        setSyncStatus('local');
+        setAppMode('public');
+        clearLegacyClinicalCache();
+        try {
+          await signOut(auth);
+        } catch (err) {
+          console.error('No se pudo cerrar la sesión anónima heredada:', err);
+          setAuthReady(true);
+        }
+        return;
+      }
+
       setUser(u);
-      if (!u) setSyncStatus('local');
+      // Remove all legacy clinical cache on every auth transition, including
+      // the administrator session. The old monolithic record is not a source
+      // of truth and must not be restored into browser memory.
+      clearLegacyClinicalCache();
+      setSyncStatus('local');
+
+      if (!u) {
+        setIsAdmin(false);
+        setAuthReady(true);
+        setAppMode('public');
+        return;
+      }
+
+      try {
+        const tokenResult = await getIdTokenResult(u);
+        const admin = tokenResult.claims.admin === true;
+        setIsAdmin(admin);
+        setAppMode(admin ? 'doctor' : 'public');
+      } catch (err) {
+        console.error('No se pudo verificar el rol de la cuenta:', err);
+        setIsAdmin(false);
+        setAppMode('public');
+      } finally {
+        setAuthReady(true);
+      }
     });
+
     return () => unsub();
   }, []);
 
-  // 2. Suscripción en tiempo real a Firestore (cuando está disponible)
+  // 2. The legacy shared Firestore document is intentionally disconnected.
+  // Clinical sync will only be re-enabled after the individual-patient
+  // repositories, account mappings and end-to-end security checks are complete.
   useEffect(() => {
-    if (!db || !user) return;
-    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'main');
-    const unsub = onSnapshot(
-      docRef,
-      (snap) => {
-        if (snap.exists() && snap.data()?.payload) {
-          isRemoteUpdate.current = true;
-          const parsed = JSON.parse(snap.data().payload);
-          setClinicData(parsed);
-          localStorage.setItem('origen_medico_clinic_v1', snap.data().payload);
-        } else {
-          // Inicializar nube con estado base
-          setDoc(docRef, { payload: JSON.stringify(clinicData), updatedAt: new Date().toISOString() }).catch(() => {});
-        }
-        setSyncStatus('synced');
-      },
-      () => {
-        setSyncStatus('local');
-      }
-    );
-    return () => unsub();
-  }, [user]);
+    setSyncStatus('local');
+  }, [user, isAdmin]);
 
-  // Helper centralizado para guardar cambios en la nube y localmente sin que el médico programe nada
-  const persistState = (updater) => {
-    setClinicData((prev) => {
-      const next = typeof updater === 'function' ? updater(prev) : updater;
-      const serialized = JSON.stringify(next);
-      try {
-        localStorage.setItem('origen_medico_clinic_v1', serialized);
-      } catch (e) {
-        console.warn('LocalStorage lleno', e);
-      }
-      if (db && user) {
-        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'clinic_state', 'main');
-        setDoc(docRef, { payload: serialized, updatedAt: new Date().toISOString() }).catch(() => {});
-      }
-      return next;
-    });
+  // Temporary write guard: never save clinical data to localStorage or to the
+  // legacy shared document. Each module will be switched to its own repository.
+  const persistState = () => {
+    if (!isAdmin) {
+      setToastMessage('Inicia sesión con una cuenta médica autorizada.');
+      return;
+    }
+    setToastMessage('La migración a expedientes individuales sigue en curso. No se guardó ningún cambio.');
   };
 
   // Paciente activo actual
@@ -941,52 +1068,6 @@ function App() {
   };
 
   // Subir imagen de QR Simple desde el panel del médico
-  const handleQrImageUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      persistState((prev) => ({
-        ...prev,
-        clinicConfig: { ...prev.clinicConfig, qrImageDataUrl: reader.result }
-      }));
-      showToast('Imagen de QR Simple actualizada correctamente');
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Exportar / Importar copia de seguridad completa en JSON
-  const handleExportBackup = () => {
-    const blob = new Blob([JSON.stringify(clinicData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Respaldo_Origen_Medico_${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Copia de seguridad descargada');
-  };
-
-  const handleImportBackup = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(reader.result);
-        if (parsed.patients && parsed.clinicConfig) {
-          persistState(parsed);
-          showToast('Base de datos restaurada con éxito');
-        } else {
-          showToast('El archivo no corresponde a un respaldo válido');
-        }
-      } catch {
-        showToast('Error al leer el archivo de respaldo');
-      }
-    };
-    reader.readAsText(file);
-  };
-
   // Filtrado de Vademécum
   const filteredVademecum = useMemo(() => {
     return BOLIVIA_VADEMECUM.filter((item) => {
@@ -1023,14 +1104,14 @@ function App() {
         </div>
       )}
 
-      {/* BARRA SUPERIOR DE NAVEGACIÓN Y SELECTOR DE 3 MODOS */}
+      {/* BARRA SUPERIOR DE NAVEGACIÓN CON ACCESOS SEGÚN ROL */}
       <header className="sticky top-0 z-40 bg-[#FFFDF9]/95 backdrop-blur-md border-b border-[#E6D9C0] shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           <div className="flex items-center justify-between">
             <OrigenMedicoLogo size={42} />
             <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-[#F5EFE2] border border-[#E6D9C0] text-[#735318] lg:hidden">
               <span className={`w-2 h-2 rounded-full ${syncStatus === 'synced' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-              {syncStatus === 'synced' ? 'Nube Activa' : 'Modo Local'}
+              {isAdmin ? (syncStatus === 'synced' ? 'Nube Activa' : 'Sin sincronización') : 'Vista pública'}
             </div>
           </div>
 
@@ -1049,7 +1130,7 @@ function App() {
             </button>
 
             <button
-              onClick={() => setAppMode('patient')}
+              onClick={() => setAppMode(isAdmin ? 'patient' : 'login')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                 appMode === 'patient'
                   ? 'bg-[#9A742C] text-white shadow-sm'
@@ -1060,35 +1141,125 @@ function App() {
               <span>App Paciente</span>
             </button>
 
-            <button
-              onClick={() => setAppMode('doctor')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-                appMode === 'doctor'
-                  ? 'bg-[#231F1A] text-[#DFBD69] shadow-sm'
-                  : 'text-[#5C4D3C] hover:bg-[#FAF6EE]'
-              }`}
-            >
-              <Stethoscope className="w-4 h-4" />
-              <span>Panel Clínico (Dr. Melgar)</span>
-              {(clinicData.webLeads.filter((l) => l.status === 'pending').length +
-                clinicData.rxRequests.filter((r) => r.status === 'pending').length) > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-rose-600 text-white rounded-full">
-                  {clinicData.webLeads.filter((l) => l.status === 'pending').length +
-                    clinicData.rxRequests.filter((r) => r.status === 'pending').length}
-                </span>
-              )}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setAppMode('doctor')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  appMode === 'doctor'
+                    ? 'bg-[#231F1A] text-[#DFBD69] shadow-sm'
+                    : 'text-[#5C4D3C] hover:bg-[#FAF6EE]'
+                }`}
+              >
+                <Stethoscope className="w-4 h-4" />
+                <span>Panel Clínico (Dr. Melgar)</span>
+                {(clinicData.webLeads.filter((l) => l.status === 'pending').length +
+                  clinicData.rxRequests.filter((r) => r.status === 'pending').length) > 0 && (
+                  <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-rose-600 text-white rounded-full">
+                    {clinicData.webLeads.filter((l) => l.status === 'pending').length +
+                      clinicData.rxRequests.filter((r) => r.status === 'pending').length}
+                  </span>
+                )}
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {user ? (
+              <button
+                onClick={handleSignOut}
+                className="px-3 py-2 rounded-xl border border-[#E6D9C0] text-xs font-semibold text-[#735318] hover:bg-[#FAF6EE]"
+              >
+                Cerrar sesión
+              </button>
+            ) : (
+              <button
+                onClick={() => { setAuthError(''); setAppMode('login'); }}
+                className="px-3 py-2 rounded-xl bg-[#231F1A] text-[#DFBD69] text-xs font-semibold hover:bg-[#3D3326]"
+              >
+                Ingresar
+              </button>
+            )}
           </div>
 
           {/* INDICADOR DE SINCRONIZACIÓN EN LA NUBE */}
           <div className="hidden lg:flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-[#F5EFE2] border border-[#E6D9C0] text-[#735318]">
             <span className={`w-2 h-2 rounded-full ${syncStatus === 'synced' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
             <span className="font-medium">
-              {syncStatus === 'synced' ? 'Sincronizado en la Nube' : 'Guardado Automático Activo'}
+              {isAdmin
+                ? (syncStatus === 'synced' ? 'Sincronizado en la Nube' : 'Sin sincronización clínica')
+                : 'Vista pública · sin datos clínicos'}
             </span>
           </div>
         </div>
       </header>
+
+      {/* ACCESO PRIVADO */}
+      {appMode === 'login' && (
+        <main className="max-w-xl mx-auto px-4 sm:px-6 py-12">
+          <section className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] shadow-sm p-6 sm:p-9 space-y-6">
+            <div className="text-center space-y-2">
+              <OrigenMedicoLogo size={58} />
+              <p className="text-xs font-bold uppercase tracking-wider text-[#9A742C]">Acceso seguro</p>
+              <h1 className="font-serif text-3xl font-bold text-[#231F1A]">Ingresar a ORIGEN Médico</h1>
+              <p className="text-sm text-[#5C4D3C]">
+                Utiliza tu cuenta autorizada. El panel médico solo se habilita después de verificar tu rol en Firebase.
+              </p>
+            </div>
+
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div>
+                <label htmlFor="origen-login-email" className="block text-xs font-bold text-[#735318] mb-1">Correo electrónico</label>
+                <input
+                  id="origen-login-email"
+                  type="email"
+                  autoComplete="username"
+                  required
+                  value={loginEmail}
+                  onChange={(event) => setLoginEmail(event.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm outline-none focus:border-[#9A742C]"
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="origen-login-password" className="block text-xs font-bold text-[#735318] mb-1">Contraseña</label>
+                <input
+                  id="origen-login-password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm outline-none focus:border-[#9A742C]"
+                  placeholder="Tu contraseña"
+                />
+              </div>
+
+              {authError && (
+                <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                  {authError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={authBusy || !authReady}
+                className="w-full rounded-xl bg-[#9A742C] hover:bg-[#7D5C1E] disabled:opacity-60 text-white font-bold py-3 text-sm"
+              >
+                {authBusy ? 'Verificando cuenta…' : 'Ingresar de forma segura'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setAuthError(''); setAppMode('public'); }}
+                className="w-full rounded-xl border border-[#E6D9C0] text-[#735318] font-semibold py-3 text-sm"
+              >
+                Volver al acceso público
+              </button>
+            </form>
+          </section>
+        </main>
+      )}
 
       {/* ==================================================================== */}
       {/* MODO 1: ACCESO PÚBLICO / BETA (CAPTACIÓN & PAGO QR BOLIVIA)          */}
@@ -1344,6 +1515,12 @@ function App() {
       {/* ==================================================================== */}
       {appMode === 'patient' && (
         <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+          {syncStatus !== 'synced' && (
+            <div role="alert" className="rounded-2xl border-2 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+              <strong className="block font-bold">VISTA DE DEMOSTRACIÓN · DATOS FICTICIOS</strong>
+              <span>Este selector y los registros mostrados son ejemplos. No corresponden a pacientes reales y no deben utilizarse para seguimiento clínico. El portal individual estará disponible cuando termine la migración de expedientes.</span>
+            </div>
+          )}
           {/* SELECTOR DE PACIENTE DEMO / REAL + INDICACIÓN DEL DR. MELGAR */}
           <div className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
             <div className="flex items-center gap-3">
@@ -2026,8 +2203,14 @@ function App() {
       {/* ==================================================================== */}
       {/* MODO 3: PANEL CLÍNICO DEL DR. JOSÉ RODOLFO MELGAR LIZARAZU           */}
       {/* ==================================================================== */}
-      {appMode === 'doctor' && (
+      {appMode === 'doctor' && isAdmin && (
         <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+          {syncStatus !== 'synced' && (
+            <div role="alert" className="rounded-2xl border-2 border-amber-400 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+              <strong className="block font-bold">ENTORNO DE DEMOSTRACIÓN · NO USAR CON PACIENTES REALES</strong>
+              <span>Los pacientes, medidas, solicitudes y recetas que aparecen son registros ficticios. La sincronización clínica está deshabilitada mientras migramos a expedientes independientes. No registres ni modifiques información clínica aquí.</span>
+            </div>
+          )}
           {/* CABECERA CLÍNICA & ACCIÓN RÁPIDA + NUEVO PACIENTE */}
           <div className="bg-[#231F1A] text-[#FAF6EE] rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md">
             <div>
@@ -2043,7 +2226,9 @@ function App() {
             <div className="flex flex-wrap gap-2.5">
               <button
                 onClick={() => setShowNewPatientModal(true)}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#DFBD69] hover:bg-[#C59B43] text-[#231F1A] font-bold text-xs sm:text-sm shadow-sm cursor-pointer"
+                disabled={syncStatus !== 'synced'}
+                title={syncStatus !== 'synced' ? 'Disponible cuando la sincronización segura esté activa' : 'Crear un expediente'}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#DFBD69] hover:bg-[#C59B43] disabled:opacity-50 disabled:cursor-not-allowed text-[#231F1A] font-bold text-xs sm:text-sm shadow-sm cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>+ Nuevo Paciente</span>
@@ -2595,11 +2780,14 @@ function App() {
                   <p className="text-xs text-[#5C4D3C]">
                     Sube la captura de pantalla del QR de tu banco boliviano para que tus pacientes puedan pagarte directamente desde la web.
                   </p>
-                  <label className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-2xl bg-[#9A742C] text-white text-xs font-bold cursor-pointer hover:bg-[#7D5C1E]">
+                  <label className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-2xl text-xs font-bold ${syncStatus === 'synced' ? 'bg-[#9A742C] text-white cursor-pointer hover:bg-[#7D5C1E]' : 'bg-stone-200 text-stone-500 cursor-not-allowed'}`}>
                     <Upload className="w-4 h-4" />
-                    <span>Subir Imagen QR Simple (PNG/JPG)</span>
-                    <input type="file" accept="image/*" onChange={handleQrImageUpload} className="hidden" />
+                    <span>{syncStatus === 'synced' ? 'Subir Imagen QR Simple (PNG/JPG)' : 'Carga de QR temporalmente deshabilitada'}</span>
+                    <input type="file" accept="image/*" disabled className="hidden" />
                   </label>
+                  {syncStatus !== 'synced' && (
+                    <p className="text-[11px] text-amber-800">La configuración de pagos se habilitará con el nuevo módulo seguro. No se guardan imágenes en el sistema antiguo.</p>
+                  )}
                   {clinicData.clinicConfig.qrImageDataUrl && (
                     <div className="flex justify-center p-3 bg-[#FAF6EE] rounded-2xl border border-[#E6D9C0]">
                       <img src={clinicData.clinicConfig.qrImageDataUrl} alt="QR Simple" className="w-36 h-36 object-contain rounded-xl" />
@@ -2608,22 +2796,90 @@ function App() {
                 </div>
 
                 <div className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 space-y-4">
-                  <h3 className="font-serif text-lg font-bold">Respaldo de Seguridad en 1 Clic</h3>
+                  <div>
+                    <h3 className="font-serif text-lg font-bold">Auditoría del almacenamiento anterior</h3>
+                    <p className="text-xs text-[#5C4D3C] mt-1">
+                      Busca el documento legado en la ruta habitual y revisa otras raíces de la colección artifacts. Solo devuelve conteos; no muestra nombres, teléfonos ni contenido clínico.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLegacyAudit}
+                    disabled={legacyAuditBusy}
+                    className="w-full py-2.5 px-3 rounded-xl bg-[#9A742C] disabled:opacity-60 text-white text-xs font-bold"
+                  >
+                    {legacyAuditBusy ? 'Revisando datos…' : 'Revisar datos antiguos'}
+                  </button>
+                  {legacyAuditError && (
+                    <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+                      {legacyAuditError}
+                    </div>
+                  )}
+                  {legacyAuditResult && (
+                    <div className="rounded-xl border border-[#E6D9C0] bg-[#FAF6EE] p-3 space-y-2 text-xs text-[#3D3326]">
+                      <strong>{legacyAuditResult.exists ? 'Documento antiguo encontrado' : 'No se encontró el documento antiguo'}</strong>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>Documentos legados: <strong>{legacyAuditResult.matchingDocuments ?? (legacyAuditResult.exists ? 1 : 0)}</strong></div>
+                        <div>Raíces de artifacts: <strong>{legacyAuditResult.scannedArtifactRoots ?? 0}</strong></div>
+                        <div>Colecciones principales revisadas: <strong>{legacyAuditResult.rootCollectionsScanned ?? 'No disponible'}</strong></div>
+                        {legacyAuditResult.counts && (
+                          <>
+                            <div>Expedientes: <strong>{legacyAuditResult.counts.patients}</strong></div>
+                            <div>Registros demo: <strong>{legacyAuditResult.counts.demoPatientRecords}</strong></div>
+                            <div>Por clasificar: <strong>{legacyAuditResult.counts.unclassifiedPatientRecords}</strong></div>
+                            <div>Solicitudes web: <strong>{legacyAuditResult.counts.webLeads}</strong></div>
+                            <div>Solicitudes de receta: <strong>{legacyAuditResult.counts.prescriptionRequests}</strong></div>
+                            <div>Solicitudes demo: <strong>{legacyAuditResult.counts.demoPrescriptionRequests}</strong></div>
+                          </>
+                        )}
+                        {legacyAuditResult.unparsedDocuments > 0 && (
+                          <div className="col-span-2 text-amber-800">Documentos que requieren revisión técnica: <strong>{legacyAuditResult.unparsedDocuments}</strong></div>
+                        )}
+                      </div>
+                      {Array.isArray(legacyAuditResult.rootCollections) && legacyAuditResult.rootCollections.length > 0 && (
+                        <div className="border-t border-[#E6D9C0] pt-2 space-y-1">
+                          <strong>Colecciones principales (solo cantidades)</strong>
+                          {legacyAuditResult.rootCollections.map((item) => (
+                            <div key={item.collection} className="flex justify-between gap-3">
+                              <span>{item.collection}</span>
+                              <strong>{item.documents}</strong>
+                            </div>
+                          ))}
+                          {legacyAuditResult.rootCollectionsTruncated && (
+                            <p className="text-amber-800">La lista se limitó a las primeras 100 colecciones.</p>
+                          )}
+                        </div>
+                      )}
+                      {legacyAuditResult.updatedAt && (
+                        <p>Última actualización: {new Date(legacyAuditResult.updatedAt).toLocaleString('es-BO')}</p>
+                      )}
+                      <p className="text-[#735318]">{legacyAuditResult.message}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 space-y-4">
+                  <h3 className="font-serif text-lg font-bold">Respaldo seguro de expedientes</h3>
                   <p className="text-xs text-[#5C4D3C]">
-                    Descarga una copia completa de todos tus pacientes, mediciones y recetas a tu computadora o celular cuando quieras.
+                    El respaldo y la restauración se habilitarán cuando los expedientes estén migrados a colecciones individuales y exista un procedimiento de recuperación probado.
                   </p>
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                    <strong>Temporalmente deshabilitado.</strong> El respaldo antiguo exportaba el objeto de demostración del navegador y no constituye una copia fiable de Firestore. No uses archivos JSON antiguos para restaurar pacientes.
+                  </div>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <button
-                      onClick={handleExportBackup}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-[#231F1A] text-[#DFBD69] text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                      type="button"
+                      disabled
+                      title="Disponible después de completar la migración segura"
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-stone-200 text-stone-500 text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed"
                     >
                       <Download className="w-4 h-4" />
-                      <span>Descargar Respaldo</span>
+                      <span>Respaldo no disponible</span>
                     </button>
-                    <label className="flex-1 py-2.5 px-3 rounded-xl bg-[#FAF6EE] border border-[#9A742C] text-[#735318] text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer">
+                    <label className="flex-1 py-2.5 px-3 rounded-xl bg-stone-100 border border-stone-200 text-stone-400 text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed">
                       <Upload className="w-4 h-4" />
-                      <span>Restaurar Copia</span>
-                      <input type="file" accept=".json" onChange={handleImportBackup} className="hidden" />
+                      <span>Restauración no disponible</span>
+                      <input type="file" accept=".json" disabled className="hidden" />
                     </label>
                   </div>
                 </div>
