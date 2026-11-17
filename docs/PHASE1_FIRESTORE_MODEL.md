@@ -218,3 +218,31 @@ Esta separación es lógica por colección/namespace dentro de la base existente
 - Recuperación de contraseña mediante correo de Firebase. No pedir ni almacenar contraseñas en ORIGEN ni enviarlas por WhatsApp.
 - El enlace de invitación puede compartirse manualmente por el canal que el consultorio elija, pero el canal de mensajería no es un proveedor de autenticación ni reemplaza la verificación de correo.
 - El vínculo de paciente se realiza solo desde servidor; el cliente nunca puede escoger ni modificar libremente `patientId`.
+
+
+## Flujo de invitación y vinculación de cuentas (Preview)
+
+### Colecciones
+- `previewEnvironments/mejoras-seguridad-origen/patients/{patientId}`: perfil y estado de cuenta.
+- `previewEnvironments/mejoras-seguridad-origen/invitations/{tokenHash}`: invitación ligada a un solo correo y expediente. Guarda SHA-256 del token, email normalizado, estado, UID emisor y vencimiento. Nunca guarda el token original.
+- `previewEnvironments/mejoras-seguridad-origen/users/{uid}`: vínculo creado por el servidor con `role=patient` y un único `patientId`.
+
+### Secuencia
+1. El médico autenticado (claim `admin=true`) emite una invitación para un paciente pendiente y un correo concreto.
+2. El servidor genera 32 bytes aleatorios URL-safe, almacena solo su hash SHA-256, fija vencimiento a 7 días y marca `accountStatus=invited`.
+3. El médico copia el enlace de activación. El token viaja en el fragmento `#activar=` para no incluirse en solicitudes HTTP ni en el referrer. El enlace se comparte manualmente; no hay envío automático de invitaciones.
+4. El paciente introduce el correo invitado y crea contraseña con Firebase Authentication Email/Password; o inicia sesión si ya tiene una cuenta.
+5. Firebase envía el correo de verificación. La pantalla permite reenviar el correo y comprobar la verificación.
+6. El endpoint de vinculación verifica el ID token Firebase con revocación y exige `email_verified=true`, correo coincidente y que el usuario no sea administrador.
+7. Una transacción de Firestore verifica invitación pendiente, vencimiento, correo, estado del paciente y que ni el paciente ni el UID estén vinculados. En la misma transacción crea `users/{uid}`, marca el paciente como vinculado, consume la invitación y registra auditoría.
+8. El endpoint de sesión devuelve solo el perfil básico del paciente actualmente autenticado.
+
+### Controles
+- Token aleatorio de 256 bits; solo hash SHA-256 almacenado.
+- Vencimiento 7 días; un solo uso; invitación anterior revocada al emitir otra.
+- Token ligado a correo exacto después de normalización.
+- No hay registro público abierto, OTP/SMS, Google ni contraseñas almacenadas por ORIGEN.
+- La recuperación de contraseña usa el correo de Firebase.
+- La API y las colecciones están restringidas a la implementación Vercel Preview y al namespace de pruebas. No usar datos reales.
+- El enlace se muestra una sola vez al médico; copiarlo y entregarlo manualmente al paciente.
+- La activación de cuenta no abre todavía módulos clínicos completos; la vista paciente inicial solo confirma que la cuenta quedó vinculada.
