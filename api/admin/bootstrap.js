@@ -1,6 +1,6 @@
-const { getAdminAuth, verifyRequestUser } = require("../_lib/firebase-admin");
+import { getAdminAuth, verifyRequestUser } from "../_lib/firebase-admin.js";
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method !== "POST") {
@@ -21,8 +21,8 @@ module.exports = async function handler(req, res) {
     const decoded = await verifyRequestUser(req);
     const email = (decoded.email || "").trim().toLowerCase();
 
-    // This first-time bootstrap is restricted to the exact UID and email
-    // configured privately in Vercel. No client-provided role is trusted.
+    // Restricted to the exact UID and email configured privately in Vercel.
+    // No role or UID supplied in the request body is trusted.
     if (decoded.uid !== configuredUid || email !== configuredEmail) {
       return res.status(403).json({ error: "Not authorized to bootstrap the administrator." });
     }
@@ -52,4 +52,4 @@ module.exports = async function handler(req, res) {
       error: status === 500 ? "Unable to configure the administrator role." : error.message
     });
   }
-};
+}
