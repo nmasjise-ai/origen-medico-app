@@ -1845,6 +1845,29 @@ function App() {
                 >
                   {activationExistingAccount ? 'Necesito crear una cuenta nueva' : 'Ya tengo una cuenta de ORIGEN Médico'}
                 </button>
+
+                {activationExistingAccount && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const email = activationEmail.trim();
+                      if (!email) {
+                        setActivationError('Escribe primero el correo invitado.');
+                        return;
+                      }
+                      try {
+                        await sendPasswordResetEmail(auth, email);
+                        setActivationMessage('Si existe una cuenta con ese correo, Firebase enviará instrucciones para restablecer la contraseña.');
+                        setActivationError('');
+                      } catch (err) {
+                        setActivationError('No se pudo enviar el enlace de recuperación. Inténtalo nuevamente.');
+                      }
+                    }}
+                    className="w-full text-sm text-[#735318] underline underline-offset-4"
+                  >
+                    Olvidé mi contraseña
+                  </button>
+                )}
               </form>
             )}
 
