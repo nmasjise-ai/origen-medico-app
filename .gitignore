@@ -9,3 +9,8 @@ dist/
 firebase-admin*.json
 service-account*.json
 *-service-account*.json
+# Firebase Emulator artifacts
+.firebase/
+firebase-debug.log
+firestore-debug.log
+emulator-data/
