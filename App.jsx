@@ -528,6 +528,13 @@ function App() {
   const [selectedCloudPatient, setSelectedCloudPatient] = useState(null);
   const [cloudPatientDetailLoading, setCloudPatientDetailLoading] = useState(false);
   const [cloudPatientDetailError, setCloudPatientDetailError] = useState('');
+  const [cloudProfileSaving, setCloudProfileSaving] = useState(false);
+  const [cloudRecordTab, setCloudRecordTab] = useState('summary');
+  const [cloudProfileForm, setCloudProfileForm] = useState({
+    displayName: '', phone: '', birthDate: '', sexAtBirth: '', heightCm: '',
+    medicalHistory: '', surgicalHistory: '', familyHistory: '', allergies: '',
+    concomitantMedications: ''
+  });
   const [cloudMeasurementSaving, setCloudMeasurementSaving] = useState(false);
   const [cloudMeasurementForm, setCloudMeasurementForm] = useState({
     weightKg: '', waistCm: '', muscleKg: '', bodyFatPct: ''
@@ -594,6 +601,9 @@ function App() {
     displayName: '',
     phone: '',
     ageYears: '',
+    birthDate: '',
+    sexAtBirth: '',
+    heightCm: '',
     weightKg: '',
     waistCm: '',
     muscleKg: '',
@@ -688,6 +698,9 @@ function App() {
           displayName: cloudPatientForm.displayName,
           phone: cloudPatientForm.phone,
           ageYears: cloudPatientForm.ageYears,
+          birthDate: cloudPatientForm.birthDate,
+          sexAtBirth: cloudPatientForm.sexAtBirth,
+          heightCm: cloudPatientForm.heightCm,
           initialMeasurement
         })
       });
@@ -704,6 +717,9 @@ function App() {
         displayName: '',
         phone: '',
         ageYears: '',
+        birthDate: '',
+        sexAtBirth: '',
+        heightCm: '',
         weightKg: '',
         waistCm: '',
         muscleKg: '',
@@ -739,12 +755,57 @@ function App() {
       }
 
       setSelectedCloudPatient(payload);
+      setCloudRecordTab('summary');
+      setCloudProfileForm({
+        displayName: payload.patient?.displayName || '',
+        phone: (payload.patient?.phoneE164 || '').replace(/^\\+/, ''),
+        birthDate: payload.patient?.birthDate || '',
+        sexAtBirth: payload.patient?.sexAtBirth || '',
+        heightCm: payload.patient?.heightCm ?? '',
+        medicalHistory: payload.patient?.medicalHistory || '',
+        surgicalHistory: payload.patient?.surgicalHistory || '',
+        familyHistory: payload.patient?.familyHistory || '',
+        allergies: payload.patient?.allergies || '',
+        concomitantMedications: payload.patient?.concomitantMedications || ''
+      });
     } catch (err) {
       console.error('No se pudo abrir la ficha del paciente de prueba:', err);
       setCloudPatientDetailError(err.message || 'No se pudo abrir el expediente.');
       setSelectedCloudPatient(null);
     } finally {
       setCloudPatientDetailLoading(false);
+    }
+  };
+
+  const handleSaveCloudProfile = async (event) => {
+    event.preventDefault();
+    const patientId = selectedCloudPatient?.patient?.id;
+    if (!user || !isAdmin || !patientId) {
+      setCloudPatientDetailError('Abre primero un expediente de prueba.');
+      return;
+    }
+    setCloudProfileSaving(true);
+    setCloudPatientDetailError('');
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch(`/api/admin/patients/${encodeURIComponent(patientId)}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ profile: cloudProfileForm })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'No se pudo guardar el perfil clínico.');
+      showToast('Perfil clínico guardado en el espacio de pruebas.');
+      await loadCloudPatientDetails(patientId);
+      await loadCloudPatients(user);
+    } catch (err) {
+      console.error('No se pudo guardar el perfil clínico de prueba:', err);
+      setCloudPatientDetailError(err.message || 'No se pudo guardar el perfil clínico.');
+    } finally {
+      setCloudProfileSaving(false);
     }
   };
 
@@ -3023,6 +3084,43 @@ function App() {
                       />
                     </div>
                     <div>
+                      <label className="block text-xs font-bold mb-1">Fecha de nacimiento (opcional)</label>
+                      <input
+                        type="date"
+                        value={cloudPatientForm.birthDate}
+                        max={new Date().toISOString().slice(0, 10)}
+                        onChange={(e) => setCloudPatientForm((prev) => ({ ...prev, birthDate: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold mb-1">Sexo biológico (opcional)</label>
+                      <select
+                        value={cloudPatientForm.sexAtBirth}
+                        onChange={(e) => setCloudPatientForm((prev) => ({ ...prev, sexAtBirth: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                      >
+                        <option value="">No especificado</option>
+                        <option value="female">Femenino</option>
+                        <option value="male">Masculino</option>
+                        <option value="intersex">Intersexual</option>
+                        <option value="not_specified">Prefiere no especificar</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold mb-1">Talla (cm)</label>
+                      <input
+                        type="number"
+                        min="80"
+                        max="250"
+                        step="0.1"
+                        value={cloudPatientForm.heightCm}
+                        onChange={(e) => setCloudPatientForm((prev) => ({ ...prev, heightCm: e.target.value }))}
+                        placeholder="Ej. 170"
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                      />
+                    </div>
+                    <div>
                       <label className="block text-xs font-bold mb-1">Peso inicial (kg)</label>
                       <input
                         type="number"
@@ -3206,80 +3304,162 @@ function App() {
                         </button>
                       </div>
 
-                      <div className="rounded-2xl bg-[#FAF6EE] p-3 space-y-2">
-                        <strong className="text-xs">Evolución de mediciones</strong>
-                        {(selectedCloudPatient.measurements || []).length === 0 ? (
-                          <p className="text-xs text-[#6F6250]">Todavía no hay mediciones registradas.</p>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs text-left">
-                              <thead>
-                                <tr className="text-[#8C7A63]">
-                                  <th className="py-2 pr-2">Fecha y hora</th>
-                                  <th className="py-2 pr-2">Registro</th>
-                                  <th className="py-2 pr-2">Peso (kg)</th>
-                                  <th className="py-2 pr-2">Cintura (cm)</th>
-                                  <th className="py-2 pr-2">Músculo (kg)</th>
-                                  <th className="py-2">Grasa (%)</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {(selectedCloudPatient.measurements || []).map((measurement) => (
-                                  <tr key={measurement.id} className="border-t border-[#E6D9C0]">
-                                    <td className="py-2 pr-2 whitespace-nowrap">{measurement.recordedAt ? new Date(measurement.recordedAt).toLocaleString('es-BO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
-                                    <td className="py-2 pr-2 whitespace-nowrap">{measurement.source === 'initial_registration' ? 'Inicial' : measurement.source === 'manual_control' ? 'Control' : 'Registro'}</td>
-                                    <td className="py-2 pr-2">{measurement.weightKg ?? '—'}</td>
-                                    <td className="py-2 pr-2">{measurement.waistCm ?? '—'}</td>
-                                    <td className="py-2 pr-2">{measurement.muscleKg ?? '—'}</td>
-                                    <td className="py-2">{measurement.bodyFatPct ?? '—'}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { id: 'summary', label: 'Resumen' },
+                          { id: 'history', label: 'Historia clínica' },
+                          { id: 'anthropometry', label: 'Antropometría' }
+                        ].map((tab) => (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setCloudRecordTab(tab.id)}
+                            className={`px-3 py-2 rounded-xl text-xs font-bold ${cloudRecordTab === tab.id ? 'bg-[#9A742C] text-white' : 'bg-[#FAF6EE] border border-[#E6D9C0] text-[#5C4D3C]'}`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
                       </div>
 
-                      <form onSubmit={handleCreateCloudMeasurement} className="rounded-2xl border border-[#E6D9C0] p-3 space-y-3">
-                        <strong className="text-xs">Registrar nuevo control (solo pruebas)</strong>
-                        <div className="grid grid-cols-2 gap-2">
-                          <input
-                            type="number" min="20" max="400" step="0.1"
-                            placeholder="Peso kg"
-                            value={cloudMeasurementForm.weightKg}
-                            onChange={(e) => setCloudMeasurementForm((prev) => ({ ...prev, weightKg: e.target.value }))}
-                            className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs"
-                          />
-                          <input
-                            type="number" min="30" max="250" step="0.1"
-                            placeholder="Cintura cm"
-                            value={cloudMeasurementForm.waistCm}
-                            onChange={(e) => setCloudMeasurementForm((prev) => ({ ...prev, waistCm: e.target.value }))}
-                            className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs"
-                          />
-                          <input
-                            type="number" min="2" max="150" step="0.1"
-                            placeholder="Músculo kg"
-                            value={cloudMeasurementForm.muscleKg}
-                            onChange={(e) => setCloudMeasurementForm((prev) => ({ ...prev, muscleKg: e.target.value }))}
-                            className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs"
-                          />
-                          <input
-                            type="number" min="1" max="75" step="0.1"
-                            placeholder="Grasa corporal %"
-                            value={cloudMeasurementForm.bodyFatPct}
-                            onChange={(e) => setCloudMeasurementForm((prev) => ({ ...prev, bodyFatPct: e.target.value }))}
-                            className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs"
-                          />
+                      {cloudRecordTab === 'summary' && (() => {
+                        const latest = (selectedCloudPatient.measurements || [])[0] || {};
+                        const height = selectedCloudPatient.patient.heightCm || latest.heightCm;
+                        const bmi = latest.weightKg && height
+                          ? (latest.weightKg / Math.pow(height / 100, 2)).toFixed(1)
+                          : null;
+                        const weightSeries = [...(selectedCloudPatient.measurements || [])]
+                          .filter((item) => Number.isFinite(Number(item.weightKg)))
+                          .slice(0, 8)
+                          .reverse();
+                        const minWeight = weightSeries.length ? Math.min(...weightSeries.map((item) => Number(item.weightKg))) : 0;
+                        const maxWeight = weightSeries.length ? Math.max(...weightSeries.map((item) => Number(item.weightKg))) : 0;
+                        const chartPoints = weightSeries.length > 1
+                          ? weightSeries.map((item, index) => {
+                              const x = 12 + (index * 276 / (weightSeries.length - 1));
+                              const y = 88 - ((Number(item.weightKg) - minWeight) / (maxWeight - minWeight || 1)) * 72;
+                              return `${x},${y}`;
+                            }).join(' ')
+                          : '';
+                        return (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                              <div className="rounded-xl bg-[#FAF6EE] p-3"><span className="text-[10px] text-[#8C7A63]">Peso actual</span><strong className="block text-lg">{latest.weightKg ?? '—'} kg</strong></div>
+                              <div className="rounded-xl bg-[#FAF6EE] p-3"><span className="text-[10px] text-[#8C7A63]">Talla</span><strong className="block text-lg">{height ? `${height} cm` : '—'}</strong></div>
+                              <div className="rounded-xl bg-[#FAF6EE] p-3"><span className="text-[10px] text-[#8C7A63]">IMC actual</span><strong className="block text-lg">{bmi || '—'}</strong></div>
+                              <div className="rounded-xl bg-[#FAF6EE] p-3"><span className="text-[10px] text-[#8C7A63]">Cintura</span><strong className="block text-lg">{latest.waistCm ?? '—'} cm</strong></div>
+                            </div>
+                            <div className="rounded-2xl border border-[#E6D9C0] p-3">
+                              <strong className="text-xs">Evolución del peso</strong>
+                              {weightSeries.length > 1 ? (
+                                <svg viewBox="0 0 300 105" role="img" aria-label="Gráfico de evolución del peso" className="w-full h-28 mt-2">
+                                  <line x1="12" y1="88" x2="288" y2="88" stroke="#E6D9C0" strokeWidth="1" />
+                                  <polyline points={chartPoints} fill="none" stroke="#9A742C" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                                  {weightSeries.map((item, index) => {
+                                    const x = 12 + (index * 276 / (weightSeries.length - 1));
+                                    const y = 88 - ((Number(item.weightKg) - minWeight) / (maxWeight - minWeight || 1)) * 72;
+                                    return <circle key={item.id || index} cx={x} cy={y} r="3.5" fill="#9A742C" />;
+                                  })}
+                                </svg>
+                              ) : (
+                                <p className="text-xs text-[#6F6250] mt-2">Registra al menos dos pesos para visualizar la tendencia.</p>
+                              )}
+                              {weightSeries.length > 0 && <p className="text-[10px] text-[#8C7A63]">Últimos {weightSeries.length} registros con peso · La gráfica muestra tendencia, no un objetivo terapéutico.</p>}
+                            </div>
+                            <div className="rounded-2xl bg-[#FAF6EE] p-3">
+                              <strong className="text-xs">Datos generales</strong>
+                              <p className="text-xs mt-2">Fecha de nacimiento: {selectedCloudPatient.patient.birthDate || 'No registrada'}</p>
+                              <p className="text-xs">Sexo biológico: {({ female: 'Femenino', male: 'Masculino', intersex: 'Intersexual', not_specified: 'No especificado' })[selectedCloudPatient.patient.sexAtBirth] || 'No registrado'}</p>
+                              <p className="text-xs">Edad: {selectedCloudPatient.patient.ageYears ? `${selectedCloudPatient.patient.ageYears} años` : 'No registrada'}</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
+                      {cloudRecordTab === 'history' && (
+                        <form onSubmit={handleSaveCloudProfile} className="rounded-2xl border border-[#E6D9C0] p-3 space-y-3">
+                          <strong className="text-xs">Perfil e historia clínica básica</strong>
+                          <p className="text-[10px] text-[#8C7A63]">Completa solo información verificada durante la anamnesis. No incluyas notas internas del profesional en estos campos.</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <label className="text-[10px] font-bold">Nombre completo
+                              <input required minLength="2" maxLength="120" value={cloudProfileForm.displayName} onChange={(e) => setCloudProfileForm((p) => ({ ...p, displayName: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
+                            </label>
+                            <label className="text-[10px] font-bold">Teléfono / WhatsApp
+                              <input value={cloudProfileForm.phone} onChange={(e) => setCloudProfileForm((p) => ({ ...p, phone: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" placeholder="71234567" />
+                            </label>
+                            <label className="text-[10px] font-bold">Fecha de nacimiento
+                              <input type="date" value={cloudProfileForm.birthDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setCloudProfileForm((p) => ({ ...p, birthDate: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
+                            </label>
+                            <label className="text-[10px] font-bold">Sexo biológico
+                              <select value={cloudProfileForm.sexAtBirth} onChange={(e) => setCloudProfileForm((p) => ({ ...p, sexAtBirth: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs">
+                                <option value="">No especificado</option><option value="female">Femenino</option><option value="male">Masculino</option><option value="intersex">Intersexual</option><option value="not_specified">Prefiere no especificar</option>
+                              </select>
+                            </label>
+                            <label className="text-[10px] font-bold">Talla (cm)
+                              <input type="number" min="80" max="250" step="0.1" value={cloudProfileForm.heightCm} onChange={(e) => setCloudProfileForm((p) => ({ ...p, heightCm: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
+                            </label>
+                          </div>
+                          {[
+                            ['medicalHistory', 'Antecedentes médicos relevantes', '3000'],
+                            ['surgicalHistory', 'Antecedentes quirúrgicos', '2000'],
+                            ['familyHistory', 'Antecedentes familiares', '2000'],
+                            ['allergies', 'Alergias (medicamentos/alimentos/otras)', '2000'],
+                            ['concomitantMedications', 'Medicación concomitante', '3000']
+                          ].map(([key, label, maxLength]) => (
+                            <label key={key} className="block text-[10px] font-bold">{label}
+                              <textarea maxLength={Number(maxLength)} rows="2" value={cloudProfileForm[key]} onChange={(e) => setCloudProfileForm((p) => ({ ...p, [key]: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
+                            </label>
+                          ))}
+                          <button type="submit" disabled={cloudProfileSaving} className="w-full py-2.5 rounded-xl bg-[#9A742C] text-white text-xs font-bold disabled:opacity-50">
+                            {cloudProfileSaving ? 'Guardando perfil…' : 'Guardar perfil clínico'}
+                          </button>
+                        </form>
+                      )}
+
+                      {cloudRecordTab === 'anthropometry' && (
+                        <div className="space-y-3">
+                          <div className="rounded-2xl bg-[#FAF6EE] p-3 space-y-2">
+                            <strong className="text-xs">Historial antropométrico</strong>
+                            {(selectedCloudPatient.measurements || []).length === 0 ? (
+                              <p className="text-xs text-[#6F6250]">Todavía no hay mediciones registradas.</p>
+                            ) : (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs text-left">
+                                  <thead><tr className="text-[#8C7A63]">
+                                    <th className="py-2 pr-2">Fecha y hora</th><th className="py-2 pr-2">Registro</th><th className="py-2 pr-2">Peso</th><th className="py-2 pr-2">Talla</th><th className="py-2 pr-2">IMC</th><th className="py-2 pr-2">Cintura</th><th className="py-2 pr-2">Músculo</th><th className="py-2">Grasa</th>
+                                  </tr></thead>
+                                  <tbody>
+                                    {(selectedCloudPatient.measurements || []).map((measurement) => (
+                                      <tr key={measurement.id} className="border-t border-[#E6D9C0]">
+                                        <td className="py-2 pr-2 whitespace-nowrap">{measurement.recordedAt ? new Date(measurement.recordedAt).toLocaleString('es-BO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                                        <td className="py-2 pr-2 whitespace-nowrap">{measurement.source === 'initial_registration' ? 'Inicial' : measurement.source === 'manual_control' ? 'Control' : 'Registro'}</td>
+                                        <td className="py-2 pr-2">{measurement.weightKg ?? '—'} kg</td>
+                                        <td className="py-2 pr-2">{measurement.heightCm ?? selectedCloudPatient.patient.heightCm ?? '—'} cm</td>
+                                        <td className="py-2 pr-2">{measurement.bmi ?? (measurement.weightKg && (measurement.heightCm || selectedCloudPatient.patient.heightCm) ? (measurement.weightKg / Math.pow((measurement.heightCm || selectedCloudPatient.patient.heightCm) / 100, 2)).toFixed(1) : '—')}</td>
+                                        <td className="py-2 pr-2">{measurement.waistCm ?? '—'} cm</td>
+                                        <td className="py-2 pr-2">{measurement.muscleKg ?? '—'} kg</td>
+                                        <td className="py-2">{measurement.bodyFatPct ?? '—'}%</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                          <form onSubmit={handleCreateCloudMeasurement} className="rounded-2xl border border-[#E6D9C0] p-3 space-y-3">
+                            <strong className="text-xs">Registrar nuevo control (solo pruebas)</strong>
+                            <p className="text-[10px] text-[#8C7A63]">La talla se toma del perfil vigente para calcular el IMC. Si cambia, actualízala en Historia clínica antes del control.</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <input type="number" min="20" max="400" step="0.1" placeholder="Peso kg" value={cloudMeasurementForm.weightKg} onChange={(e) => setCloudMeasurementForm((p) => ({ ...p, weightKg: e.target.value }))} className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
+                              <input type="number" min="30" max="250" step="0.1" placeholder="Cintura cm" value={cloudMeasurementForm.waistCm} onChange={(e) => setCloudMeasurementForm((p) => ({ ...p, waistCm: e.target.value }))} className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
+                              <input type="number" min="2" max="150" step="0.1" placeholder="Músculo kg" value={cloudMeasurementForm.muscleKg} onChange={(e) => setCloudMeasurementForm((p) => ({ ...p, muscleKg: e.target.value }))} className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
+                              <input type="number" min="1" max="75" step="0.1" placeholder="Grasa corporal %" value={cloudMeasurementForm.bodyFatPct} onChange={(e) => setCloudMeasurementForm((p) => ({ ...p, bodyFatPct: e.target.value }))} className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
+                            </div>
+                            <button type="submit" disabled={cloudMeasurementSaving} className="w-full py-2.5 rounded-xl bg-[#9A742C] text-white text-xs font-bold disabled:opacity-50">
+                              {cloudMeasurementSaving ? 'Guardando control…' : 'Guardar nuevo control'}
+                            </button>
+                          </form>
                         </div>
-                        <button
-                          type="submit"
-                          disabled={cloudMeasurementSaving}
-                          className="w-full py-2.5 rounded-xl bg-[#9A742C] text-white text-xs font-bold disabled:opacity-50"
-                        >
-                          {cloudMeasurementSaving ? 'Guardando control…' : 'Guardar nuevo control'}
-                        </button>
-                      </form>
+                      )}
                     </div>
                   )}
                 </div>

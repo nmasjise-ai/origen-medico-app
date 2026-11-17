@@ -46,3 +46,14 @@ test("rejects arbitrary path and malformed patient identifiers", () => {
   assert.throws(() => validatePreviewPatientId("short"), /identificador/i);
   assert.throws(() => validatePreviewPatientId(null), /identificador/i);
 });
+
+test("accepts height snapshots in anthropometric records", () => {
+  assert.deepEqual(
+    validatePatientMeasurement({ weightKg: "82.4", heightCm: "170" }),
+    { weightKg: 82.4, heightCm: 170 }
+  );
+});
+
+test("rejects out-of-range height snapshots", () => {
+  assert.throws(() => validatePatientMeasurement({ heightCm: 40 }), /fuera del rango/i);
+});

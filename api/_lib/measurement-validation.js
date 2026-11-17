@@ -2,7 +2,8 @@ const MEASUREMENT_LIMITS = {
   weightKg: [20, 400],
   waistCm: [30, 250],
   muscleKg: [2, 150],
-  bodyFatPct: [1, 75]
+  bodyFatPct: [1, 75],
+  heightCm: [80, 250]
 };
 
 function invalid(message) {

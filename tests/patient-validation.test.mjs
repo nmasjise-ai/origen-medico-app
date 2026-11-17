@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { normalizeNewPatient } from "../api/_lib/patient-validation.js";
+import { normalizeNewPatient, normalizePatientProfile } from "../api/_lib/patient-validation.js";
 
 test("normalizes a valid Bolivian patient profile and measurements", () => {
   const result = normalizeNewPatient({
@@ -56,4 +56,33 @@ test("rejects invalid age", () => {
     displayName: "Paciente",
     ageYears: 0
   }), /edad/i);
+});
+
+test("normalizes date of birth, sex, height and clinical history", () => {
+  const result = normalizePatientProfile({
+    displayName: "Paciente QA",
+    birthDate: "1990-05-10",
+    sexAtBirth: "female",
+    heightCm: "164.5",
+    medicalHistory: "Hipertensión",
+    allergies: "Penicilina",
+    concomitantMedications: "Losartán"
+  });
+  assert.equal(result.birthDate, "1990-05-10");
+  assert.equal(result.sexAtBirth, "female");
+  assert.equal(result.heightCm, 164.5);
+  assert.equal(result.medicalHistory, "Hipertensión");
+  assert.equal(result.allergies, "Penicilina");
+  assert.equal(result.ageYears >= 36, true);
+});
+
+test("rejects future or malformed birth dates and invalid sex values", () => {
+  assert.throws(() => normalizePatientProfile({ displayName: "Paciente", birthDate: "2030-01-01" }), /futuro/i);
+  assert.throws(() => normalizePatientProfile({ displayName: "Paciente", birthDate: "1990-02-31" }), /fecha/i);
+  assert.throws(() => normalizePatientProfile({ displayName: "Paciente", sexAtBirth: "admin" }), /sexo/i);
+});
+
+test("rejects invalid height and excessive clinical history", () => {
+  assert.throws(() => normalizePatientProfile({ displayName: "Paciente", heightCm: 40 }), /talla/i);
+  assert.throws(() => normalizePatientProfile({ displayName: "Paciente", allergies: "x".repeat(2001) }), /alergias/i);
 });

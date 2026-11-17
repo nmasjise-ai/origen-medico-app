@@ -2,6 +2,7 @@ import { FieldValue } from "firebase-admin/firestore";
 import { getAdminFirestore, verifyRequestUser } from "../../_lib/firebase-admin.js";
 import { getPreviewPatientsCollection } from "../../_lib/staging-firestore.js";
 import { validatePatientMeasurement, validatePreviewPatientId } from "../../_lib/measurement-validation.js";
+import { normalizePatientProfile } from "../../_lib/patient-validation.js";
 
 const MAX_MEASUREMENTS = 30;
 function asIso(value) {
@@ -11,8 +12,8 @@ function asIso(value) {
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
-  if (req.method !== "GET" && req.method !== "POST") {
-    res.setHeader("Allow", "GET, POST");
+  if (req.method !== "GET" && req.method !== "POST" && req.method !== "PATCH") {
+    res.setHeader("Allow", "GET, POST, PATCH");
     return res.status(405).json({ error: "Method not allowed." });
   }
 
@@ -46,6 +47,10 @@ export default async function handler(req, res) {
           waistCm: data.waistCm ?? null,
           muscleKg: data.muscleKg ?? null,
           bodyFatPct: data.bodyFatPct ?? null,
+          heightCm: data.heightCm ?? patientSnapshot.data().heightCm ?? null,
+          bmi: data.weightKg && (data.heightCm ?? patientSnapshot.data().heightCm)
+            ? Number((data.weightKg / Math.pow((data.heightCm ?? patientSnapshot.data().heightCm) / 100, 2)).toFixed(1))
+            : null,
           recordedAt: asIso(data.recordedAt),
           source: data.source || "manual"
         };
@@ -58,6 +63,14 @@ export default async function handler(req, res) {
           displayName: data.displayName || "",
           phoneE164: data.phoneE164 || null,
           ageYears: data.ageYears ?? null,
+          birthDate: data.birthDate || null,
+          sexAtBirth: data.sexAtBirth || null,
+          heightCm: data.heightCm ?? null,
+          medicalHistory: data.medicalHistory || "",
+          surgicalHistory: data.surgicalHistory || "",
+          familyHistory: data.familyHistory || "",
+          allergies: data.allergies || "",
+          concomitantMedications: data.concomitantMedications || "",
           status: data.status || "unknown",
           accountStatus: data.accountStatus || "unlinked",
           createdAt: asIso(data.createdAt),
@@ -67,7 +80,31 @@ export default async function handler(req, res) {
       });
     }
 
+    if (req.method === "PATCH") {
+      const profile = normalizePatientProfile(req.body?.profile);
+      const batch = db.batch();
+      batch.update(patientRef, {
+        ...profile,
+        updatedAt: FieldValue.serverTimestamp()
+      });
+      const auditRef = patientRef.collection("auditLogs").doc();
+      batch.create(auditRef, {
+        action: "patient.profile_updated",
+        actorUid: decoded.uid,
+        occurredAt: FieldValue.serverTimestamp(),
+        source: "admin_api"
+      });
+      await batch.commit();
+      return res.status(200).json({
+        patient: { id: patientRef.id, ...profile },
+        message: "Perfil clínico actualizado en el espacio de pruebas."
+      });
+    }
+
     const measurement = validatePatientMeasurement(req.body?.measurement);
+    if (measurement.heightCm === undefined && patientSnapshot.data().heightCm) {
+      measurement.heightCm = patientSnapshot.data().heightCm;
+    }
     const batch = db.batch();
     const measurementRef = patientRef.collection("measurements").doc();
 
