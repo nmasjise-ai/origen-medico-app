@@ -14,6 +14,8 @@ Esta rama contiene una implementación preliminar del backend de administración
 - `api/_lib/firebase-admin.js`: inicialización privada del Firebase Admin SDK y verificación de ID tokens revocados.
 - `api/admin/bootstrap.js`: endpoint POST restringido por UID y correo configurados en variables privadas; asigna `admin: true` como custom claim, preservando claims existentes.
 - `api/auth/session.js`: endpoint GET para verificar la identidad y exponer si el token tiene el claim de administrador.
+- `api/admin/legacy-audit.js`: endpoint solo médico que consulta el documento legado mediante Firebase Admin y devuelve exclusivamente presencia, conteos e IDs de demostración conocidos; no devuelve nombres, teléfonos ni contenido clínico.
+- `App.jsx`: panel de Configuración incluye el botón «Revisar datos antiguos» para invocar esa auditoría con el ID token del médico.
 - `App.jsx`: login con correo/contraseña; no crea sesiones anónimas; el acceso al panel médico depende del claim `admin: true`; el cierre de sesión limpia la copia local.
 - `firestore.rules`: reglas detalladas para el esquema por paciente, con perfiles vinculados por `users/{uid}.patientId`, documentos internos del médico, informes de síntomas y registros diarios validados. Son reglas objetivo y no deben publicarse antes de integrar el frontend y superar las pruebas del emulador.
 - `firebase.json` y `tests/firestore.rules.test.mjs`: entorno local de emulación y pruebas de acceso para visitantes, médico, paciente A y paciente B. GitHub Actions completó 8/8 pruebas de reglas en el emulador (incluida la segunda ejecución tras endurecer el chequeo del claim).
