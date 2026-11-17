@@ -1208,8 +1208,9 @@ function App() {
 
       if (!u) {
         setIsAdmin(false);
+        setPatientPortalProfile(null);
         setAuthReady(true);
-        setAppMode('public');
+        setAppMode(patientInvitationToken ? 'activation' : 'public');
         return;
       }
 
