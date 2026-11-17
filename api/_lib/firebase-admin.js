@@ -49,8 +49,9 @@ export function getAdminAuth() {
   return getAuth(getAdminApp());
 }
 
-export function getAdminFirestore() {
-  return getFirestore(getAdminApp());
+export function getAdminFirestore(databaseId = null) {
+  const app = getAdminApp();
+  return databaseId ? getFirestore(app, databaseId) : getFirestore(app);
 }
 
 export function getBearerToken(req) {
