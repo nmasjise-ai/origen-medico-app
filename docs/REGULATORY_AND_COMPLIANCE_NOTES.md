@@ -97,3 +97,49 @@ Mientras no esté completada la revisión regulatoria:
 - **Permitido para diseño:** catálogo de artículos no medicinales verificados y reserva de productos de bienestar autorizados.
 - **Referencia interna:** lista profesional de medicamentos genéricos sin tienda, publicidad ni farmacia asociada.
 - **No habilitar:** venta/dispensación en línea de medicamentos ni promesas de suministro farmacéutico sin autorización comprobada.
+
+
+## 7. Actualización GLP-1 — revisión AGEMED al 17/11/2026
+
+### Registro sanitario diario
+AGEMED publica el listado oficial diario de registros sanitarios aprobados y el listado de registros cancelados. La página consultada muestra actualización al **17 de noviembre de 2026**:
+https://apiwww.agemed.gob.bo/api/listautcom
+
+La inclusión de una marca en una referencia interna requiere comprobar el registro vigente y los datos de la presentación exacta; no basta una búsqueda por principio activo.
+
+### Tirzepatida — Alerta Nacional N° 082/2026
+Fuente oficial:
+https://www.agemed.gob.bo/archivo_farmacovigi/alertas/2026/ALERTA_082_2026.pdf
+
+AGEMED alerta sobre versiones de TG (tirzepatida inyectable) de contrabando, sin registro sanitario, asociadas a comercialización por redes sociales y Marketplace. La alerta indica expresamente que el producto descrito no asegura estabilidad y no tiene autorización AGEMED. En la misma alerta AGEMED señala que TG se comercializa legalmente en Bolivia por IMFAR S.R.L. con los registros:
+- II-97037/2026
+- II-97039/2026
+- II-97040/2026
+- II-97058/2026
+- II-97059
+- II-97062/2026
+
+**Regla de datos:** no asociar automáticamente esos números a una dosis/presentación específica, porque la alerta consultada no ofrece ese mapeo. Verificar el número impreso y la presentación exacta contra el registro oficial.
+
+### Lipoless MD 15 — Alerta Nacional N° 043/2026
+Fuente oficial:
+https://www.agemed.gob.bo/archivo_farmacovigi/alertas/2026/ALERTA_043_2026.pdf
+
+AGEMED identifica específicamente LIPOLESS MD 15, tirzepatida 15 mg/0,6 mL, fabricante ETICOS, origen Paraguay, sin registro sanitario en Bolivia y de contrabando. Esta alerta se refiere a la presentación descrita; no extrapolar automáticamente a toda marca o presentación distinta sin revisar el registro aplicable. No mostrar LIPOLESS MD 15 como producto autorizado.
+
+### Tirzec 15 — Alerta N° 230/2026
+El listado oficial de Vigilancia y Control de AGEMED incluye la Alerta N° 230/2026 para “TIRZEC 15” como medicamento ilícito de contrabando, con fecha 24/09/2026:
+https://apiwww.agemed.gob.bo/api/web/vigilanciacontrol%7Ccontenido
+
+Hasta verificar directamente el documento y el producto físico, no mostrar Tirzec 15 como autorizado ni recomendar su uso.
+
+### Semaglutida
+No se incorpora ninguna marca/presentación como autorizada en esta actualización. La marca, titular, forma farmacéutica, presentación y vigencia deben contrastarse individualmente con el listado oficial diario y el listado de registros cancelados. Estado interno inicial: **pendiente de verificación**.
+
+### Nota de seguridad AGEMED N° 002/2026
+Fuente:
+https://www.agemed.gob.bo/archivo_uso_racional/notas_seguridad/2026/002_2026.pdf
+
+La nota recoge el riesgo de pancreatitis asociado al uso inadecuado de agonistas GLP-1 (dulaglutida, liraglutida, semaglutida y tirzepatida), indica informar sobre dolor abdominal intenso y persistente, acudir inmediatamente a urgencias ante síntomas sugerentes, suspender si se sospecha pancreatitis y realizar evaluación médica, evaluar cuidadosamente antecedentes de pancreatitis y notificar sospechas de reacciones adversas. La referencia no debe convertir estas indicaciones en un algoritmo de prescripción autónoma.
+
+**Regla de producto:** la referencia farmacológica es de uso profesional, no es catálogo comercial, no contiene precios de farmacia ni botones para emitir recetas. Toda prescripción sigue siendo una decisión individual del médico.

@@ -75,48 +75,37 @@ const OrigenMedicoLogo = ({ size = 44, showText = true }) => (
 // DATOS BASE: VADEMÉCUM COMERCIAL BOLIVIA (31 MEDICAMENTOS - FARMACORP/CHÁVEZ)
 // ============================================================================
 const BOLIVIA_VADEMECUM = [
-  // 1. GASES / METEORISMO / SIMETICONA (6 MARCAS)
-  { id: 'v1', category: 'Gases y Distensión', brand: 'Aero-OM 125 mg', generic: 'Simeticona', lab: 'OM Pharma', presentation: 'Caja x 30 cápsulas blandas', priceBs: '68 Bs.', dose: '1 cápsula después de almuerzo y cena', pearl: 'Ideal en pacientes con Tirzepatida que presentan eructos sulfurados o distensión postprandial.', symptomKey: 'nausea' },
-  { id: 'v2', category: 'Gases y Distensión', brand: 'Factor AG 200', generic: 'Simeticona 200 mg', lab: 'Casasco', presentation: 'Caja x 20 cápsulas blandas', priceBs: '75 Bs.', dose: '1 cápsula antes o después de comidas principales', pearl: 'Alta concentración; excelente cuando el vaciamiento gástrico lento genera meteorismo nocturno.', symptomKey: 'nausea' },
-  { id: 'v3', category: 'Gases y Distensión', brand: 'Gaseovet 80 mg', generic: 'Simeticona', lab: 'Medifarma', presentation: 'Caja x 30 tabletas masticables', priceBs: '42 Bs.', dose: '1 a 2 tabletas masticadas tras comer', pearl: 'Opción económica disponible en todas las sucursales de Farmacorp y Chávez en Santa Cruz.', symptomKey: 'nausea' },
-  { id: 'v4', category: 'Gases y Distensión', brand: 'Flatoril', generic: 'Cleboprida + Simeticona', lab: 'Almirall', presentation: 'Caja x 30 cápsulas', priceBs: '115 Bs.', dose: '1 cápsula 15 min antes de almuerzo y cena', pearl: 'Combina antiflatulento con procinético suave para acelerar el vaciamiento gástrico lento.', symptomKey: 'nausea' },
-  { id: 'v5', category: 'Gases y Distensión', brand: 'Meteospasmyl', generic: 'Alverina + Simeticona', lab: 'Mayoly Spindler', presentation: 'Caja x 20 cápsulas', priceBs: '138 Bs.', dose: '1 cápsula 2 veces al día antes de alimentos', pearl: 'De elección si hay cólicos abdominales asociados a gases por GLP-1.', symptomKey: 'nausea' },
-  { id: 'v6', category: 'Gases y Distensión', brand: 'Eudon', generic: 'Bromazepam + Cleboprida + Simeticona', lab: 'Bago Bolivia', presentation: 'Caja x 20 comprimidos', priceBs: '92 Bs.', dose: '1 comprimido antes de almuerzo (uso corto)', pearl: 'Útil cuando la ansiedad por náuseas empeora la dispepsia funcional.', symptomKey: 'nausea' },
-
-  // 2. ESTREÑIMIENTO POR ENLENTECIMIENTO INTESTINAL (5 MARCAS)
-  { id: 'v7', category: 'Estreñimiento GLP-1', brand: 'Contumax (Polietilenglicol 3350)', generic: 'Macrogol 3350', lab: 'Asofarma', presentation: 'Caja x 15 sobres de 17 g', priceBs: '145 Bs.', dose: '1 sobre disuelto en 250 ml de agua al día', pearl: 'Primera línea mundial en GLP-1: no irrita la mucosa ni genera dependencia ni cólicos.', symptomKey: 'constipation' },
-  { id: 'v8', category: 'Estreñimiento GLP-1', brand: 'Duphalac', generic: 'Lactulosa 66.7%', lab: 'Abbott', presentation: 'Frasco x 200 ml', priceBs: '88 Bs.', dose: '15 a 30 ml en ayunas con abundante agua', pearl: 'Osmótico seguro; advertir al paciente que puede causar leves gases los primeros 2 días.', symptomKey: 'constipation' },
-  { id: 'v9', category: 'Estreñimiento GLP-1', brand: 'Metamucil', generic: 'Psyllium Plantago', lab: 'P&G Health', presentation: 'Bote x 174 g (Naranja)', priceBs: '112 Bs.', dose: '1 cucharada en 250 ml de agua (tomar rápido)', pearl: 'Solo indicar si el paciente cumple >2 L de agua/día; sin agua suficiente puede empeorar el bloqueo.', symptomKey: 'constipation' },
-  { id: 'v10', category: 'Estreñimiento GLP-1', brand: 'Ciruelax Jalea / Comprimidos', generic: 'Senósidos A y B + Ciruela', lab: 'Garden House', presentation: 'Frasco x 150 g / 30 comp', priceBs: '65 Bs.', dose: '1 cucharadita o 1 comprimido antes de dormir (SOS)', pearl: 'Rescate puntual si lleva >72 horas sin evacuar; no usar de forma crónica diaria.', symptomKey: 'constipation' },
-  { id: 'v11', category: 'Estreñimiento GLP-1', brand: 'Leche de Magnesia Phillips', generic: 'Hidróxido de Magnesio', lab: 'Aspen', presentation: 'Frasco x 120 ml', priceBs: '34 Bs.', dose: '15 a 30 ml antes de acostarse con un vaso de agua', pearl: 'Económico, aporta magnesio y alivia simultáneamente acidez leve nocturna.', symptomKey: 'constipation' },
-
-  // 3. NÁUSEAS Y VÓMITOS (6 MARCAS)
-  { id: 'v12', category: 'Náuseas y Vaciamiento', brand: 'Zofran / Ondansetrón 8 mg', generic: 'Ondansetrón', lab: 'Novartis / Genérico', presentation: 'Caja x 10 comprimidos', priceBs: '95 Bs.', dose: '4 a 8 mg cada 8-12 h según náusea (máx 3 días)', pearl: 'Antiemético de rescate más efectivo tras escalada de dosis; vigilar que puede estreñir un poco.', symptomKey: 'nausea' },
-  { id: 'v13', category: 'Náuseas y Vaciamiento', brand: 'Plasil 10 mg', generic: 'Metoclopramida', lab: 'Sanofi', presentation: 'Caja x 20 comprimidos', priceBs: '38 Bs.', dose: '1 comprimido 20 min antes de comer (máx 5 días)', pearl: 'Procinético clásico y accesible; evitar uso continuo mayor a 5 días.', symptomKey: 'nausea' },
-  { id: 'v14', category: 'Náuseas y Vaciamiento', brand: 'Moperidona / Domperidona 10 mg', generic: 'Domperidona', lab: 'Saval / Bago', presentation: 'Caja x 30 comprimidos', priceBs: '74 Bs.', dose: '1 comprimido 15 min antes de las 3 comidas', pearl: 'Excelente tolerancia sin somnolencia; mejora la saciedad precoz dolorosa.', symptomKey: 'nausea' },
-  { id: 'v15', category: 'Náuseas y Vaciamiento', brand: 'Dramamine 50 mg', generic: 'Dimenhidrinato', lab: 'Johnson & Johnson', presentation: 'Caja x 24 tabletas', priceBs: '46 Bs.', dose: '1 tableta cada 8 horas si hay mareo o náusea leve', pearl: 'Venta libre en Bolivia; puede producir leve sueño, útil en náuseas vespertinas.', symptomKey: 'nausea' },
-  { id: 'v16', category: 'Náuseas y Vaciamiento', brand: 'Bonadoxina', generic: 'Meclizina + Piridoxina (Vit B6)', lab: 'Pfizer', presentation: 'Caja x 25 tabletas', priceBs: '62 Bs.', dose: '1 tableta cada 12 horas', pearl: 'La vitamina B6 potencia el control de náuseas matutinas del día posterior a la inyección.', symptomKey: 'nausea' },
-  { id: 'v17', category: 'Náuseas y Vaciamiento', brand: 'Cinitaprida 1 mg (Rogastril)', generic: 'Cinitaprida', lab: 'Roemmers', presentation: 'Caja x 30 comprimidos', priceBs: '128 Bs.', dose: '1 comprimido 15 min antes de cada comida', pearl: 'Procinético de alta gama que mejora tanto el vaciamiento gástrico como el tránsito colónico.', symptomKey: 'nausea' },
-
-  // 4. REFLUJO GASTROESOFÁGICO Y ACIDEZ (5 MARCAS)
-  { id: 'v18', category: 'Reflujo y Acidez', brand: 'Nexium 40 mg', generic: 'Esomeprazol', lab: 'AstraZeneca', presentation: 'Caja x 14 comprimidos', priceBs: '165 Bs.', dose: '1 comprimido en ayunas 30 min antes del desayuno', pearl: 'Control potente de acidez por retención gástrica; usar ciclos de 2 a 4 semanas.', symptomKey: 'reflux' },
-  { id: 'v19', category: 'Reflujo y Acidez', brand: 'Pantoprazol 40 mg (Zoltum)', generic: 'Pantoprazol', lab: 'Bago Bolivia', presentation: 'Caja x 14 comprimidos', priceBs: '98 Bs.', dose: '1 comprimido en ayunas', pearl: 'Menor interacción hepática; excelente relación calidad-precio en Farmacorp y Chávez.', symptomKey: 'reflux' },
-  { id: 'v20', category: 'Reflujo y Acidez', brand: 'Omeprazol 20 mg (Losec / Gen)', generic: 'Omeprazol', lab: 'AstraZeneca / Inti', presentation: 'Caja x 28 cápsulas', priceBs: '35 Bs.', dose: '1 cápsula en ayunas', pearl: 'Alternativa económica de primera línea en Bolivia.', symptomKey: 'reflux' },
-  { id: 'v21', category: 'Reflujo y Acidez', brand: 'Gaviscon Doble Acción', generic: 'Alginato de Sodio + Bicarbonato', lab: 'Reckitt', presentation: 'Caja x 12 sobres líquidos', priceBs: '89 Bs.', dose: '1 sobre después de cenar y antes de acostarse', pearl: 'Crea una balsa física que evita el reflujo nocturno al acostarse sin inhibir la digestión.', symptomKey: 'reflux' },
-  { id: 'v22', category: 'Reflujo y Acidez', brand: 'Riopan Gel 800 mg', generic: 'Magaldrato + Simeticona', lab: 'Takeda', presentation: 'Caja x 20 sobres / Frasco', priceBs: '104 Bs.', dose: '1 sobre 1 hora después de las comidas o SOS', pearl: 'Alivia acidez y gases al mismo tiempo con sabor agradable.', symptomKey: 'reflux' },
-
-  // 5. HIDRATACIÓN, ELECTROLITOS Y FATIGA (5 MARCAS)
-  { id: 'v23', category: 'Hidratación y Fatiga', brand: 'Pedialyte Active 60 mEq', generic: 'Sales de Rehidratación + Zinc', lab: 'Abbott', presentation: 'Botella x 500 ml (Manzana/Uva)', priceBs: '24 Bs.', dose: '500 ml fraccionados en el día de inyección y +1 día', pearl: 'Elimina la cefalea y fatiga por natriuresis inducida por GLP-1 en el calor de Santa Cruz.', symptomKey: 'fatigue' },
-  { id: 'v24', category: 'Hidratación y Fatiga', brand: 'Electrolit 625 ml', generic: 'Sodio, Potasio, Magnesio, Calcio', lab: 'Pisa', presentation: 'Botella x 625 ml (Coco/Fresa)', priceBs: '22 Bs.', dose: '1 botella diaria si hay baja ingesta o calor intenso', pearl: 'Muy bien tolerado frío; ayuda a prevenir calambres nocturnos.', symptomKey: 'fatigue' },
-  { id: 'v25', category: 'Hidratación y Fatiga', brand: 'Suero Oral Inti (Sobres)', generic: 'Sales de Rehidratación OMS', lab: 'Droguería Inti', presentation: 'Sobre individual para 1 L', priceBs: '4.50 Bs.', dose: '1 sobre disuelto en 1 litro de agua fría', pearl: 'Solución ultra económica boliviana; añadir gotas de limón para mejorar palatabilidad.', symptomKey: 'fatigue' },
-  { id: 'v26', category: 'Hidratación y Fatiga', brand: 'Magnesio Quelado / Citrato', generic: 'Citrato de Magnesio 400 mg', lab: 'Now / Natural Systems', presentation: 'Frasco x 60 cápsulas', priceBs: '135 Bs.', dose: '1 cápsula por la noche', pearl: 'Doble beneficio: mejora la energía muscular, el sueño y favorece el tránsito intestinal.', symptomKey: 'fatigue' },
-  { id: 'v27', category: 'Hidratación y Fatiga', brand: 'Neurobión DC / Complejo B', generic: 'Vitaminas B1, B6, B12', lab: 'P&G Health', presentation: 'Caja x 30 tabletas', priceBs: '96 Bs.', dose: '1 tableta con el desayuno', pearl: 'Previene déficit de B12 por menor ingesta de carnes rojas durante la terapia.', symptomKey: 'fatigue' },
-
-  // 6. PROTECCIÓN BILIAR Y HEPÁTICA (4 MARCAS)
-  { id: 'v28', category: 'Protección Biliar', brand: 'Ursofalk 250 mg', generic: 'Ácido Ursodesoxicólico', lab: 'Dr. Falk Pharma', presentation: 'Caja x 50 cápsulas', priceBs: '295 Bs.', dose: '250 mg cada 12 horas con alimentos', pearl: 'Fundamental en pacientes con pérdida rápida de peso (>1.5 kg/sem) para prevenir barro/cálculos biliares.', symptomKey: 'reflux' },
-  { id: 'v29', category: 'Protección Biliar', brand: 'Ursacol 300 mg', generic: 'Ácido Ursodesoxicólico', lab: 'Zambon', presentation: 'Caja x 20 comprimidos', priceBs: '158 Bs.', dose: '1 comprimido en desayuno y cena', pearl: 'Alternativa de 300 mg ideal para pacientes con antecedente de esteatosis hepática.', symptomKey: 'reflux' },
-  { id: 'v30', category: 'Protección Biliar', brand: 'Legalon 140 mg', generic: 'Silimarina', lab: 'Madaus', presentation: 'Caja x 30 cápsulas', priceBs: '118 Bs.', dose: '1 cápsula cada 12 horas', pearl: 'Coadyuvante hepatoprotector en hígado graso metabólico (MASLD).', symptomKey: 'fatigue' },
-  { id: 'v31', category: 'Protección Biliar', brand: 'Enzymax / Kreon 10.000', generic: 'Pancreatina (Lipasa, Amilasa, Proteasa)', lab: 'Abbott', presentation: 'Frasco x 20 cápsulas', priceBs: '142 Bs.', dose: '1 cápsula con la comida más rica en proteínas/grasas', pearl: 'Facilita la digestión proteica cuando el paciente siente pesadez con carnes o huevos.', symptomKey: 'nausea' }
+  {
+    id: 'tirzepatida-tg-imfar',
+    category: 'Agonistas GLP-1',
+    generic: 'Tirzepatida',
+    brand: 'TG · IMFAR S.R.L.',
+    registrationStatus: 'Registro sanitario identificado en alerta oficial AGEMED',
+    registrationNumbers: [
+      'II-97037/2026', 'II-97039/2026', 'II-97040/2026',
+      'II-97058/2026', 'II-97059', 'II-97062/2026'
+    ],
+    regulatoryNote: 'AGEMED identifica comercialización legal por IMFAR S.R.L. con los registros indicados. Verificar que el envase, titular/importador, presentación, lote y número impreso coincidan exactamente antes de considerar el producto.',
+    alertNote: 'AGEMED también alertó sobre presentaciones TG de contrabando sin registro sanitario. La coincidencia del nombre TG por sí sola no acredita legitimidad.',
+    sourceLabel: 'AGEMED · Alerta Nacional N° 082/2026',
+    sourceUrl: 'https://www.agemed.gob.bo/archivo_farmacovigi/alertas/2026/ALERTA_082_2026.pdf',
+    reviewedAt: '2026-11-17',
+    status: 'verified_specific_registration'
+  },
+  {
+    id: 'semaglutida-pending',
+    category: 'Agonistas GLP-1',
+    generic: 'Semaglutida',
+    brand: 'Marcas y presentaciones por verificar',
+    registrationStatus: 'Pendiente de verificación individual en el registro sanitario vigente',
+    registrationNumbers: [],
+    regulatoryNote: 'No se atribuye autorización sanitaria a una marca o presentación hasta contrastar su registro, titular, presentación y vigencia en el listado oficial de AGEMED.',
+    alertNote: 'No sustituir la verificación del registro por el nombre comercial, país de origen o disponibilidad en redes sociales.',
+    sourceLabel: 'AGEMED · Listado oficial diario de registros sanitarios',
+    sourceUrl: 'https://apiwww.agemed.gob.bo/api/listautcom',
+    reviewedAt: '2026-11-17',
+    status: 'pending_verification'
+  }
 ];
 
 // ============================================================================
@@ -564,7 +553,6 @@ function App() {
   const [printableRx, setPrintableRx] = useState(null);
   const [vademecumSearch, setVademecumSearch] = useState('');
   const [vademecumCategory, setVademecumCategory] = useState('Todas');
-  const [targetRxPatientId, setTargetRxPatientId] = useState('pat-sofia');
 
   // Simulador público de metas
   const [simWeight, setSimWeight] = useState(82);
@@ -1645,20 +1633,14 @@ function App() {
   // Subir imagen de QR Simple desde el panel del médico
   // Filtrado de Vademécum
   const filteredVademecum = useMemo(() => {
-    return BOLIVIA_VADEMECUM.filter((item) => {
-      const matchesCat = vademecumCategory === 'Todas' || item.category === vademecumCategory;
-      const q = vademecumSearch.toLowerCase();
-      const matchesSearch =
-        !q ||
-        item.brand.toLowerCase().includes(q) ||
-        item.generic.toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q) ||
-        item.pearl.toLowerCase().includes(q);
-      return matchesCat && matchesSearch;
-    });
-  }, [vademecumCategory, vademecumSearch]);
+    const q = vademecumSearch.trim().toLowerCase();
+    return BOLIVIA_VADEMECUM.filter((item) =>
+      !q || [item.generic, item.brand, item.category, item.registrationStatus]
+        .some((value) => String(value || '').toLowerCase().includes(q))
+    );
+  }, [vademecumSearch]);
 
-  const vademecumCategories = ['Todas', ...Array.from(new Set(BOLIVIA_VADEMECUM.map((v) => v.category)))];
+  const vademecumCategories = ['Todas', 'Agonistas GLP-1'];
 
   // Cálculos visuales de Mi Día GLP-1
   const proteinPct = Math.min(100, Math.round((currentPatient.dailyLog.proteinConsumed / currentPatient.proteinGoal) * 100));
@@ -2902,64 +2884,14 @@ function App() {
                 )}
               </div>
 
-              {/* BUSCADOR DE ALIVIO Y VADEMÉCUM COMERCIAL BOLIVIA */}
-              <div className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 space-y-4">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div>
-                    <span className="text-xs font-bold uppercase text-[#9A742C]">Guía Farmacológica Santa Cruz</span>
-                    <h3 className="font-serif text-xl font-bold">Vademécum de Soporte GLP-1 (Disponibilidad y Precios Bolivia)</h3>
-                  </div>
-                  <div className="relative w-full md:w-72">
-                    <Search className="w-4 h-4 absolute left-3 top-3 text-[#8C7A63]" />
-                    <input
-                      type="text"
-                      placeholder="Buscar marca, síntoma o compuesto..."
-                      value={vademecumSearch}
-                      onChange={(e) => setVademecumSearch(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-xs"
-                    />
-                  </div>
+              <div className="rounded-3xl border border-[#E6D9C0] bg-[#FAF6EE] p-5 space-y-2">
+                <div className="flex items-center gap-2 text-[#735318] font-bold text-sm">
+                  <ShieldCheck className="w-4 h-4" />
+                  Información farmacológica supervisada
                 </div>
-
-                <div className="flex overflow-x-auto gap-1.5 pb-1">
-                  {vademecumCategories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setVademecumCategory(cat)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border cursor-pointer ${
-                        vademecumCategory === cat
-                          ? 'bg-[#9A742C] text-white border-[#9A742C]'
-                          : 'bg-[#FAF6EE] text-[#5C4D3C] border-[#E6D9C0]'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredVademecum.map((med) => (
-                    <div key={med.id} className="p-4 rounded-2xl bg-[#FAF6EE] border border-[#E6D9C0] flex flex-col justify-between space-y-3">
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase text-[#9A742C]">{med.category}</span>
-                          <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-[#E6D9C0]/60 text-[#231F1A]">
-                            ~{med.priceBs}
-                          </span>
-                        </div>
-                        <div className="font-bold text-sm text-[#231F1A]">{med.brand}</div>
-                        <div className="text-xs text-[#735318] font-medium">{med.generic} · {med.lab}</div>
-                        <p className="text-[11px] text-[#5C4D3C] pt-1">{med.pearl}</p>
-                      </div>
-                      <button
-                        onClick={() => handleRequestRx(med)}
-                        className="w-full py-2 rounded-xl bg-white hover:bg-[#9A742C] text-[#9A742C] hover:text-white border border-[#9A742C] text-xs font-bold transition-all cursor-pointer"
-                      >
-                        Solicitar Receta al Dr. Melgar
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-xs text-[#5C4D3C]">
+                  La referencia de medicamentos es una herramienta interna del equipo profesional. No se muestran recomendaciones de automedicación, precios ni botones para solicitar recetas. Consulta cualquier síntoma o duda sobre tu tratamiento directamente con tu médico.
+                </p>
               </div>
             </div>
           )}
@@ -3544,18 +3476,17 @@ function App() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => {
-                              const foundMed = BOLIVIA_VADEMECUM.find((m) => req.suggestedMed.includes(m.brand)) || BOLIVIA_VADEMECUM[0];
-                              handleDoctorPrescribe(req.patientId, foundMed);
                               persistState((prev) => ({
                                 ...prev,
                                 rxRequests: prev.rxRequests.map((r) =>
-                                  r.id === req.id ? { ...r, status: 'approved' } : r
+                                  r.id === req.id ? { ...r, status: 'reviewed' } : r
                                 )
                               }));
+                              showToast('Solicitud marcada para revisión clínica; no se emitió receta.');
                             }}
-                            className="flex-1 py-2 px-3 rounded-xl bg-emerald-700 text-white text-xs font-bold cursor-pointer"
+                            className="flex-1 py-2 px-3 rounded-xl bg-[#9A742C] text-white text-xs font-bold cursor-pointer"
                           >
-                            Aprobar y Emitir Receta Ahora
+                            Marcar como revisada (sin receta)
                           </button>
                           <button
                             onClick={() =>
@@ -3798,74 +3729,64 @@ function App() {
             </div>
           )}
 
-          {/* DOCTOR TAB 3: VADEMÉCUM GLP-1 BOLIVIA (31 MEDICAMENTOS + PRESCRIPCIÓN EN 1 CLIC) */}
+          {/* REFERENCIA DE MEDICAMENTOS · SOLO USO PROFESIONAL */}
           {doctorTab === 'vademecum' && (
             <div className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 space-y-5">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 <div>
-                  <span className="text-xs font-bold uppercase text-[#9A742C]">Farmacorp & Farmacias Chávez · Santa Cruz</span>
-                  <h2 className="font-serif text-2xl font-bold">Vademécum Completo de Manejo de Efectos GLP-1 (31 Marcas)</h2>
+                  <span className="text-xs font-bold uppercase text-[#9A742C]">Biblioteca profesional · Bolivia</span>
+                  <h2 className="font-serif text-2xl font-bold">Referencia de medicamentos</h2>
+                  <p className="text-xs text-[#6F6250] mt-1">Consulta regulatoria y farmacológica. No emite recetas ni sustituye el juicio clínico.</p>
                 </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold text-[#735318]">Prescribir a:</span>
-                  <select
-                    value={targetRxPatientId}
-                    onChange={(e) => setTargetRxPatientId(e.target.value)}
-                    className="px-3 py-2 rounded-xl bg-[#FAF6EE] border border-[#9A742C] text-xs font-bold"
-                  >
-                    {clinicData.patients.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Buscar marca o compuesto..."
-                    value={vademecumSearch}
-                    onChange={(e) => setVademecumSearch(e.target.value)}
-                    className="px-3 py-2 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-xs"
-                  />
-                </div>
+                <input
+                  type="search"
+                  placeholder="Buscar principio activo o marca..."
+                  value={vademecumSearch}
+                  onChange={(e) => setVademecumSearch(e.target.value)}
+                  className="w-full lg:w-72 px-3 py-2 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-xs"
+                />
               </div>
 
-              <div className="flex overflow-x-auto gap-1.5 pb-1">
-                {vademecumCategories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setVademecumCategory(cat)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap border cursor-pointer ${
-                      vademecumCategory === cat
-                        ? 'bg-[#231F1A] text-[#DFBD69] border-[#231F1A]'
-                        : 'bg-[#FAF6EE] text-[#5C4D3C] border-[#E6D9C0]'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
+              <div role="alert" className="rounded-2xl border border-amber-400 bg-amber-50 p-4 space-y-2 text-xs text-amber-950">
+                <div className="font-bold flex items-center gap-2"><ShieldAlert className="w-4 h-4" /> Alertas regulatorias importantes de AGEMED</div>
+                <p><strong>LIPOLESS MD 15:</strong> AGEMED lo identificó como producto sin registro sanitario y de contrabando (Alerta 043/2026). No confundir con otras presentaciones o titulares sin verificar su registro específico.</p>
+                <p><strong>TIRZEC 15:</strong> figura en la lista oficial de alertas como medicamento ilícito de contrabando (Alerta 230/2026).</p>
+                <p><strong>TG inyectable:</strong> AGEMED alertó sobre versiones de contrabando sin registro (Alerta 082/2026), pero en esa misma alerta identificó comercialización legal de TG por IMFAR S.R.L. con seis registros sanitarios específicos. Debe verificarse el envase y número de registro exacto.</p>
+                <a href="https://apiwww.agemed.gob.bo/api/web/vigilanciacontrol%7Ccontenido" target="_blank" rel="noreferrer" className="inline-flex font-bold underline">Consultar alertas oficiales de AGEMED</a>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {filteredVademecum.map((med) => (
-                  <div key={med.id} className="p-4 rounded-2xl bg-[#FAF6EE] border border-[#E6D9C0] flex flex-col justify-between space-y-3">
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
+                  <article key={med.id} className="rounded-2xl border border-[#E6D9C0] bg-[#FAF6EE] p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
                         <span className="text-[10px] font-bold uppercase text-[#9A742C]">{med.category}</span>
-                        <span className="text-xs font-bold text-[#231F1A]">{med.priceBs}</span>
+                        <h3 className="font-bold text-base text-[#231F1A]">{med.generic}</h3>
+                        <p className="text-xs text-[#735318]">{med.brand}</p>
                       </div>
-                      <div className="font-bold text-sm">{med.brand}</div>
-                      <div className="text-xs text-[#735318]">{med.generic} ({med.lab})</div>
-                      <div className="text-[11px] font-semibold text-[#3D3326] pt-1">Posología: {med.dose}</div>
-                      <p className="text-[11px] text-[#5C4D3C] italic">Perla: {med.pearl}</p>
+                      <span className={`text-[10px] px-2 py-1 rounded-lg font-bold ${med.status === 'verified_specific_registration' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}`}>
+                        {med.status === 'verified_specific_registration' ? 'Registro identificado' : 'Verificación pendiente'}
+                      </span>
                     </div>
-                    <button
-                      onClick={() => handleDoctorPrescribe(targetRxPatientId, med)}
-                      className="w-full py-2 rounded-xl bg-[#9A742C] hover:bg-[#7D5C1E] text-white text-xs font-bold cursor-pointer"
-                    >
-                      Prescribir en 1 Clic
-                    </button>
-                  </div>
+                    <p className="text-xs font-semibold text-[#3D3326]">{med.registrationStatus}</p>
+                    {med.registrationNumbers.length > 0 && (
+                      <div className="rounded-xl bg-white p-3">
+                        <div className="text-[10px] font-bold text-[#8C7A63] mb-1">Registros mencionados por AGEMED</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {med.registrationNumbers.map((number) => <span key={number} className="text-[10px] bg-[#F4EAD5] rounded-md px-2 py-1">{number}</span>)}
+                        </div>
+                      </div>
+                    )}
+                    <p className="text-xs text-[#5C4D3C]">{med.regulatoryNote}</p>
+                    <p className="text-xs text-amber-900">{med.alertNote}</p>
+                    <div className="flex items-center justify-between gap-2 border-t border-[#E6D9C0] pt-2">
+                      <span className="text-[10px] text-[#8C7A63]">Revisado: {med.reviewedAt}</span>
+                      <a href={med.sourceUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#8A6829] underline">{med.sourceLabel}</a>
+                    </div>
+                  </article>
                 ))}
               </div>
+              <p className="text-[10px] text-[#8C7A63]">La presencia de un registro en esta referencia no garantiza la legitimidad de cualquier unidad comercializada. Verificar siempre titular, envase, presentación, lote, vencimiento y vigencia del registro en AGEMED. La referencia no recomienda dosis ni permite prescripción automática.</p>
             </div>
           )}
 

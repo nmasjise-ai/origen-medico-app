@@ -81,11 +81,11 @@ Este documento centraliza los requisitos. Las nuevas ideas se registran aquí; s
 - [ ] Personal de tienda solo ve datos necesarios para pedidos; no diagnósticos, síntomas ni notas clínicas.
 
 ### Referencia de medicamentos (antes Vademécum GLP-1)
-- [ ] Renombrar a **“Referencia de medicamentos”** o **“Vademécum clínico”**.
-- [ ] Área interna para profesionales; usar nombres genéricos/principios activos según lo solicitado y retirar nombres de cadenas de farmacias.
+- [x] Renombrar a **“Referencia de medicamentos”**; uso interno profesional, separado del catálogo comercial (Preview; validación manual pendiente).
+- [x] Área interna para profesionales; la primera vista usa principios activos y datos regulatorios oficiales disponibles. La carga completa de marcas y presentaciones queda pendiente de verificación individual.
 - [ ] Sin CTA de compra/reserva, precios de farmacia ni publicidad al público desde esta sección.
-- [ ] Información clínica de consulta solo para profesional autorizado, con fuente y fecha de revisión.
-- [ ] Ninguna receta automática: toda prescripción requiere decisión y validación médica.
+- [x] Cada ficha inicial incluye fuente, fecha de revisión y estado de verificación; ampliar con fichas técnicas y fuentes clínicas validadas.
+- [x] Se retiró la prescripción en un clic y la aprobación automática de solicitudes; la referencia no emite recetas.
 - [ ] Cambiar el nombre de una farmacia no elimina obligaciones regulatorias. El catálogo público no ofrecerá medicamentos de prescripción para compra/reserva. Cualquier comercialización, publicidad, dispensación o integración con una farmacia debe verificarse con AGEMED/SEDES y asesoría legal antes de activarse.
 
 ### Agenda y gestión del consultorio
