@@ -566,7 +566,7 @@ function App() {
     activePlan: 'fat_loss'
   });
 
-  // Alta provisional en la base de pruebas aislada (sin tratamiento ni dosis).
+  // Alta provisional bajo el namespace de Preview (sin tratamiento ni dosis).
   const [cloudPatientForm, setCloudPatientForm] = useState({
     displayName: '',
     phone: '',
@@ -611,7 +611,7 @@ function App() {
 
       if (!response.ok) {
         if (response.status === 503) {
-          throw new Error('La base de pruebas «origen-staging» todavía debe crearse en Firebase. No se ha escrito nada en la base principal.');
+          throw new Error('El namespace de Preview no está configurado. No se ha guardado ningún expediente.');
         }
         throw new Error(payload.error || 'No se pudo consultar la lista de pacientes.');
       }
@@ -672,7 +672,7 @@ function App() {
 
       if (!response.ok) {
         if (response.status === 503) {
-          throw new Error('La base «origen-staging» aún no está creada en Firebase. No se ha guardado ningún expediente.');
+          throw new Error('El namespace de Preview no está configurado. No se ha guardado ningún expediente.');
         }
         throw new Error(payload.error || 'No se pudo crear el expediente provisional.');
       }
@@ -686,7 +686,7 @@ function App() {
         muscleKg: '',
         bodyFatPct: ''
       });
-      showToast('Expediente provisional creado en la base de pruebas.');
+      showToast('Expediente provisional creado en el espacio de Preview.');
       await loadCloudPatients(user);
     } catch (err) {
       console.error('No se pudo crear el expediente provisional:', err);
@@ -2347,7 +2347,7 @@ function App() {
               <button
                 onClick={() => setDoctorTab('cloud_patients')}
                 disabled={!isAdmin}
-                title="Abrir alta provisional en la base aislada de pruebas"
+                title="Abrir alta provisional en el espacio de Preview"
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#DFBD69] hover:bg-[#C59B43] disabled:opacity-50 disabled:cursor-not-allowed text-[#231F1A] font-bold text-xs sm:text-sm shadow-sm cursor-pointer"
               >
                 <UserPlus className="w-4 h-4" />
@@ -2388,7 +2388,7 @@ function App() {
             <div className="space-y-5">
               <div className="rounded-3xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
                 <strong className="block font-bold">ENTORNO DE PRUEBAS · NO REGISTRAR PACIENTES REALES</strong>
-                <span>Estos expedientes se guardarán únicamente en la base nombrada «origen-staging». Todavía no crean un usuario ni habilitan el portal del paciente. Usa nombres ficticios para comprobar el flujo.</span>
+                <span>Estos registros se guardarán bajo `previewEnvironments/mejoras-seguridad-origen` dentro de la base actual. No se mezclan con `patients` de producción, no crean un usuario ni habilitan el portal del paciente. Usa exclusivamente nombres ficticios.</span>
               </div>
 
               {cloudPatientsError && (
@@ -2519,7 +2519,7 @@ function App() {
 
                   {!cloudPatientsLoading && cloudPatients.length === 0 && !cloudPatientsError && (
                     <div className="rounded-2xl bg-[#FAF6EE] p-5 text-sm text-[#6F6250]">
-                      Todavía no hay expedientes de prueba en la base aislada.
+                      Todavía no hay expedientes ficticios en el espacio de Preview.
                     </div>
                   )}
 
