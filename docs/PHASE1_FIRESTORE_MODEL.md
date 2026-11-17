@@ -246,3 +246,8 @@ Esta separación es lógica por colección/namespace dentro de la base existente
 - La API y las colecciones están restringidas a la implementación Vercel Preview y al namespace de pruebas. No usar datos reales.
 - El enlace se muestra una sola vez al médico; copiarlo y entregarlo manualmente al paciente.
 - La activación de cuenta no abre todavía módulos clínicos completos; la vista paciente inicial solo confirma que la cuenta quedó vinculada.
+
+
+### Acceso Vercel protegido en Preview
+
+Cuando el médico abre el Preview a través de un enlace compartible temporal de Vercel, el frontend conserva el parámetro `_vercel_share` al construir el enlace de activación. El token de invitación continúa en el fragmento URL `#activar=` y se valida de forma independiente en servidor. El enlace compartible de Vercel puede vencer antes que la invitación de 7 días; ambos deben estar vigentes para completar el test en Preview.
