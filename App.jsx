@@ -689,7 +689,7 @@ function App() {
         const tokenResult = await getIdTokenResult(u);
         const admin = tokenResult.claims.admin === true;
         setIsAdmin(admin);
-        setAppMode(admin ? 'doctor' : 'public');
+        if (admin) setAppMode('doctor');
       } catch (err) {
         console.error('No se pudo verificar el rol de la cuenta:', err);
         setIsAdmin(false);
