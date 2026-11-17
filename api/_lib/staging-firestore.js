@@ -21,3 +21,15 @@ export function getPreviewPatientsCollection(db, env = process.env) {
   const [rootCollection, rootDocument] = namespace.split("/");
   return db.collection(rootCollection).doc(rootDocument).collection("patients");
 }
+
+export function getPreviewInvitationsCollection(db, env = process.env) {
+  const namespace = getPreviewDataNamespace(env);
+  const [rootCollection, rootDocument] = namespace.split("/");
+  return db.collection(rootCollection).doc(rootDocument).collection("invitations");
+}
+
+export function getPreviewUsersCollection(db, env = process.env) {
+  const namespace = getPreviewDataNamespace(env);
+  const [rootCollection, rootDocument] = namespace.split("/");
+  return db.collection(rootCollection).doc(rootDocument).collection("users");
+}
