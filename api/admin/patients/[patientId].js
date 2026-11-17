@@ -8,17 +8,6 @@ function asIso(value) {
   return value?.toDate ? value.toDate().toISOString() : null;
 }
 
-function getPatientId(req) {
-  const raw = req.query?.patientId;
-  const patientId = Array.isArray(raw) ? raw[0] : raw;
-  if (typeof patientId !== "string" || !/^[A-Za-z0-9_-]{8,128}$/.test(patientId)) {
-    const error = new Error("Identificador de expediente no válido.");
-    error.statusCode = 400;
-    throw error;
-  }
-  return patientId;
-}
-
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
