@@ -32,7 +32,7 @@ La captura de la auditoría ampliada mostró:
 - Raíces de `artifacts`: 0.
 - Expedientes, solicitudes web y solicitudes de receta en la ruta antigua: 0.
 
-Interpretación: no se encontró el documento clínico antiguo en la ruta esperada ni documentos raíz bajo `artifacts`. Esto no prueba que todas las colecciones raíz de Firestore estén vacías. La versión más reciente añade un resumen de todas las colecciones raíz con nombres y conteos; hay que volver a ejecutar la auditoría en la nueva Preview.
+Interpretación: no se encontró el documento clínico antiguo en la ruta esperada ni documentos raíz bajo `artifacts`. Esto no prueba que todas las colecciones raíz de Firestore estén vacías. La versión de auditoría incluye un resumen de nombres y cantidades de colecciones raíz; volver a ejecutarla en el Preview actual.
 
 ## Separación Preview / Production
 
@@ -45,13 +45,12 @@ Interpretación: no se encontró el documento clínico antiguo en la ruta espera
 
 ## Pendientes inmediatos
 
-1. Repetir auditoría de colecciones raíz desde una Preview actualizada.
-2. Esperar un nuevo despliegue Preview del último commit cuando se restablezca la cuota diaria de Vercel.
-3. Probar emisión, validación, expiración y reemisión de invitaciones con cuentas y datos totalmente ficticios.
-4. Completar pruebas extremo a extremo de activación, verificación de correo, consumo único y sesión paciente.
-5. Construir repositorios para mediciones, tratamiento, nutrición, síntomas y solicitudes.
-6. Probar médico, paciente A, paciente B, nutricionista y recepción.
-7. Mantener las reglas sin publicar hasta validar todos los flujos.
+1. Ejecutar la auditoría de colecciones raíz en el Preview actual.
+2. Probar emisión, validación, expiración y reemisión de invitaciones con cuentas y datos totalmente ficticios.
+3. Completar pruebas extremo a extremo de activación, verificación de correo, consumo único y sesión paciente.
+4. Construir repositorios para mediciones, tratamiento, nutrición, síntomas y solicitudes.
+5. Probar médico, paciente A, paciente B, nutricionista y recepción.
+6. Mantener las reglas sin publicar hasta validar todos los flujos.
 
 ## Bloqueos de seguridad
 
@@ -81,13 +80,14 @@ Se implementó el flujo de invitación con correo y contraseña exclusivamente:
 - El enlace lleva el secreto como fragmento URL `#activar=`, no como query string. El envío del enlace se realiza manualmente; Firebase envía el correo de verificación.
 - Firebase Email/Password es el único proveedor usado. No se ha habilitado SMS/WhatsApp OTP ni otros proveedores.
 
-El flujo está limitado al namespace Preview `previewEnvironments/mejoras-seguridad-origen`. El código del flujo de invitación está en la rama de trabajo, pero todavía requiere despliegue Preview actualizado y pruebas extremo a extremo. Las reglas y la vinculación de producción aún requieren diseño y pruebas específicas antes de habilitar pacientes reales.
+El flujo está limitado al namespace Preview `previewEnvironments/mejoras-seguridad-origen`. El último commit de la rama se desplegó como Preview READY en Vercel; quedan las pruebas funcionales de invitación y las pruebas extremo a extremo. Las reglas y la vinculación de producción aún requieren diseño y pruebas específicas antes de habilitar pacientes reales.
 
 
 ## Estado de pruebas y despliegue del módulo de invitaciones
 
 - Firebase Emulator / GitHub Actions: la última ejecución completada antes del cambio que añade el paso de compilación aprobó **40/40 pruebas** (8 de reglas Firestore y 32 unitarias de invitaciones, mediciones, perfiles, namespace y regresión del frontend).
 - El workflow también ejecutó `npm run build` y completó la compilación Vite correctamente en el commit de código verificado.
-- El límite diario de Vercel Free para crear despliegues fue alcanzado durante esta sesión (respuesta 402 `api-deployments-free-per-day`, retry indicado 24 h). Por eso el último commit está guardado en GitHub pero aún no tiene un Preview nuevo asociado.
-- El último Preview READY no incluye todos los cambios de invitación y no debe usarse para probarlos todavía.
+- La solicitud manual de despliegue alcanzó el límite diario gratuito de Vercel (`402 api-deployments-free-per-day`), pero el despliegue automático vinculado al último commit de GitHub sí terminó correctamente.
+- Preview actual: `origen-medico-elf3yfqxy-origen-medico.vercel.app`, commit `468c4a5f6e60750e2f06ff1ceb6d8c607803a836`, estado `READY`.
+- La protección de acceso de Vercel puede requerir iniciar sesión con la cuenta autorizada para abrir el Preview.
 - El PR sigue en borrador, sin merge y sin despliegue de reglas.
