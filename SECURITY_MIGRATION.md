@@ -14,6 +14,7 @@ Esta rama contiene una implementación preliminar del backend de administración
 - `api/_lib/firebase-admin.js`: inicialización privada del Firebase Admin SDK y verificación de ID tokens revocados.
 - `api/admin/bootstrap.js`: endpoint POST restringido por UID y correo configurados en variables privadas; asigna `admin: true` como custom claim, preservando claims existentes.
 - `api/auth/session.js`: endpoint GET para verificar la identidad y exponer si el token tiene el claim de administrador.
+- `App.jsx`: login con correo/contraseña; no crea sesiones anónimas; el acceso al panel médico depende del claim `admin: true`; el cierre de sesión limpia la copia local.
 - `firestore.rules`: borrador de reglas para un esquema por paciente. No coincide con el esquema de datos legado y no debe publicarse antes de la migración.
 - `firebase-admin` se ejecuta solo en el servidor; Node.js 22.x está configurado para la compatibilidad del SDK.
 
@@ -57,4 +58,5 @@ El endpoint `POST /api/admin/bootstrap` solo asigna el claim cuando tanto el UID
 - La clave de configuración Firebase del frontend no sustituye las reglas de seguridad. No incluir claves privadas ni JSON de cuentas de servicio en el repositorio.
 - No utilizar datos reales de pacientes durante el desarrollo y las pruebas iniciales.
 - El backend está preparado, pero no es operativo hasta configurar variables privadas en Vercel y probar un deployment de Preview.
-- Todavía no se integró el login en `App.jsx` ni se migró el documento compartido. No anunciar la aplicación como segura ni habilitar pacientes reales hasta completar las fases restantes.
+- El portal de pacientes todavía no está habilitado para cuentas individuales; la navegación de paciente solo se conserva para vista previa del médico.
+- El panel médico todavía usa el modelo legado de un documento compartido y la sincronización está bloqueada por las reglas actuales. No cargar pacientes reales ni anunciar la aplicación como lista para uso clínico hasta completar la migración.
