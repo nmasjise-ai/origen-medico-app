@@ -1,4 +1,4 @@
-import { getAdminFirestore, verifyRequestUser } from "./_lib/firebase-admin.js";
+import { getAdminFirestore, verifyRequestUser } from "../_lib/firebase-admin.js";
 
 const LEGACY_DOCUMENT_PATH = "artifacts/origen-medico-glpi-bo/public/data/clinic_state/main";
 
