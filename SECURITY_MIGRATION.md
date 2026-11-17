@@ -15,7 +15,10 @@ Esta rama contiene una implementación preliminar del backend de administración
 - `api/admin/bootstrap.js`: endpoint POST restringido por UID y correo configurados en variables privadas; asigna `admin: true` como custom claim, preservando claims existentes.
 - `api/auth/session.js`: endpoint GET para verificar la identidad y exponer si el token tiene el claim de administrador.
 - `App.jsx`: login con correo/contraseña; no crea sesiones anónimas; el acceso al panel médico depende del claim `admin: true`; el cierre de sesión limpia la copia local.
-- `firestore.rules`: borrador de reglas para un esquema por paciente. No coincide con el esquema de datos legado y no debe publicarse antes de la migración.
+- `firestore.rules`: reglas detalladas para el esquema por paciente, con perfiles vinculados por `users/{uid}.patientId`, documentos internos del médico, informes de síntomas y registros diarios validados. Son reglas objetivo y no deben publicarse antes de integrar el frontend y superar las pruebas del emulador.
+- `firebase.json` y `tests/firestore.rules.test.mjs`: entorno local de emulación y pruebas de acceso para visitantes, médico, paciente A y paciente B.
+- `docs/PHASE1_FIRESTORE_MODEL.md`: modelo de datos, mapeo del documento legado y plan de migración sin importar datos ficticios.
+- `PRODUCT_BACKLOG.md`: hoja de ruta priorizada para nuevas ideas y módulos.
 - `firebase-admin` se ejecuta solo en el servidor; se fijó en `13.10.0` tras observar `ERR_REQUIRE_ESM` con 14.5.1 en el runtime de Vercel. Node.js 22.x está configurado para la compatibilidad del SDK.
 - Vercel Preview contiene las tres variables privadas restringidas a `mejoras-seguridad-origen`. El endpoint `/api/health` confirmó `firebaseAdmin: ready` sin exponer el JSON de la cuenta de servicio.
 
@@ -39,7 +42,7 @@ El endpoint `POST /api/admin/bootstrap` solo asigna el claim cuando tanto el UID
 
 ## Autorización
 - Rol médico: custom claim `admin: true`, asignada exclusivamente desde un entorno confiable mediante Firebase Admin SDK.
-- Paciente: lectura limitada a su documento y subcolecciones mediante coincidencia de `authUid` con `request.auth.uid`.
+- Paciente: lectura limitada al expediente indicado por su propio documento `users/{uid}.patientId`, asignado por servidor.
 - Escrituras clínicas sensibles y solicitudes deben validarse por operación, con reglas específicas o funciones de servidor.
 - Ninguna regla de cliente debe confiar en un campo `role` enviado por el propio usuario.
 
@@ -58,6 +61,8 @@ El endpoint `POST /api/admin/bootstrap` solo asigna el claim cuando tanto el UID
 - Desplegarlas antes de migrar el código y los datos causará errores de lectura/escritura: el documento legado queda denegado intencionalmente.
 - La clave de configuración Firebase del frontend no sustituye las reglas de seguridad. No incluir claves privadas ni JSON de cuentas de servicio en el repositorio.
 - No utilizar datos reales de pacientes durante el desarrollo y las pruebas iniciales.
-- El backend de Preview ya inicializa Firebase Admin; el endpoint de bootstrap del rol todavía no se ha probado con una sesión real del médico.
+- El backend de Preview inicializa Firebase Admin y el registro de Vercel confirmó que el bootstrap asignó `admin: true` a la cuenta médica.
+- Las nuevas reglas y pruebas están en GitHub, pero todavía no se han ejecutado satisfactoriamente en el emulador ni se han publicado en Firebase.
+- El frontend aún conserva el modelo monolítico y el estado de demostración. El indicador `Sin sincronización clínica` debe considerarse un bloqueo operativo: no usar para altas ni seguimiento de pacientes reales.
 - El portal de pacientes todavía no está habilitado para cuentas individuales; la navegación de paciente solo se conserva para vista previa del médico.
 - El panel médico todavía usa el modelo legado de un documento compartido y la sincronización está bloqueada por las reglas actuales. No cargar pacientes reales ni anunciar la aplicación como lista para uso clínico hasta completar la migración.
