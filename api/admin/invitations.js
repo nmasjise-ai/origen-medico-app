@@ -60,6 +60,12 @@ export default async function handler(req, res) {
         throw error;
       }
 
+      if (patient.status !== "pending_account" && patient.status !== "pending") {
+        const error = new Error("El estado del expediente no permite emitir una invitación.");
+        error.statusCode = 409;
+        throw error;
+      }
+
       const previousHash = patient.activeInvitationHash;
       let previousInvitationSnapshot = null;
       let previousInvitationRef = null;
