@@ -5,7 +5,9 @@ const APP_NAME = "origen-medico-admin";
 const PROJECT_ID = "origen-medico";
 
 export function getAdminAuth() {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  const raw =
+    process.env.FIREBASE_SERVICE_ACCOUNT_JSON ||
+    process.env.CUENTA_SERVICIO_FIREBASE_JSON;
   if (!raw) {
     const error = new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not configured.");
     error.statusCode = 503;
