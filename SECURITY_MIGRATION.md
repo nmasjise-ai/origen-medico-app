@@ -91,3 +91,12 @@ El flujo está limitado al namespace Preview `previewEnvironments/mejoras-seguri
 - Preview actual: `origen-medico-elf3yfqxy-origen-medico.vercel.app`, commit `468c4a5f6e60750e2f06ff1ceb6d8c607803a836`, estado `READY`.
 - La protección de acceso de Vercel puede requerir iniciar sesión con la cuenta autorizada para abrir el Preview.
 - El PR sigue en borrador, sin merge y sin despliegue de reglas.
+
+
+## Acceso temporal al Preview protegido
+
+El Preview está protegido con Vercel Authentication. Al abrir el Preview con el enlace compartible temporal, la pantalla de invitación conserva el parámetro `_vercel_share` al construir el enlace de activación. El token de invitación sigue en el fragmento `#activar=`, y el enlace debe compartirse únicamente con el correo de prueba indicado.
+
+- El acceso compartible de Vercel vence aproximadamente en 23 horas.
+- El token de invitación tiene vigencia propia de 7 días, pero el acceso temporal de Vercel puede vencer antes.
+- Esto aplica solo a QA/Preview; no reemplaza la autenticación de Firebase ni autoriza el acceso a expedientes.
