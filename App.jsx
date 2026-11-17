@@ -1167,7 +1167,7 @@ function App() {
             <OrigenMedicoLogo size={42} />
             <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-[#F5EFE2] border border-[#E6D9C0] text-[#735318] lg:hidden">
               <span className={`w-2 h-2 rounded-full ${syncStatus === 'synced' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-              {syncStatus === 'synced' ? 'Nube Activa' : 'Modo Local'}
+              {isAdmin ? (syncStatus === 'synced' ? 'Nube Activa' : 'Sin sincronización') : 'Vista pública'}
             </div>
           </div>
 
@@ -1241,7 +1241,9 @@ function App() {
           <div className="hidden lg:flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-[#F5EFE2] border border-[#E6D9C0] text-[#735318]">
             <span className={`w-2 h-2 rounded-full ${syncStatus === 'synced' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
             <span className="font-medium">
-              {syncStatus === 'synced' ? 'Sincronizado en la Nube' : 'Guardado Automático Activo'}
+              {isAdmin
+                ? (syncStatus === 'synced' ? 'Sincronizado en la Nube' : 'Sin sincronización clínica')
+                : 'Vista pública · sin datos clínicos'}
             </span>
           </div>
         </div>
