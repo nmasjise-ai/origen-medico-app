@@ -504,6 +504,9 @@ function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
+  const [legacyAuditBusy, setLegacyAuditBusy] = useState(false);
+  const [legacyAuditResult, setLegacyAuditResult] = useState(null);
+  const [legacyAuditError, setLegacyAuditError] = useState('');
   const [syncStatus, setSyncStatus] = useState('connecting'); // 'connecting' | 'synced' | 'local'
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -657,6 +660,38 @@ function App() {
       }
     } catch (err) {
       showToast('No se pudo cerrar la sesión. Inténtalo nuevamente.');
+    }
+  };
+
+  const handleLegacyAudit = async () => {
+    if (!user || !isAdmin) {
+      setLegacyAuditError('Se requiere una sesión de médico autorizada.');
+      return;
+    }
+
+    setLegacyAuditBusy(true);
+    setLegacyAuditError('');
+    setLegacyAuditResult(null);
+
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/admin/legacy-audit', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${idToken}` },
+        cache: 'no-store'
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'No se pudo revisar el almacenamiento anterior.');
+      }
+
+      setLegacyAuditResult(payload);
+    } catch (err) {
+      console.error('Error en auditoría de datos antiguos:', err);
+      setLegacyAuditError(err.message || 'No se pudo completar la auditoría.');
+    } finally {
+      setLegacyAuditBusy(false);
     }
   };
 
@@ -2848,6 +2883,47 @@ function App() {
                   {clinicData.clinicConfig.qrImageDataUrl && (
                     <div className="flex justify-center p-3 bg-[#FAF6EE] rounded-2xl border border-[#E6D9C0]">
                       <img src={clinicData.clinicConfig.qrImageDataUrl} alt="QR Simple" className="w-36 h-36 object-contain rounded-xl" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 space-y-4">
+                  <div>
+                    <h3 className="font-serif text-lg font-bold">Auditoría del almacenamiento anterior</h3>
+                    <p className="text-xs text-[#5C4D3C] mt-1">
+                      Revisa únicamente si existe el documento legado y cuántos registros contiene. Esta consulta no muestra nombres, teléfonos ni contenido clínico.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLegacyAudit}
+                    disabled={legacyAuditBusy}
+                    className="w-full py-2.5 px-3 rounded-xl bg-[#9A742C] disabled:opacity-60 text-white text-xs font-bold"
+                  >
+                    {legacyAuditBusy ? 'Revisando datos…' : 'Revisar datos antiguos'}
+                  </button>
+                  {legacyAuditError && (
+                    <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800">
+                      {legacyAuditError}
+                    </div>
+                  )}
+                  {legacyAuditResult && (
+                    <div className="rounded-xl border border-[#E6D9C0] bg-[#FAF6EE] p-3 space-y-2 text-xs text-[#3D3326]">
+                      <strong>{legacyAuditResult.exists ? 'Documento antiguo encontrado' : 'No se encontró el documento antiguo'}</strong>
+                      {legacyAuditResult.counts && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>Expedientes: <strong>{legacyAuditResult.counts.patients}</strong></div>
+                          <div>Registros demo: <strong>{legacyAuditResult.counts.demoPatientRecords}</strong></div>
+                          <div>Por clasificar: <strong>{legacyAuditResult.counts.unclassifiedPatientRecords}</strong></div>
+                          <div>Solicitudes web: <strong>{legacyAuditResult.counts.webLeads}</strong></div>
+                          <div>Solicitudes de receta: <strong>{legacyAuditResult.counts.prescriptionRequests}</strong></div>
+                          <div>Solicitudes demo: <strong>{legacyAuditResult.counts.demoPrescriptionRequests}</strong></div>
+                        </div>
+                      )}
+                      {legacyAuditResult.updatedAt && (
+                        <p>Última actualización: {new Date(legacyAuditResult.updatedAt).toLocaleString('es-BO')}</p>
+                      )}
+                      <p className="text-[#735318]">{legacyAuditResult.message}</p>
                     </div>
                   )}
                 </div>
