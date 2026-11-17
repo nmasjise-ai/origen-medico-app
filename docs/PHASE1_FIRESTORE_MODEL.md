@@ -165,3 +165,19 @@ No trasladar el objeto completo como JSON dentro de un documento nuevo. Cada con
 ## Extensiones previstas para no rehacer el modelo
 
 El esquema deja espacio para consentimiento informado, alergias/antecedentes, objetivos, laboratorios, alertas clínicas, citas, recordatorios, seguimiento de adherencia y documentos adjuntos. Se incorporarán con sus propios permisos y retención; no se añadirán al documento raíz del paciente por comodidad.
+
+
+## Decisión de almacenamiento liviano para V1
+
+- No se implementará en V1 la carga de informes de laboratorio, PDFs ni fotografías clínicas. Se mantendrán únicamente antecedentes esenciales y valores clínicos estructurados (fecha, parámetro, resultado, unidad y profesional que los registró) cuando el flujo clínico los requiera.
+- No almacenar imágenes, PDFs, adjuntos ni cadenas base64 dentro de documentos Firestore.
+- El catálogo de productos almacenará solo metadatos pequeños en `storeProducts/{productId}`: nombre, categoría validada, presentación, descripción/beneficios aprobados, precio en Bs, unidades disponibles, estado de publicación y fechas de actualización.
+- No se requiere Firebase Storage para el catálogo inicial. Las fichas pueden comenzar en formato texto; si más adelante se deciden fotografías, usar assets estáticos optimizados del sitio o un almacenamiento de objetos separado, con límites y revisión de coste.
+- Los pedidos se guardan en `orders/{orderId}` y nunca dentro del expediente médico. El acceso comercial no otorga acceso clínico.
+- Las fotografías compartidas para inventario son referencia de trabajo; no se guardan automáticamente en Firestore ni en Storage.
+
+## Inventario inicial leído de las fotografías
+
+Se creó `docs/INITIAL_STOCK_CATALOG.md` con un borrador de nombres visibles: THERMO, BELLE, PRIMULA/PRÍMULA (por confirmar), + TESTO, HSN + SILICIO, DETOX MATCHA, LIPO TEA, MAGNESIO BISGLICINATO, OMEGA 3 ULTRAPURE 33/22, CREATINHEX NEURO, CREATINHEX MUJER, VITAMINA A-Z, COLÁGENO ARTROS, VITAMINA D3 2000 UI, TRI MAGNESIO y una segunda presentación de OMEGA 3 que requiere transcripción exacta.
+
+Los precios, cantidades exactas, presentaciones y beneficios no se infieren de las fotografías; deben confirmarse con el inventario y las etiquetas antes de publicación.
