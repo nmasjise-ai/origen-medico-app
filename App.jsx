@@ -797,6 +797,245 @@ function App() {
     }
   };
 
+  const loadPatientSession = async (account = user) => {
+    if (!account) return null;
+
+    const idToken = await account.getIdToken();
+    const response = await fetch('/api/patient/session', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${idToken}` },
+      cache: 'no-store'
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (response.status === 404) return null;
+    if (!response.ok) {
+      throw new Error(payload.error || 'No se pudo verificar el acceso del paciente.');
+    }
+
+    setPatientPortalProfile(payload.patient || null);
+    return payload.patient || null;
+  };
+
+  const handleCreatePatientInvitation = async (patientId) => {
+    const email = (cloudInviteEmails[patientId] || '').trim();
+    if (!email) {
+      setCloudPatientsError('Introduce el correo electrónico que utilizará el paciente.');
+      return;
+    }
+
+    if (!user || !isAdmin) {
+      setCloudPatientsError('Solo el médico puede crear invitaciones.');
+      return;
+    }
+
+    setCloudInviteLoadingId(patientId);
+    setCloudPatientsError('');
+    setCloudInviteResult(null);
+
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch('/api/admin/invitations', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ patientId, email })
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'No se pudo crear la invitación.');
+      }
+
+      const activationUrl = `${window.location.origin}/#activar=${payload.invitation.token}`;
+      setCloudInviteResult({
+        patientId,
+        email: payload.invitation.email,
+        activationUrl,
+        expiresAt: payload.invitation.expiresAt
+      });
+      showToast('Invitación creada. Copia el enlace para compartirlo.');
+      await loadCloudPatients(user);
+    } catch (err) {
+      console.error('No se pudo crear la invitación del paciente:', err);
+      setCloudPatientsError(err.message || 'No se pudo crear la invitación.');
+    } finally {
+      setCloudInviteLoadingId('');
+    }
+  };
+
+  const handleCopyInvitationLink = async () => {
+    if (!cloudInviteResult?.activationUrl) return;
+    try {
+      await navigator.clipboard.writeText(cloudInviteResult.activationUrl);
+      showToast('Enlace de invitación copiado.');
+    } catch {
+      setCloudPatientsError('No se pudo copiar automáticamente. Selecciona y copia el enlace mostrado.');
+    }
+  };
+
+  const completePatientInvitation = async (account = auth?.currentUser) => {
+    if (!account || !patientInvitationToken) {
+      setActivationError('Abre el enlace de invitación completo para continuar.');
+      return;
+    }
+
+    setActivationBusy(true);
+    setActivationError('');
+    setActivationMessage('');
+
+    try {
+      await reload(account);
+      if (!account.emailVerified) {
+        setActivationAwaitingVerification(true);
+        setActivationMessage('Todavía no aparece la verificación. Abre el correo de Firebase, confirma tu dirección y vuelve a pulsar «Ya verifiqué mi correo».');
+        return;
+      }
+
+      const idToken = await account.getIdToken(true);
+      const response = await fetch('/api/invitations/redeem', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ token: patientInvitationToken })
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'No se pudo activar la invitación.');
+      }
+
+      setUser(account);
+      setIsAdmin(false);
+      const linkedPatient = await loadPatientSession(account);
+      setActivationMessage('Tu cuenta quedó vinculada correctamente a tu expediente.');
+      setActivationAwaitingVerification(false);
+      setActivationPassword('');
+      setAppMode('patient_portal');
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      if (linkedPatient) setPatientPortalProfile(linkedPatient);
+    } catch (err) {
+      console.error('No se pudo completar la activación del paciente:', err);
+      setActivationError(err.message || 'No se pudo activar la cuenta.');
+    } finally {
+      setActivationBusy(false);
+    }
+  };
+
+  const handlePatientInvitationActivation = async (event) => {
+    event.preventDefault();
+    setActivationError('');
+    setActivationMessage('');
+
+    if (!auth || !patientInvitationToken) {
+      setActivationError('El enlace de invitación no es válido.');
+      return;
+    }
+
+    if (isAdmin) {
+      setActivationError('Para evitar cerrar tu sesión médica, abre este enlace en una ventana privada o en el dispositivo del paciente.');
+      return;
+    }
+
+    setActivationBusy(true);
+    try {
+      const email = activationEmail.trim().toLowerCase();
+      const validationResponse = await fetch('/api/invitations/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: patientInvitationToken, email })
+      });
+      const validationPayload = await validationResponse.json().catch(() => ({}));
+
+      if (!validationResponse.ok || validationPayload.valid !== true) {
+        throw new Error(validationPayload.error || 'La invitación no corresponde a este correo o ha vencido.');
+      }
+
+      const credential = activationExistingAccount
+        ? await signInWithEmailAndPassword(auth, email, activationPassword)
+        : await createUserWithEmailAndPassword(auth, email, activationPassword);
+
+      if (!credential.user.emailVerified) {
+        await sendEmailVerification(credential.user);
+        setUser(credential.user);
+        setActivationAwaitingVerification(true);
+        setActivationMessage('Cuenta preparada. Enviamos un correo de verificación. Abre ese mensaje, confirma tu dirección y vuelve a esta pestaña para finalizar la vinculación.');
+        return;
+      }
+
+      await completePatientInvitation(credential.user);
+    } catch (err) {
+      console.error('Error durante la activación del paciente:', err);
+      const code = err?.code || '';
+      if (code === 'auth/email-already-in-use') {
+        setActivationError('Ese correo ya tiene una cuenta. Selecciona «Ya tengo una cuenta» e ingresa con tu contraseña.');
+      } else if (code === 'auth/weak-password') {
+        setActivationError('La contraseña debe tener al menos 6 caracteres.');
+      } else if (code === 'auth/invalid-credential') {
+        setActivationError('Correo o contraseña incorrectos.');
+      } else if (code === 'auth/too-many-requests') {
+        setActivationError('Demasiados intentos. Espera un momento e inténtalo nuevamente.');
+      } else {
+        setActivationError(err.message || 'No se pudo preparar la cuenta.');
+      }
+    } finally {
+      setActivationBusy(false);
+    }
+  };
+
+  const handleConfirmPatientEmail = async () => {
+    await completePatientInvitation(auth?.currentUser);
+  };
+
+  const handlePasswordReset = async () => {
+    const email = loginEmail.trim();
+    setAuthError('');
+    setAuthStatusMessage('');
+
+    if (!email) {
+      setAuthError('Escribe tu correo electrónico para enviarte el enlace de recuperación.');
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setAuthStatusMessage('Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.');
+    } catch (err) {
+      console.error('No se pudo solicitar recuperación de contraseña:', err);
+      setAuthError('No se pudo enviar el enlace de recuperación. Verifica el correo e inténtalo más tarde.');
+    }
+  };
+
+  const handlePatientPortalClick = async () => {
+    if (isAdmin) {
+      setAppMode('patient');
+      return;
+    }
+
+    if (!user) {
+      setAuthError('');
+      setAppMode('login');
+      return;
+    }
+
+    try {
+      const linkedPatient = await loadPatientSession(user);
+      if (linkedPatient) {
+        setAppMode('patient_portal');
+      } else {
+        setAppMode('public');
+        showToast('Esta cuenta todavía no está vinculada a un expediente.');
+      }
+    } catch (err) {
+      setAuthError(err.message || 'No se pudo validar la cuenta del paciente.');
+      setAppMode('login');
+    }
+  };
+
   const handleSignIn = async (event) => {
     event.preventDefault();
     setAuthError('');
