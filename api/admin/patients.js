@@ -1,6 +1,6 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminFirestore, verifyRequestUser } from "../_lib/firebase-admin.js";
-import { getStagingFirestoreDatabaseId } from "../_lib/staging-firestore.js";
+import { getPreviewPatientsCollection } from "../_lib/staging-firestore.js";
 import { normalizeNewPatient } from "../_lib/patient-validation.js";
 
 const MAX_RESULTS = 100;
@@ -23,13 +23,14 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "Se requiere una cuenta médica autorizada." });
     }
 
-    // Preview writes are isolated to a named Firestore staging database.
-    // The default production database is never used by this endpoint.
-    const stagingDatabaseId = getStagingFirestoreDatabaseId();
-    const db = getAdminFirestore(stagingDatabaseId);
+    // Preview patient data uses a dedicated namespace inside the project's
+    // existing (default) database. The endpoint rejects non-Preview deployments.
+    // This avoids requiring the paid named-database feature on the Spark plan.
+    const db = getAdminFirestore();
+    const patientsCollection = getPreviewPatientsCollection(db);
 
     if (req.method === "GET") {
-      const snapshot = await db.collection("patients")
+      const snapshot = await patientsCollection
         .orderBy("createdAt", "desc")
         .limit(MAX_RESULTS)
         .get();
@@ -52,7 +53,7 @@ export default async function handler(req, res) {
     }
 
     const patientInput = normalizeNewPatient(req.body);
-    const patientRef = db.collection("patients").doc();
+    const patientRef = patientsCollection.doc();
     const batch = db.batch();
 
     batch.create(patientRef, {
@@ -96,7 +97,7 @@ export default async function handler(req, res) {
         status: "pending_account",
         accountStatus: "unlinked"
       },
-      message: "Expediente provisional creado en la base de pruebas. La cuenta individual todavía no está vinculada."
+      message: "Expediente provisional creado en el espacio aislado de Preview. La cuenta individual todavía no está vinculada."
     });
   } catch (error) {
     const status = error.statusCode || 500;
