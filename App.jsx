@@ -1254,7 +1254,7 @@ function App() {
     });
 
     return () => unsub();
-  }, []);
+  }, [patientInvitationToken]);
 
   // 2. The legacy shared Firestore document is intentionally disconnected.
   // Clinical sync will only be re-enabled after the individual-patient
