@@ -61,3 +61,10 @@ Interpretación: no se encontró el documento clínico antiguo en la ruta espera
 - No fusionar ni publicar reglas de Firestore.
 - No permitir que una solicitud de paciente se convierta automáticamente en receta.
 - No activar venta pública de medicamentos ni servicio de teleconsulta privada sin revisión regulatoria específica.
+
+
+## Decisión de acceso de pacientes
+
+Se confirma usar únicamente **correo electrónico y contraseña** mediante Firebase Authentication. El proveedor Email/Password ya está habilitado en el proyecto y el inicio de sesión del médico usa `signInWithEmailAndPassword`.
+
+No se añadirá SMS, OTP de WhatsApp ni Google en esta etapa. El registro de pacientes no será público: la cuenta se activará solo mediante invitación médica de un solo uso y con vencimiento. Tras crear la cuenta, el paciente verificará su correo; el servidor consumirá la invitación y vinculará el UID con el único `patientId` autorizado. La recuperación de contraseña será por correo mediante Firebase. ORIGEN no pedirá ni almacenará contraseñas.
