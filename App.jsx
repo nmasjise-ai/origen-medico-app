@@ -503,7 +503,7 @@ function App() {
   const [authError, setAuthError] = useState('');
   const [authStatusMessage, setAuthStatusMessage] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
-  const [patientInvitationToken] = useState(() => {
+  const [patientInvitationToken, setPatientInvitationToken] = useState(() => {
     if (typeof window === 'undefined') return '';
     return new URLSearchParams(window.location.hash.replace(/^#/, '')).get('activar') || '';
   });
@@ -916,6 +916,7 @@ function App() {
       setActivationAwaitingVerification(false);
       setActivationPassword('');
       setAppMode('patient_portal');
+      setPatientInvitationToken('');
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
       if (linkedPatient) setPatientPortalProfile(linkedPatient);
     } catch (err) {
