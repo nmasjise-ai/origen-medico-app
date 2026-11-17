@@ -19,14 +19,14 @@ function optionalNumber(value, field, min, max, integer = false) {
 function optionalText(value, field, maxLength) {
   if (value === undefined || value === null || value === "") return null;
   if (typeof value !== "string") fail(`El campo ${field} no es válido.`);
-  const normalized = value.trim().replace(/\\s+/g, " ");
+  const normalized = value.trim().replace(/\s+/g, " ");
   if (normalized.length > maxLength) fail(`El campo ${field} supera el límite permitido.`);
   return normalized || null;
 }
 
 function normalizeBirthDate(value) {
   if (value === undefined || value === null || value === "") return null;
-  if (typeof value !== "string" || !/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     fail("La fecha de nacimiento no es válida.");
   }
   const date = new Date(`${value}T00:00:00.000Z`);
@@ -57,7 +57,7 @@ export function normalizePatientProfile(input) {
   }
 
   const displayName = typeof input.displayName === "string"
-    ? input.displayName.trim().replace(/\\s+/g, " ")
+    ? input.displayName.trim().replace(/\s+/g, " ")
     : "";
   if (displayName.length < 2 || displayName.length > MAX_NAME_LENGTH) {
     fail("El nombre debe tener entre 2 y 120 caracteres.");

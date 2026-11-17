@@ -758,7 +758,7 @@ function App() {
       setCloudRecordTab('summary');
       setCloudProfileForm({
         displayName: payload.patient?.displayName || '',
-        phone: (payload.patient?.phoneE164 || '').replace(/^\\+/, ''),
+        phone: (payload.patient?.phoneE164 || '').replace(/^\+/, ''),
         birthDate: payload.patient?.birthDate || '',
         sexAtBirth: payload.patient?.sexAtBirth || '',
         heightCm: payload.patient?.heightCm ?? '',
