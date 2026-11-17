@@ -2875,11 +2875,14 @@ function App() {
                   <p className="text-xs text-[#5C4D3C]">
                     Sube la captura de pantalla del QR de tu banco boliviano para que tus pacientes puedan pagarte directamente desde la web.
                   </p>
-                  <label className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-2xl bg-[#9A742C] text-white text-xs font-bold cursor-pointer hover:bg-[#7D5C1E]">
+                  <label className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-2xl text-xs font-bold ${syncStatus === 'synced' ? 'bg-[#9A742C] text-white cursor-pointer hover:bg-[#7D5C1E]' : 'bg-stone-200 text-stone-500 cursor-not-allowed'}`}>
                     <Upload className="w-4 h-4" />
-                    <span>Subir Imagen QR Simple (PNG/JPG)</span>
-                    <input type="file" accept="image/*" onChange={handleQrImageUpload} className="hidden" />
+                    <span>{syncStatus === 'synced' ? 'Subir Imagen QR Simple (PNG/JPG)' : 'Carga de QR temporalmente deshabilitada'}</span>
+                    <input type="file" accept="image/*" onChange={handleQrImageUpload} disabled={syncStatus !== 'synced'} className="hidden" />
                   </label>
+                  {syncStatus !== 'synced' && (
+                    <p className="text-[11px] text-amber-800">La configuración de pagos se habilitará con el nuevo módulo seguro. No se guardan imágenes en el sistema antiguo.</p>
+                  )}
                   {clinicData.clinicConfig.qrImageDataUrl && (
                     <div className="flex justify-center p-3 bg-[#FAF6EE] rounded-2xl border border-[#E6D9C0]">
                       <img src={clinicData.clinicConfig.qrImageDataUrl} alt="QR Simple" className="w-36 h-36 object-contain rounded-xl" />
@@ -2929,22 +2932,27 @@ function App() {
                 </div>
 
                 <div className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 space-y-4">
-                  <h3 className="font-serif text-lg font-bold">Respaldo de Seguridad en 1 Clic</h3>
+                  <h3 className="font-serif text-lg font-bold">Respaldo seguro de expedientes</h3>
                   <p className="text-xs text-[#5C4D3C]">
-                    Descarga una copia completa de todos tus pacientes, mediciones y recetas a tu computadora o celular cuando quieras.
+                    El respaldo y la restauración se habilitarán cuando los expedientes estén migrados a colecciones individuales y exista un procedimiento de recuperación probado.
                   </p>
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                    <strong>Temporalmente deshabilitado.</strong> El respaldo antiguo exportaba el objeto de demostración del navegador y no constituye una copia fiable de Firestore. No uses archivos JSON antiguos para restaurar pacientes.
+                  </div>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <button
-                      onClick={handleExportBackup}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-[#231F1A] text-[#DFBD69] text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                      type="button"
+                      disabled
+                      title="Disponible después de completar la migración segura"
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-stone-200 text-stone-500 text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed"
                     >
                       <Download className="w-4 h-4" />
-                      <span>Descargar Respaldo</span>
+                      <span>Respaldo no disponible</span>
                     </button>
-                    <label className="flex-1 py-2.5 px-3 rounded-xl bg-[#FAF6EE] border border-[#9A742C] text-[#735318] text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer">
+                    <label className="flex-1 py-2.5 px-3 rounded-xl bg-stone-100 border border-stone-200 text-stone-400 text-xs font-bold flex items-center justify-center gap-1.5 cursor-not-allowed">
                       <Upload className="w-4 h-4" />
-                      <span>Restaurar Copia</span>
-                      <input type="file" accept=".json" onChange={handleImportBackup} className="hidden" />
+                      <span>Restauración no disponible</span>
+                      <input type="file" accept=".json" disabled className="hidden" />
                     </label>
                   </div>
                 </div>
