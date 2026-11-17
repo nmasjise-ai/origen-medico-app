@@ -1,13 +1,15 @@
 import { getApps, initializeApp, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import { getFirestore } from "firebase-admin/firestore";
 
 const APP_NAME = "origen-medico-admin";
 const PROJECT_ID = "origen-medico";
 
-export function getAdminAuth() {
+function getAdminApp() {
   const raw =
     process.env.FIREBASE_SERVICE_ACCOUNT_JSON ||
     process.env.CUENTA_SERVICIO_FIREBASE_JSON;
+
   if (!raw) {
     const error = new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not configured.");
     error.statusCode = 503;
@@ -40,7 +42,15 @@ export function getAdminAuth() {
     );
   }
 
-  return getAuth(app);
+  return app;
+}
+
+export function getAdminAuth() {
+  return getAuth(getAdminApp());
+}
+
+export function getAdminFirestore() {
+  return getFirestore(getAdminApp());
 }
 
 export function getBearerToken(req) {
