@@ -668,7 +668,34 @@ function App() {
       return;
     }
 
+    const clearLegacyClinicalCache = () => {
+      try {
+        localStorage.removeItem('origen_medico_clinic_v1');
+      } catch (err) {
+        console.warn('No se pudo limpiar el almacenamiento local:', err);
+      }
+      setClinicData(DEFAULT_CLINIC_STATE);
+    };
+
     const unsub = onAuthStateChanged(auth, async (u) => {
+      // Older versions created persistent anonymous sessions. They must not
+      // be treated as an account or be allowed to keep legacy clinical cache.
+      if (u?.isAnonymous) {
+        setUser(null);
+        setIsAdmin(false);
+        setAuthReady(false);
+        setSyncStatus('local');
+        setAppMode('public');
+        clearLegacyClinicalCache();
+        try {
+          await signOut(auth);
+        } catch (err) {
+          console.error('No se pudo cerrar la sesión anónima heredada:', err);
+          setAuthReady(true);
+        }
+        return;
+      }
+
       setUser(u);
 
       if (!u) {
@@ -676,12 +703,7 @@ function App() {
         setAuthReady(true);
         setSyncStatus('local');
         setAppMode('public');
-        try {
-          localStorage.removeItem('origen_medico_clinic_v1');
-        } catch (err) {
-          console.warn('No se pudo limpiar el almacenamiento local:', err);
-        }
-        setClinicData(DEFAULT_CLINIC_STATE);
+        clearLegacyClinicalCache();
         return;
       }
 
@@ -689,11 +711,21 @@ function App() {
         const tokenResult = await getIdTokenResult(u);
         const admin = tokenResult.claims.admin === true;
         setIsAdmin(admin);
-        if (admin) setAppMode('doctor');
+        if (admin) {
+          setAppMode('doctor');
+        } else {
+          // An authenticated account without the explicit admin claim must
+          // never retain the old shared clinical state in browser memory.
+          setAppMode('public');
+          clearLegacyClinicalCache();
+          setSyncStatus('local');
+        }
       } catch (err) {
         console.error('No se pudo verificar el rol de la cuenta:', err);
         setIsAdmin(false);
         setAppMode('public');
+        setSyncStatus('local');
+        clearLegacyClinicalCache();
       } finally {
         setAuthReady(true);
       }
