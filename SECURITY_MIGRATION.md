@@ -20,7 +20,7 @@ Esta rama contiene una implementación preliminar del backend de administración
 
 ## Variables privadas requeridas en Vercel (Preview primero)
 Configurar como Environment Variables privadas, solo en Preview durante las pruebas:
-- `FIREBASE_SERVICE_ACCOUNT_JSON`: contenido JSON de una cuenta de servicio del proyecto `origen-medico`. Nunca guardarlo en GitHub, en `App.jsx` ni compartirlo por chat.
+- `CUENTA_SERVICIO_FIREBASE_JSON` (nombre ya utilizado en Vercel) o `FIREBASE_SERVICE_ACCOUNT_JSON`: contenido JSON de una cuenta de servicio del proyecto `origen-medico`. El backend acepta cualquiera de los dos nombres. Nunca guardar el JSON en GitHub, en `App.jsx` ni compartirlo por chat.
 - `ORIGEN_ADMIN_UID`: UID completo de la cuenta médica autorizada.
 - `ORIGEN_ADMIN_EMAIL`: correo exacto de esa cuenta, en minúsculas.
 
