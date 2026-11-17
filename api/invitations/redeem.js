@@ -5,6 +5,7 @@ import {
   getPreviewPatientsCollection,
   getPreviewUsersCollection
 } from "../_lib/staging-firestore.js";
+import { validatePreviewPatientId } from "../_lib/measurement-validation.js";
 import {
   hashInvitationToken,
   normalizeInvitationToken
@@ -44,7 +45,8 @@ export default async function handler(req, res) {
       }
 
       const invitation = invitationSnapshot.data();
-      const patientRef = patients.doc(invitation.patientId);
+      const patientId = validatePreviewPatientId(invitation.patientId);
+      const patientRef = patients.doc(patientId);
       const [patientSnapshot, userSnapshot] = await Promise.all([
         transaction.get(patientRef),
         transaction.get(userRef)
