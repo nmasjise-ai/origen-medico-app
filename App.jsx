@@ -1612,7 +1612,7 @@ function App() {
             <OrigenMedicoLogo size={42} />
             <div className="flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-[#F5EFE2] border border-[#E6D9C0] text-[#735318] lg:hidden">
               <span className={`w-2 h-2 rounded-full ${syncStatus === 'synced' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-              {isAdmin ? (syncStatus === 'synced' ? 'Nube Activa' : 'Sin sincronización') : 'Vista pública'}
+              {isAdmin ? (syncStatus === 'synced' ? 'Nube Activa' : 'Sin sincronización') : appMode === 'patient_portal' ? 'Cuenta paciente' : 'Vista pública'}
             </div>
           </div>
 
@@ -1633,7 +1633,7 @@ function App() {
             <button
               onClick={handlePatientPortalClick}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-                appMode === 'patient'
+                appMode === 'patient' || appMode === 'patient_portal'
                   ? 'bg-[#9A742C] text-white shadow-sm'
                   : 'text-[#5C4D3C] hover:bg-[#FAF6EE]'
               }`}
@@ -1688,7 +1688,7 @@ function App() {
             <span className="font-medium">
               {isAdmin
                 ? (syncStatus === 'synced' ? 'Sincronizado en la Nube' : 'Sin sincronización clínica')
-                : 'Vista pública · sin datos clínicos'}
+                : appMode === 'patient_portal' ? 'Cuenta de paciente verificada' : 'Vista pública · sin datos clínicos'}
             </span>
           </div>
         </div>
