@@ -183,25 +183,17 @@ Se creó `docs/INITIAL_STOCK_CATALOG.md` con un borrador de nombres visibles: TH
 Los precios, cantidades exactas, presentaciones y beneficios no se infieren de las fotografías; deben confirmarse con el inventario y las etiquetas antes de publicación.
 
 
-## Aislamiento de datos entre Preview y producción
 
-La auditoría del documento legado se ejecuta contra la base actual `(default)` y solo devuelve metadatos. Para las primeras altas de prueba no se escribirá en esa base.
+## Aislamiento de Preview sin una base Firestore adicional
 
-- Se reserva la base Firestore nombrada `origen-staging` para los datos de Preview.
-- Vercel tiene `ORIGEN_STAGING_FIRESTORE_DATABASE_ID=origen-staging`, solo en Preview y solo para la rama `mejoras-seguridad-origen`.
-- `api/admin/patients.js` usa la base nombrada, nunca la base `(default)`.
-- `api/_lib/staging-firestore.js` rechaza cualquier entorno distinto de Vercel Preview, rechaza la base `(default)` y exige un ID válido.
-- La función Admin SDK `getFirestore(app, databaseId)` está documentada como API Public Preview; se utiliza solo en el entorno de pruebas, no en Production. <https://firebase.google.com/docs/reference/admin/node/firebase-admin.firestore>
+El proyecto está en el plan Firebase Spark. Las bases Firestore con ID distinto de `(default)` requieren activar facturación Blaze y no reciben la cuota gratuita de Firestore. Por ello, V1 no creará `origen-staging` como base secundaria.
 
-### Configuración manual pendiente
+- Se conserva la única base `(default)`, en la ubicación existente `southamerica-east1`.
+- Los datos de control de calidad de Preview van bajo `previewEnvironments/mejoras-seguridad-origen/patients/{patientId}`.
+- La API de pacientes verifica cuenta médica, `VERCEL_ENV=preview` y el namespace exacto `ORIGEN_PREVIEW_DATA_NAMESPACE`.
+- La variable de Vercel queda limitada a Preview y a la rama `mejoras-seguridad-origen`.
+- La API Admin SDK escribe solo en ese subárbol, nunca en `patients/{patientId}` de producción.
+- Las reglas cliente mantienen denegado todo acceso que no esté expresamente permitido; el SDK Admin del servidor utiliza autenticación y autorización propias y no depende de las reglas cliente.
+- No se debe crear una base Firestore nombrada ni activar Blaze para este paso.
 
-En Firebase Console, proyecto `origen-medico`:
-1. Abrir **Databases & Storage → Firestore**.
-2. Elegir **Add database**.
-3. Elegir Standard edition.
-4. Database ID: `origen-staging`.
-5. Elegir la misma ubicación que la base `(default)` cuando sea posible.
-6. Elegir **Production mode** para las reglas iniciales (denegar acceso desde clientes; la API Admin usa credenciales de servidor).
-7. Crear la base.
-
-Hasta que la base nombrada exista, `GET/POST /api/admin/patients` devolverá un error controlado y no escribirá nada en `(default)`. No se habilitarán altas de pacientes reales en esta etapa.
+Esta separación es lógica por colección/namespace dentro de la base existente, no aislamiento físico de bases. No se deben guardar datos reales de pacientes en Preview.
