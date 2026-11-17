@@ -49,7 +49,7 @@ export function normalizePatientProfile(input) {
   }
   const allowedKeys = new Set([
     "displayName", "phone", "ageYears", "birthDate", "sexAtBirth", "heightCm",
-    "medicalHistory", "surgicalHistory", "familyHistory", "allergies",
+    "activeDiagnoses", "medicalHistory", "surgicalHistory", "familyHistory", "allergies",
     "concomitantMedications"
   ]);
   if (Object.keys(input).some((key) => !allowedKeys.has(key))) {
@@ -96,6 +96,7 @@ export function normalizePatientProfile(input) {
     birthDate,
     sexAtBirth,
     heightCm: heightCm ?? null,
+    activeDiagnoses: optionalText(input.activeDiagnoses, "diagnósticos activos", 2000),
     medicalHistory: optionalText(input.medicalHistory, "antecedentes médicos", 3000),
     surgicalHistory: optionalText(input.surgicalHistory, "antecedentes quirúrgicos", 2000),
     familyHistory: optionalText(input.familyHistory, "antecedentes familiares", 2000),

@@ -532,7 +532,7 @@ function App() {
   const [cloudRecordTab, setCloudRecordTab] = useState('summary');
   const [cloudProfileForm, setCloudProfileForm] = useState({
     displayName: '', phone: '', ageYears: '', birthDate: '', sexAtBirth: '', heightCm: '',
-    medicalHistory: '', surgicalHistory: '', familyHistory: '', allergies: '',
+    activeDiagnoses: '', medicalHistory: '', surgicalHistory: '', familyHistory: '', allergies: '',
     concomitantMedications: ''
   });
   const [cloudMeasurementSaving, setCloudMeasurementSaving] = useState(false);
@@ -763,6 +763,7 @@ function App() {
         birthDate: payload.patient?.birthDate || '',
         sexAtBirth: payload.patient?.sexAtBirth || '',
         heightCm: payload.patient?.heightCm ?? '',
+        activeDiagnoses: payload.patient?.activeDiagnoses || '',
         medicalHistory: payload.patient?.medicalHistory || '',
         surgicalHistory: payload.patient?.surgicalHistory || '',
         familyHistory: payload.patient?.familyHistory || '',
@@ -3403,6 +3404,7 @@ function App() {
                             </label>
                           </div>
                           {[
+                            ['activeDiagnoses', 'Diagnósticos activos / problemas vigentes', '2000'],
                             ['medicalHistory', 'Antecedentes médicos relevantes', '3000'],
                             ['surgicalHistory', 'Antecedentes quirúrgicos', '2000'],
                             ['familyHistory', 'Antecedentes familiares', '2000'],

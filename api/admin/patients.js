@@ -67,6 +67,7 @@ export default async function handler(req, res) {
       birthDate: patientInput.birthDate,
       sexAtBirth: patientInput.sexAtBirth,
       heightCm: patientInput.heightCm,
+      activeDiagnoses: patientInput.activeDiagnoses,
       medicalHistory: patientInput.medicalHistory,
       surgicalHistory: patientInput.surgicalHistory,
       familyHistory: patientInput.familyHistory,
@@ -74,7 +75,7 @@ export default async function handler(req, res) {
       concomitantMedications: patientInput.concomitantMedications,
       status: "pending_account",
       accountStatus: "unlinked",
-      schemaVersion: 1,
+      schemaVersion: 2,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
       createdByUid: decoded.uid

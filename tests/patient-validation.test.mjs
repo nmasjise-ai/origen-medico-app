@@ -64,6 +64,7 @@ test("normalizes date of birth, sex, height and clinical history", () => {
     birthDate: "1990-05-10",
     sexAtBirth: "female",
     heightCm: "164.5",
+    activeDiagnoses: "Obesidad",
     medicalHistory: "Hipertensión",
     allergies: "Penicilina",
     concomitantMedications: "Losartán"
@@ -71,6 +72,7 @@ test("normalizes date of birth, sex, height and clinical history", () => {
   assert.equal(result.birthDate, "1990-05-10");
   assert.equal(result.sexAtBirth, "female");
   assert.equal(result.heightCm, 164.5);
+  assert.equal(result.activeDiagnoses, "Obesidad");
   assert.equal(result.medicalHistory, "Hipertensión");
   assert.equal(result.allergies, "Penicilina");
   assert.equal(result.ageYears >= 36, true);

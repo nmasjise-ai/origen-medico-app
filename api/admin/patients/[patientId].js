@@ -66,6 +66,7 @@ export default async function handler(req, res) {
           birthDate: data.birthDate || null,
           sexAtBirth: data.sexAtBirth || null,
           heightCm: data.heightCm ?? null,
+          activeDiagnoses: data.activeDiagnoses || "",
           medicalHistory: data.medicalHistory || "",
           surgicalHistory: data.surgicalHistory || "",
           familyHistory: data.familyHistory || "",
@@ -85,6 +86,7 @@ export default async function handler(req, res) {
       const batch = db.batch();
       batch.update(patientRef, {
         ...profile,
+        schemaVersion: 2,
         updatedAt: FieldValue.serverTimestamp()
       });
       const auditRef = patientRef.collection("auditLogs").doc();
