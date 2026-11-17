@@ -206,3 +206,15 @@ Esta separación es lógica por colección/namespace dentro de la base existente
 - Cada nuevo control genera un evento de auditoría y actualiza `updatedAt`.
 - La pantalla del panel permite abrir una ficha provisional, consultar el historial y registrar un nuevo control.
 - Estos datos son QA; todavía no existe cuenta de paciente vinculada ni portal individual activo.
+
+
+## Decisión de autenticación de pacientes
+
+- Método único de inicio de sesión: correo electrónico + contraseña mediante Firebase Authentication.
+- El proveedor Email/Password ya está habilitado en Firebase Console y el frontend actual del médico usa `signInWithEmailAndPassword`.
+- No implementar inicio de sesión por SMS, OTP de WhatsApp, ni Google/otros proveedores en esta fase.
+- El paciente podrá crear su cuenta solo después de recibir una invitación emitida por el consultorio; no habrá auto-registro público abierto.
+- El flujo previsto es: invitación de un solo uso y con vencimiento → paciente crea cuenta con correo y contraseña → verificación de correo → servidor valida y consume invitación → servidor vincula `users/{uid}.patientId` y marca la cuenta del expediente como vinculada.
+- Recuperación de contraseña mediante correo de Firebase. No pedir ni almacenar contraseñas en ORIGEN ni enviarlas por WhatsApp.
+- El enlace de invitación puede compartirse manualmente por el canal que el consultorio elija, pero el canal de mensajería no es un proveedor de autenticación ni reemplaza la verificación de correo.
+- El vínculo de paciente se realiza solo desde servidor; el cliente nunca puede escoger ni modificar libremente `patientId`.
