@@ -47,11 +47,11 @@ Interpretación: no se encontró el documento clínico antiguo en la ruta espera
 
 1. Crear `origen-staging` desde Firebase Console.
 2. Repetir auditoría de colecciones raíz desde la última Preview.
-3. Probar alta, apertura de ficha, historial de mediciones y nuevo control solo con registros ficticios de QA.
-4. Implementar invitaciones y vínculo seguro `users/{uid}.patientId`.
-5. Construir repositorios para mediciones, tratamiento, nutrición, síntomas y solicitudes.
-6. Reemplazar el expediente demo y selector por la identidad autenticada.
-7. Implementar vínculo de cuentas y probar médico, paciente A, paciente B, nutricionista y recepción.
+3. Esperar un despliegue Preview del último commit (la API de Vercel alcanzó el límite diario de despliegues gratuitos durante esta sesión).
+4. Probar emisión, validación, expiración y reemisión de invitaciones con cuentas y datos totalmente ficticios.
+5. Completar pruebas extremo a extremo de activación, verificación de correo, consumo único y sesión paciente.
+6. Construir repositorios para mediciones, tratamiento, nutrición, síntomas y solicitudes.
+7. Probar médico, paciente A, paciente B, nutricionista y recepción.
 8. Mantener las reglas sin publicar hasta validar todos los flujos.
 
 ## Bloqueos de seguridad
@@ -82,4 +82,13 @@ Se implementó el flujo de invitación con correo y contraseña exclusivamente:
 - El enlace lleva el secreto como fragmento URL `#activar=`, no como query string. El envío del enlace se realiza manualmente; Firebase envía el correo de verificación.
 - Firebase Email/Password es el único proveedor usado. No se ha habilitado SMS/WhatsApp OTP ni otros proveedores.
 
-El flujo está limitado al namespace Preview `previewEnvironments/mejoras-seguridad-origen`. Las reglas y la vinculación de producción aún requieren diseño y pruebas específicas antes de habilitar pacientes reales.
+El flujo está limitado al namespace Preview `previewEnvironments/mejoras-seguridad-origen`. El código del flujo de invitación está en la rama de trabajo, pero todavía requiere despliegue Preview actualizado y pruebas extremo a extremo. Las reglas y la vinculación de producción aún requieren diseño y pruebas específicas antes de habilitar pacientes reales.
+
+
+## Estado de pruebas y despliegue del módulo de invitaciones
+
+- Firebase Emulator / GitHub Actions: la última ejecución completada antes del cambio que añade el paso de compilación aprobó **40/40 pruebas** (8 de reglas Firestore y 32 unitarias de invitaciones, mediciones, perfiles, namespace y regresión del frontend).
+- Se añadió al workflow un paso adicional `npm run build`; la ejecución del commit que incluye ese paso está pendiente de terminar.
+- El límite diario de Vercel Free para crear despliegues fue alcanzado durante esta sesión (respuesta 402 `api-deployments-free-per-day`, retry indicado 24 h). Por eso el último commit está guardado en GitHub pero aún no tiene un Preview nuevo asociado.
+- El último Preview READY no incluye todos los cambios de invitación y no debe usarse para probarlos todavía.
+- El PR sigue en borrador, sin merge y sin despliegue de reglas.
