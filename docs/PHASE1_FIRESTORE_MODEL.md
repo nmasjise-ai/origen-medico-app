@@ -197,3 +197,12 @@ El proyecto está en el plan Firebase Spark. Las bases Firestore con ID distinto
 - No se debe crear una base Firestore nombrada ni activar Blaze para este paso.
 
 Esta separación es lógica por colección/namespace dentro de la base existente, no aislamiento físico de bases. No se deben guardar datos reales de pacientes en Preview.
+
+
+## Ficha individual y mediciones de control en Preview
+
+- `GET /api/admin/patients/{patientId}`: devuelve solo los campos básicos de perfil y hasta 30 mediciones recientes, con acceso de administrador y namespace Preview.
+- `POST /api/admin/patients/{patientId}`: agrega una nueva medición mediante lista permitida de campos y límites numéricos; no acepta medicamentos, dosis, notas libres ni cambios de rol.
+- Cada nuevo control genera un evento de auditoría y actualiza `updatedAt`.
+- La pantalla del panel permite abrir una ficha provisional, consultar el historial y registrar un nuevo control.
+- Estos datos son QA; todavía no existe cuenta de paciente vinculada ni portal individual activo.
