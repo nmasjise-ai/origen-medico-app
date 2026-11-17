@@ -8,6 +8,7 @@ Este documento centraliza los requisitos. Las nuevas ideas se registran aquí; s
 
 ## P0 — Fundaciones antes de pacientes reales
 - [ ] Modelo Firestore por paciente y subcolecciones.
+- [ ] Base Firestore nombrada `origen-staging` para datos de Preview, separada de `(default)`; reglas iniciales cerradas.
 - [ ] Cuentas individuales, invitaciones, recuperación de acceso y vínculo seguro `users/{uid}.patientId`.
 - [ ] Roles y permisos de mínimo privilegio para médico, nutricionista, recepción, tienda y paciente.
 - [ ] Pruebas con Firebase Emulator para visitante, médico, nutricionista, recepción, paciente A y paciente B.
