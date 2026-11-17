@@ -2820,7 +2820,8 @@ function App() {
                       <strong>{legacyAuditResult.exists ? 'Documento antiguo encontrado' : 'No se encontró el documento antiguo'}</strong>
                       <div className="grid grid-cols-2 gap-2">
                         <div>Documentos legados: <strong>{legacyAuditResult.matchingDocuments ?? (legacyAuditResult.exists ? 1 : 0)}</strong></div>
-                        <div>Raíces revisadas: <strong>{legacyAuditResult.scannedArtifactRoots ?? 0}</strong></div>
+                        <div>Raíces de artifacts: <strong>{legacyAuditResult.scannedArtifactRoots ?? 0}</strong></div>
+                        <div>Colecciones principales revisadas: <strong>{legacyAuditResult.rootCollectionsScanned ?? 'No disponible'}</strong></div>
                         {legacyAuditResult.counts && (
                           <>
                             <div>Expedientes: <strong>{legacyAuditResult.counts.patients}</strong></div>
@@ -2835,6 +2836,20 @@ function App() {
                           <div className="col-span-2 text-amber-800">Documentos que requieren revisión técnica: <strong>{legacyAuditResult.unparsedDocuments}</strong></div>
                         )}
                       </div>
+                      {Array.isArray(legacyAuditResult.rootCollections) && legacyAuditResult.rootCollections.length > 0 && (
+                        <div className="border-t border-[#E6D9C0] pt-2 space-y-1">
+                          <strong>Colecciones principales (solo cantidades)</strong>
+                          {legacyAuditResult.rootCollections.map((item) => (
+                            <div key={item.collection} className="flex justify-between gap-3">
+                              <span>{item.collection}</span>
+                              <strong>{item.documents}</strong>
+                            </div>
+                          ))}
+                          {legacyAuditResult.rootCollectionsTruncated && (
+                            <p className="text-amber-800">La lista se limitó a las primeras 100 colecciones.</p>
+                          )}
+                        </div>
+                      )}
                       {legacyAuditResult.updatedAt && (
                         <p>Última actualización: {new Date(legacyAuditResult.updatedAt).toLocaleString('es-BO')}</p>
                       )}
