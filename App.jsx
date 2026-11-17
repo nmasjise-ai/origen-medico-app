@@ -1055,6 +1055,20 @@ function App() {
 
       let tokenResult = await getIdTokenResult(credential.user, true);
 
+      // A verified patient with a consumed invitation is routed to their own
+      // server-resolved profile before attempting the protected admin bootstrap.
+      if (tokenResult.claims.admin !== true) {
+        const patientProfile = await loadPatientSession(credential.user);
+        if (patientProfile) {
+          setIsAdmin(false);
+          setPatientPortalProfile(patientProfile);
+          setLoginPassword('');
+          setAuthError('');
+          setAppMode('patient_portal');
+          return;
+        }
+      }
+
       // Only the account preconfigured in private Vercel variables can receive admin:true.
       if (tokenResult.claims.admin !== true) {
         const idToken = await credential.user.getIdToken();
@@ -1103,6 +1117,7 @@ function App() {
     try {
       await signOut(auth);
       setIsAdmin(false);
+      setPatientPortalProfile(null);
       setAppMode('public');
       setClinicData(DEFAULT_CLINIC_STATE);
       try {
