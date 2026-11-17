@@ -13,7 +13,7 @@
 - Modelo Firestore por paciente en `docs/PHASE1_FIRESTORE_MODEL.md`.
 - Reglas objetivo con administrador por claim, vínculo paciente `users/{uid}.patientId`, notas internas separadas y validación de síntomas/diarios/solicitudes.
 - Firebase Emulator Suite, GitHub Actions y pruebas en `tests/*.test.mjs`.
-- Última suite completada y verificada: 13/13 (8 reglas + 5 regresiones del frontend). Se añadieron 7 pruebas de validación de perfil y 4 de aislamiento de base Preview; se añadieron también 7 pruebas de mediciones/ID y las pruebas de validación de perfiles y aislamiento; confirmar el resultado de CI para el conjunto completo.
+- Última suite completada y verificada: 13/13 (8 reglas + 5 regresiones del frontend). Se añadieron 7 pruebas de validación de perfil y 4 de aislamiento de base Preview; la suite completa ampliada se ejecutó en GitHub Actions y aprobó 31/31 casos.
 - Frontend desconectado del documento compartido `clinic_state` y del almacenamiento clínico en `localStorage`; altas y guardado del flujo legado continúan bloqueados.
 - Se retiraron exportación/restauración del estado de demostración y carga QR Base64.
 - Auditoría protegida: revisa la ruta de datos anterior, raíces de `artifacts` y nombres/cantidades de colecciones principales; nunca devuelve campos de documentos.
