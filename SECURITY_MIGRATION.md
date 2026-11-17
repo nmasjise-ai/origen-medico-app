@@ -19,10 +19,10 @@
 - Auditoría protegida: revisa la ruta de datos anterior, raíces de `artifacts` y nombres/cantidades de colecciones principales; nunca devuelve campos de documentos.
 - Nueva pantalla «Pacientes en nube (Pruebas)» en el panel médico.
 - `api/admin/patients.js`: listado y creación de perfiles provisionales solo para administrador, con validación estricta, medición inicial opcional y evento de auditoría.
-- `api/_lib/staging-firestore.js`: exige `VERCEL_ENV=preview`, base nombrada configurada y rechaza `(default)`.
+- `api/_lib/staging-firestore.js`: exige `VERCEL_ENV=preview` y un namespace exacto configurado; rechaza Production.
 - `api/admin/patients.js` solo accede a la base nombrada `origen-staging`; no escribe en la base principal.
-- Vercel: `ORIGEN_STAGING_FIRESTORE_DATABASE_ID=origen-staging`, variable plain, únicamente en Preview y rama `mejoras-seguridad-origen`.
-- La base `origen-staging` aún no se ha creado en Firebase Console. Hasta entonces GET/POST de pacientes devuelve un error controlado y no realiza escrituras.
+- Vercel: `ORIGEN_PREVIEW_DATA_NAMESPACE=previewEnvironments/mejoras-seguridad-origen`, variable plain, únicamente en Preview y rama `mejoras-seguridad-origen`.
+- No se creará una segunda base Firestore: el plan Spark no permite bases nombradas adicionales sin activar Blaze. Los datos QA se alojan en un subárbol de la única base `(default)` y la API solo funciona en Preview.
 - Backlog en `PRODUCT_BACKLOG.md`; catálogo MixNutri preliminar en `docs/INITIAL_STOCK_CATALOG.md`; notas regulatorias en `docs/REGULATORY_AND_COMPLIANCE_NOTES.md`.
 
 ## Auditoría de Firestore actual
@@ -37,11 +37,11 @@ Interpretación: no se encontró el documento clínico antiguo en la ruta espera
 ## Separación Preview / Production
 
 - La base `(default)` se usa solo para auditoría de metadatos del esquema legado.
-- Los perfiles provisionales de Preview se escribirán exclusivamente en `origen-staging`.
-- Vercel establece el ID de esa base solo para Preview y la rama de seguridad.
-- El endpoint rechaza Production y rechaza expresamente la base `(default)`.
-- Falta crear manualmente `origen-staging` en Firebase Console. Elegir Standard edition, ID `origen-staging`, ubicación revisada y reglas iniciales en Production mode (deny by default).
-- Admin SDK `getFirestore(app, databaseId)` está documentado como Public Preview; aquí se usa exclusivamente para pruebas, no para Production: https://firebase.google.com/docs/reference/admin/node/firebase-admin.firestore
+- Los perfiles provisionales de Preview se escribirán exclusivamente en `previewEnvironments/mejoras-seguridad-origen/patients` dentro de `(default)`.
+- Vercel establece el namespace de pruebas solo para Preview y la rama de seguridad.
+- El endpoint rechaza Production y solo permite el namespace fijo de Preview.
+- No requiere crear otra base ni cambiar a Blaze. La base `(default)` permanece en `southamerica-east1`.
+- La separación QA/Production es por namespace lógico dentro de la misma base; no es aislamiento físico de bases. No poner datos reales en Preview.
 
 ## Pendientes inmediatos
 
