@@ -3328,7 +3328,7 @@ function App() {
                           ? (latest.weightKg / Math.pow(height / 100, 2)).toFixed(1)
                           : null;
                         const weightSeries = [...(selectedCloudPatient.measurements || [])]
-                          .filter((item) => Number.isFinite(Number(item.weightKg)))
+                          .filter((item) => item.weightKg !== null && item.weightKg !== undefined && Number.isFinite(Number(item.weightKg)))
                           .slice(0, 8)
                           .reverse();
                         const minWeight = weightSeries.length ? Math.min(...weightSeries.map((item) => Number(item.weightKg))) : 0;
