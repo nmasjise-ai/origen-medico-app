@@ -1,47 +1,70 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getStagingFirestoreDatabaseId } from "../api/_lib/staging-firestore.js";
+import {
+  getPreviewDataNamespace,
+  getPreviewPatientsCollection
+} from "../api/_lib/staging-firestore.js";
 
-test("allows only a named staging database in Vercel Preview", () => {
+const validPreview = {
+  VERCEL_ENV: "preview",
+  ORIGEN_PREVIEW_DATA_NAMESPACE: "previewEnvironments/mejoras-seguridad-origen"
+};
+
+test("allows the explicit isolated namespace only in Vercel Preview", () => {
   assert.equal(
-    getStagingFirestoreDatabaseId({
-      VERCEL_ENV: "preview",
-      ORIGEN_STAGING_FIRESTORE_DATABASE_ID: "origen-staging"
-    }),
-    "origen-staging"
+    getPreviewDataNamespace(validPreview),
+    "previewEnvironments/mejoras-seguridad-origen"
   );
 });
 
-test("rejects production environment", () => {
+test("rejects production and development deployments", () => {
   assert.throws(
-    () => getStagingFirestoreDatabaseId({
-      VERCEL_ENV: "production",
-      ORIGEN_STAGING_FIRESTORE_DATABASE_ID: "origen-staging"
-    }),
-    /Preview environment/
+    () => getPreviewDataNamespace({ ...validPreview, VERCEL_ENV: "production" }),
+    /Vercel Preview/
+  );
+  assert.throws(
+    () => getPreviewDataNamespace({ ...validPreview, VERCEL_ENV: "development" }),
+    /Vercel Preview/
   );
 });
 
-test("rejects the default database to prevent Preview writes into production data", () => {
+test("rejects a missing or unexpected namespace", () => {
   assert.throws(
-    () => getStagingFirestoreDatabaseId({
+    () => getPreviewDataNamespace({ VERCEL_ENV: "preview" }),
+    /namespace is not configured/
+  );
+  assert.throws(
+    () => getPreviewDataNamespace({
       VERCEL_ENV: "preview",
-      ORIGEN_STAGING_FIRESTORE_DATABASE_ID: "(default)"
+      ORIGEN_PREVIEW_DATA_NAMESPACE: "patients"
     }),
-    /separate named Firestore database/
+    /namespace is not configured/
   );
 });
 
-test("rejects missing or invalid database IDs", () => {
-  assert.throws(
-    () => getStagingFirestoreDatabaseId({ VERCEL_ENV: "preview" }),
-    /separate named Firestore database/
-  );
-  assert.throws(
-    () => getStagingFirestoreDatabaseId({
-      VERCEL_ENV: "preview",
-      ORIGEN_STAGING_FIRESTORE_DATABASE_ID: "Prod_Database"
-    }),
-    /invalid/
-  );
+test("builds the dedicated nested patients collection path", () => {
+  const calls = [];
+  const collection = (name) => {
+    calls.push(["collection", name]);
+    return {
+      doc: (id) => {
+        calls.push(["doc", id]);
+        return {
+          collection: (subcollection) => {
+            calls.push(["subcollection", subcollection]);
+            return { marker: "preview-patients-collection" };
+          }
+        };
+      }
+    };
+  };
+
+  const result = getPreviewPatientsCollection({ collection }, validPreview);
+
+  assert.equal(result.marker, "preview-patients-collection");
+  assert.deepEqual(calls, [
+    ["collection", "previewEnvironments"],
+    ["doc", "mejoras-seguridad-origen"],
+    ["subcollection", "patients"]
+  ]);
 });
