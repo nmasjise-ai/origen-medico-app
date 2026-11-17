@@ -9,9 +9,9 @@ Este documento centraliza los requisitos. Las nuevas ideas se registran aquí; s
 ## P0 — Fundaciones antes de pacientes reales
 - [ ] Modelo Firestore por paciente y subcolecciones.
 - [ ] Namespace QA `previewEnvironments/mejoras-seguridad-origen` dentro de `(default)`, restringido a API Preview y separado de `patients` de producción.
-- [ ] Cuentas individuales únicamente con correo electrónico y contraseña de Firebase Authentication; no habilitar SMS/OTP de WhatsApp ni proveedores adicionales.
-- [ ] Alta de pacientes solo mediante invitación médica de un solo uso; el paciente define su contraseña mediante formulario de ORIGEN y confirma su correo antes de acceder a su expediente.
-- [ ] Recuperación de acceso por correo y vínculo seguro `users/{uid}.patientId`; impedir el registro público sin invitación válida.
+- [x] Método único de cuenta individual: correo electrónico y contraseña de Firebase Authentication; sin SMS/OTP de WhatsApp ni proveedores adicionales.
+- [x] Invitación médica de un solo uso y con vencimiento; el paciente define su contraseña en ORIGEN y verifica su correo antes de vincular el expediente (Preview).
+- [x] Recuperación de contraseña por correo y vínculo seguro de UID con expediente en namespace Preview; impedir auto-registro sin invitación válida.
 - [ ] Roles y permisos de mínimo privilegio para médico, nutricionista, recepción, tienda y paciente.
 - [ ] Pruebas con Firebase Emulator para visitante, médico, nutricionista, recepción, paciente A y paciente B.
 - [ ] Eliminar expedientes/datos clínicos de `localStorage`; no exponer PII clínica en URLs, logs ni notificaciones externas.
