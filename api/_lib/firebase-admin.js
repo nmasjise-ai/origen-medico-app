@@ -43,7 +43,7 @@ export function getAdminAuth() {
 
 export function getBearerToken(req) {
   const header = req.headers.authorization || "";
-  const match = header.match(/^Bearer\\s+(.+)$/i);
+  const match = header.match(/^Bearer\s+(.+)$/i);
   return match ? match[1] : null;
 }
 
