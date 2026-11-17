@@ -1,23 +1,23 @@
-export function getStagingFirestoreDatabaseId(env = process.env) {
+const EXPECTED_PREVIEW_NAMESPACE = "previewEnvironments/mejoras-seguridad-origen";
+
+export function getPreviewDataNamespace(env = process.env) {
   if (env.VERCEL_ENV !== "preview") {
-    const error = new Error("Patient write operations are restricted to a Vercel Preview environment.");
+    const error = new Error("Patient preview operations are restricted to a Vercel Preview deployment.");
     error.statusCode = 503;
     throw error;
   }
 
-  const databaseId = String(env.ORIGEN_STAGING_FIRESTORE_DATABASE_ID || "").trim();
-
-  if (!databaseId || databaseId === "(default)") {
-    const error = new Error("A separate named Firestore database must be configured for Preview.");
+  if (env.ORIGEN_PREVIEW_DATA_NAMESPACE !== EXPECTED_PREVIEW_NAMESPACE) {
+    const error = new Error("The isolated Preview data namespace is not configured.");
     error.statusCode = 503;
     throw error;
   }
 
-  if (!/^[a-z][a-z0-9-]{2,61}[a-z0-9]$/.test(databaseId)) {
-    const error = new Error("The configured Preview Firestore database ID is invalid.");
-    error.statusCode = 503;
-    throw error;
-  }
+  return EXPECTED_PREVIEW_NAMESPACE;
+}
 
-  return databaseId;
+export function getPreviewPatientsCollection(db, env = process.env) {
+  const namespace = getPreviewDataNamespace(env);
+  const [rootCollection, rootDocument] = namespace.split("/");
+  return db.collection(rootCollection).doc(rootDocument).collection("patients");
 }
