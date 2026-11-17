@@ -100,3 +100,21 @@ El Preview está protegido con Vercel Authentication. Al abrir el Preview con el
 - El acceso compartible de Vercel vence aproximadamente en 23 horas.
 - El token de invitación tiene vigencia propia de 7 días, pero el acceso temporal de Vercel puede vencer antes.
 - Esto aplica solo a QA/Preview; no reemplaza la autenticación de Firebase ni autoriza el acceso a expedientes.
+
+
+## Fase 1 — Perfil clínico y antropometría (Preview)
+
+Implementación de la rama `mejoras-seguridad-origen`, commit `86687fb56e19e44900b9f4051e67ffd2276414f7`:
+
+- Ficha individual organizada en pestañas Resumen, Historia clínica y Antropometría.
+- Perfil con nombre, teléfono, fecha de nacimiento, edad derivada/compatibilidad, sexo biológico y talla.
+- Historia clínica básica: diagnósticos activos, antecedentes médicos, quirúrgicos y familiares, alergias y medicación concomitante.
+- Mediciones con peso, cintura, músculo, grasa y snapshot de talla; IMC derivado sin clasificación automática.
+- Gráfico de evolución del peso y tabla histórica.
+- API protegida con validación de campos, límites, autorización de administrador, namespace Preview y auditoría de creación/actualización.
+- El perfil usa `schemaVersion: 2`; los registros anteriores siguen siendo legibles y se completan de forma compatible.
+- GitHub Actions del commit indicado: **45/45 pruebas aprobadas** y `npm run build` completado.
+- Vercel todavía no publicó este commit en Preview: el último deployment READY visible corresponde a un commit anterior y el check de Vercel devuelve `build-rate-limit`. No usar ese Preview anterior para validar esta interfaz nueva.
+- La prueba manual en navegador de esta fase queda pendiente hasta disponer de un Preview actualizado. Mantener exclusivamente datos ficticios.
+
+La fase se considera **implementada y validada por CI**, pero no cerrada funcionalmente hasta completar la prueba manual en Preview. No fusionar el PR, no publicar reglas Firestore ni usar expedientes reales.

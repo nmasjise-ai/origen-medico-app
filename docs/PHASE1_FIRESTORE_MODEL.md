@@ -4,7 +4,7 @@
 
 Sustituir el documento compartido `artifacts/{appId}/public/data/clinic_state/main` por expedientes independientes en Cloud Firestore. Cada paciente tendrá una identidad vinculada a un único expediente. El médico podrá consultar todos los expedientes autorizados mediante un custom claim de Firebase Authentication (`admin: true`).
 
-**Este documento define el destino; no significa que el frontend ya esté migrado ni que estas reglas deban publicarse todavía.**
+**Este documento define el modelo objetivo. El perfil clínico básico y la antropometría ya tienen una implementación inicial en la rama de trabajo y namespace Preview; no están habilitados en producción ni implican publicar estas reglas.**
 
 ## Hechos del proyecto actual
 
@@ -28,16 +28,18 @@ Documento de autorización/mapeo, provisionado únicamente por el servidor:
 
 Documento de perfil que puede ver el paciente asociado y el médico:
 
-- Identidad: `displayName`, `birthDate` o edad calculada, `sex`, `phone`, `email`.
-- Estado: `status`, `createdAt`, `updatedAt`, `assignedClinicianUid`.
-- Datos necesarios para el portal: objetivos visibles, altura y preferencias acordadas.
-- No guardar aquí notas internas del médico, alertas internas ni datos de auditoría.
+- Identidad: `displayName`, `birthDate` y edad derivada (`ageYears` como compatibilidad), `sexAtBirth`, `phoneE164` y correo asociado a la invitación/vínculo.
+- Antropometría de referencia: `heightCm`; cada medición conserva una instantánea `heightCm` para calcular IMC histórico cuando está disponible.
+- Historia clínica básica visible al médico autorizado: `activeDiagnoses`, `medicalHistory`, `surgicalHistory`, `familyHistory`, `allergies` y `concomitantMedications`.
+- Estado: `status`, `createdAt`, `updatedAt`, `assignedClinicianUid` y `schemaVersion`.
+- No guardar aquí notas internas del médico, alertas internas ni datos de auditoría; usar `doctorNotes` y `auditLogs` separados.
+- La implementación actual de estos campos está limitada al namespace de Preview y se valida mediante endpoints de servidor; no constituye aún el repositorio clínico de producción.
 
 ### Subcolecciones de cada paciente
 
 | Ruta | Contenido | Paciente | Médico |
 |---|---|---|---|
-| `measurements/{id}` | Peso, cintura, composición corporal e IMC derivado | Leer | Leer/escribir |
+| `measurements/{id}` | Peso, talla snapshot, cintura y composición corporal; IMC derivado de peso/talla, sin almacenar una interpretación automática | Leer | Leer/escribir |
 | `treatmentEvents/{id}` | Tratamiento prescrito, dosis indicada, calendario y cambios autorizados | Leer | Leer/escribir |
 | `nutritionPlans/{id}` | Planes nutricionales aprobados, versiones y vigencia | Leer | Leer/escribir |
 | `prescriptions/{id}` | Recetas emitidas y estado | Leer | Leer/escribir |

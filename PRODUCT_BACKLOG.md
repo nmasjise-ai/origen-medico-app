@@ -25,10 +25,10 @@ Este documento centraliza los requisitos. Las nuevas ideas se registran aquí; s
 ## P1 — Experiencia clínica esencial
 
 ### Expediente individual
-- [ ] Perfil del paciente, datos de contacto y antecedentes clínicos relevantes.
-- [ ] Alergias y medicación concomitante.
+- [x] Perfil del paciente, datos de contacto, fecha de nacimiento/edad y sexo biológico (implementado en Preview; QA pendiente).
+- [x] Diagnósticos activos, antecedentes médicos/quirúrgicos/familiares, alergias y medicación concomitante (formulario validado y auditado en Preview).
 - [ ] Línea de tiempo de consultas, mediciones, síntomas, tratamientos, recetas, planes y documentos.
-- [ ] Peso, cintura, IMC calculado, composición corporal y gráficos de evolución.
+- [x] Peso, talla, cintura, IMC derivado, composición corporal e historial/gráfico de evolución (implementado en Preview; pendiente validación manual de interfaz).
 - [ ] Tratamiento indicado, dosis prescrita por médico, frecuencia y eventos autorizados. La app nunca ajusta dosis automáticamente.
 - [ ] En V1 no se habilitará carga de archivos de laboratorio, PDF ni fotografías clínicas. Si más adelante se necesita, usar un servicio de almacenamiento separado, límites de tamaño, compresión, retención y permisos específicos; nunca guardar binarios/base64 en Firestore.
 - [ ] Informe de progreso PDF, revisado por profesional antes de compartirlo.
