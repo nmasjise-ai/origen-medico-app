@@ -2799,7 +2799,7 @@ function App() {
                   <div>
                     <h3 className="font-serif text-lg font-bold">Auditoría del almacenamiento anterior</h3>
                     <p className="text-xs text-[#5C4D3C] mt-1">
-                      Revisa únicamente si existe el documento legado y cuántos registros contiene. Esta consulta no muestra nombres, teléfonos ni contenido clínico.
+                      Busca el documento legado en la ruta habitual y revisa otras raíces de la colección artifacts. Solo devuelve conteos; no muestra nombres, teléfonos ni contenido clínico.
                     </p>
                   </div>
                   <button
@@ -2818,16 +2818,23 @@ function App() {
                   {legacyAuditResult && (
                     <div className="rounded-xl border border-[#E6D9C0] bg-[#FAF6EE] p-3 space-y-2 text-xs text-[#3D3326]">
                       <strong>{legacyAuditResult.exists ? 'Documento antiguo encontrado' : 'No se encontró el documento antiguo'}</strong>
-                      {legacyAuditResult.counts && (
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>Expedientes: <strong>{legacyAuditResult.counts.patients}</strong></div>
-                          <div>Registros demo: <strong>{legacyAuditResult.counts.demoPatientRecords}</strong></div>
-                          <div>Por clasificar: <strong>{legacyAuditResult.counts.unclassifiedPatientRecords}</strong></div>
-                          <div>Solicitudes web: <strong>{legacyAuditResult.counts.webLeads}</strong></div>
-                          <div>Solicitudes de receta: <strong>{legacyAuditResult.counts.prescriptionRequests}</strong></div>
-                          <div>Solicitudes demo: <strong>{legacyAuditResult.counts.demoPrescriptionRequests}</strong></div>
-                        </div>
-                      )}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>Documentos legados: <strong>{legacyAuditResult.matchingDocuments ?? (legacyAuditResult.exists ? 1 : 0)}</strong></div>
+                        <div>Raíces revisadas: <strong>{legacyAuditResult.scannedArtifactRoots ?? 0}</strong></div>
+                        {legacyAuditResult.counts && (
+                          <>
+                            <div>Expedientes: <strong>{legacyAuditResult.counts.patients}</strong></div>
+                            <div>Registros demo: <strong>{legacyAuditResult.counts.demoPatientRecords}</strong></div>
+                            <div>Por clasificar: <strong>{legacyAuditResult.counts.unclassifiedPatientRecords}</strong></div>
+                            <div>Solicitudes web: <strong>{legacyAuditResult.counts.webLeads}</strong></div>
+                            <div>Solicitudes de receta: <strong>{legacyAuditResult.counts.prescriptionRequests}</strong></div>
+                            <div>Solicitudes demo: <strong>{legacyAuditResult.counts.demoPrescriptionRequests}</strong></div>
+                          </>
+                        )}
+                        {legacyAuditResult.unparsedDocuments > 0 && (
+                          <div className="col-span-2 text-amber-800">Documentos que requieren revisión técnica: <strong>{legacyAuditResult.unparsedDocuments}</strong></div>
+                        )}
+                      </div>
                       {legacyAuditResult.updatedAt && (
                         <p>Última actualización: {new Date(legacyAuditResult.updatedAt).toLocaleString('es-BO')}</p>
                       )}
