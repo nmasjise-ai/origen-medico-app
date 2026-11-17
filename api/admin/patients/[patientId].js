@@ -1,52 +1,9 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminFirestore, verifyRequestUser } from "../../_lib/firebase-admin.js";
 import { getPreviewPatientsCollection } from "../../_lib/staging-firestore.js";
+import { validatePatientMeasurement, validatePreviewPatientId } from "../../_lib/measurement-validation.js";
 
 const MAX_MEASUREMENTS = 30;
-const MEASUREMENT_LIMITS = {
-  weightKg: [20, 400],
-  waistCm: [30, 250],
-  muscleKg: [2, 150],
-  bodyFatPct: [1, 75]
-};
-
-function validateMeasurement(input) {
-  if (!input || typeof input !== "object" || Array.isArray(input)) {
-    const error = new Error("Datos de medición no válidos.");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const keys = Object.keys(input);
-  if (keys.some((key) => !Object.hasOwn(MEASUREMENT_LIMITS, key))) {
-    const error = new Error("La medición contiene campos no permitidos.");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const result = {};
-  for (const key of keys) {
-    const value = input[key];
-    if (value === "" || value === null || value === undefined) continue;
-    const number = Number(value);
-    const [min, max] = MEASUREMENT_LIMITS[key];
-    if (!Number.isFinite(number) || number < min || number > max) {
-      const error = new Error(`El valor de ${key} está fuera del rango permitido.`);
-      error.statusCode = 400;
-      throw error;
-    }
-    result[key] = number;
-  }
-
-  if (Object.keys(result).length === 0) {
-    const error = new Error("Introduce al menos una medición.");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  return result;
-}
-
 function asIso(value) {
   return value?.toDate ? value.toDate().toISOString() : null;
 }
@@ -76,7 +33,7 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "Se requiere una cuenta médica autorizada." });
     }
 
-    const patientId = getPatientId(req);
+    const patientId = validatePreviewPatientId(req.query?.patientId);
     const db = getAdminFirestore();
     const patients = getPreviewPatientsCollection(db);
     const patientRef = patients.doc(patientId);
@@ -121,7 +78,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const measurement = validateMeasurement(req.body?.measurement);
+    const measurement = validatePatientMeasurement(req.body?.measurement);
     const batch = db.batch();
     const measurementRef = patientRef.collection("measurements").doc();
 
