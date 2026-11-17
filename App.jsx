@@ -1631,7 +1631,7 @@ function App() {
             </button>
 
             <button
-              onClick={() => setAppMode(isAdmin ? 'patient' : 'login')}
+              onClick={handlePatientPortalClick}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                 appMode === 'patient'
                   ? 'bg-[#9A742C] text-white shadow-sm'
@@ -1703,7 +1703,7 @@ function App() {
               <p className="text-xs font-bold uppercase tracking-wider text-[#9A742C]">Acceso seguro</p>
               <h1 className="font-serif text-3xl font-bold text-[#231F1A]">Ingresar a ORIGEN Médico</h1>
               <p className="text-sm text-[#5C4D3C]">
-                Utiliza tu cuenta autorizada. El panel médico solo se habilita después de verificar tu rol en Firebase.
+                Ingresa con correo y contraseña. El panel médico o el portal individual se habilitan según los permisos verificados en Firebase.
               </p>
             </div>
 
@@ -1741,6 +1741,11 @@ function App() {
                   {authError}
                 </div>
               )}
+              {authStatusMessage && (
+                <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  {authStatusMessage}
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -1752,12 +1757,175 @@ function App() {
 
               <button
                 type="button"
-                onClick={() => { setAuthError(''); setAppMode('public'); }}
+                onClick={handlePasswordReset}
+                className="w-full text-sm text-[#735318] underline underline-offset-4"
+              >
+                ¿Olvidaste tu contraseña? Enviar recuperación por correo
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setAuthError(''); setAuthStatusMessage(''); setAppMode('public'); }}
                 className="w-full rounded-xl border border-[#E6D9C0] text-[#735318] font-semibold py-3 text-sm"
               >
                 Volver al acceso público
               </button>
             </form>
+          </section>
+        </main>
+      )}
+
+      {/* ACTIVACIÓN SEGURA DE CUENTA DE PACIENTE POR INVITACIÓN */}
+      {appMode === 'activation' && (
+        <main className="max-w-xl mx-auto px-4 sm:px-6 py-10">
+          <section className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] shadow-sm p-6 sm:p-9 space-y-6">
+            <div className="text-center space-y-2">
+              <OrigenMedicoLogo size={58} />
+              <p className="text-xs font-bold uppercase tracking-wider text-[#9A742C]">Invitación privada</p>
+              <h1 className="font-serif text-3xl font-bold text-[#231F1A]">Activar cuenta de paciente</h1>
+              <p className="text-sm text-[#5C4D3C]">
+                La invitación está ligada al correo que indicó el consultorio. No necesitas pagar ni introducir datos clínicos para activar tu acceso.
+              </p>
+            </div>
+
+            {isAdmin && (
+              <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                Estás dentro de la sesión médica. Abre este enlace en una ventana privada o en el dispositivo del paciente para no reemplazar tu sesión de administrador.
+              </div>
+            )}
+
+            {!activationAwaitingVerification && (
+              <form onSubmit={handlePatientInvitationActivation} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#735318] mb-1">Correo invitado</label>
+                  <input
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={activationEmail}
+                    onChange={(event) => setActivationEmail(event.target.value)}
+                    placeholder="correo@ejemplo.com"
+                    className="w-full px-4 py-3 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#735318] mb-1">
+                    {activationExistingAccount ? 'Contraseña de tu cuenta' : 'Crear contraseña'}
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    autoComplete={activationExistingAccount ? 'current-password' : 'new-password'}
+                    value={activationPassword}
+                    onChange={(event) => setActivationPassword(event.target.value)}
+                    placeholder="Al menos 6 caracteres"
+                    className="w-full px-4 py-3 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={activationBusy || isAdmin}
+                  className="w-full rounded-xl bg-[#9A742C] hover:bg-[#7D5C1E] disabled:opacity-50 text-white font-bold py-3 text-sm"
+                >
+                  {activationBusy ? 'Validando invitación…' : activationExistingAccount ? 'Ingresar y activar expediente' : 'Crear cuenta y enviar verificación'}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActivationExistingAccount((value) => !value);
+                    setActivationError('');
+                    setActivationMessage('');
+                  }}
+                  className="w-full text-sm text-[#735318] underline underline-offset-4"
+                >
+                  {activationExistingAccount ? 'Necesito crear una cuenta nueva' : 'Ya tengo una cuenta de ORIGEN Médico'}
+                </button>
+              </form>
+            )}
+
+            {activationAwaitingVerification && (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                  {activationMessage || 'Revisa tu correo electrónico y confirma tu dirección.'}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleConfirmPatientEmail}
+                  disabled={activationBusy}
+                  className="w-full rounded-xl bg-[#9A742C] hover:bg-[#7D5C1E] disabled:opacity-50 text-white font-bold py-3 text-sm"
+                >
+                  {activationBusy ? 'Comprobando correo…' : 'Ya verifiqué mi correo'}
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const account = auth?.currentUser;
+                      if (!account) throw new Error('Vuelve a ingresar con el correo invitado.');
+                      await sendEmailVerification(account);
+                      setActivationMessage('Enviamos otro correo de verificación. Revisa también la carpeta de spam.');
+                    } catch (err) {
+                      setActivationError(err.message || 'No se pudo reenviar el correo.');
+                    }
+                  }}
+                  className="w-full text-sm text-[#735318] underline underline-offset-4"
+                >
+                  Reenviar correo de verificación
+                </button>
+              </div>
+            )}
+
+            {activationError && (
+              <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+                {activationError}
+              </div>
+            )}
+            {!activationAwaitingVerification && activationMessage && (
+              <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                {activationMessage}
+              </div>
+            )}
+
+            <p className="text-[11px] text-[#7A6A54]">
+              La invitación vence a los 7 días y se usa una sola vez. ORIGEN Médico nunca te pedirá tu contraseña por WhatsApp.
+            </p>
+            <button
+              type="button"
+              onClick={() => setAppMode('public')}
+              className="w-full rounded-xl border border-[#E6D9C0] text-[#735318] font-semibold py-3 text-sm"
+            >
+              Volver al acceso público
+            </button>
+          </section>
+        </main>
+      )}
+
+      {/* PORTAL INICIAL DE PACIENTE VINCULADO — SIN DATOS DE DEMOSTRACIÓN */}
+      {appMode === 'patient_portal' && (
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+          <section className="rounded-3xl bg-[#231F1A] text-[#FFFDF9] p-7 sm:p-9 space-y-3">
+            <span className="text-xs uppercase tracking-wider text-[#DFBD69]">Acceso individual verificado</span>
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold">Bienvenido a ORIGEN Médico</h1>
+            <p className="text-sm text-[#E9DDC8]">
+              {patientPortalProfile?.displayName ? `Hola, ${patientPortalProfile.displayName}. Tu cuenta está vinculada a tu expediente personal.` : 'Tu cuenta está vinculada a tu expediente personal.'}
+            </p>
+          </section>
+          <section className="rounded-3xl border border-[#E6D9C0] bg-[#FFFDF9] p-6 space-y-3">
+            <h2 className="font-serif text-2xl font-bold">Tu espacio de seguimiento</h2>
+            <p className="text-sm text-[#5C4D3C]">
+              La activación y el vínculo seguro de tu cuenta están completados. Estamos habilitando por etapas las secciones de mediciones, tratamiento, nutrición, síntomas y calendario.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {['Mi expediente y mediciones','Mi tratamiento y controles','Mi plan nutricional','Mis síntomas y alertas','Mi calendario','Educación y recursos'].map((label) => (
+                <div key={label} className="rounded-xl border border-[#E6D9C0] bg-[#FAF6EE] p-4 text-sm font-semibold text-[#735318]">
+                  {label}
+                  <span className="block text-[10px] font-normal text-[#8C7A63] mt-1">Próximamente</span>
+                </div>
+              ))}
+            </div>
           </section>
         </main>
       )}
