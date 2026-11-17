@@ -1,6 +1,6 @@
-const { verifyRequestUser } = require("../_lib/firebase-admin");
+import { verifyRequestUser } from "../_lib/firebase-admin.js";
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method !== "GET") {
@@ -23,4 +23,4 @@ module.exports = async function handler(req, res) {
       error: status === 500 ? "Unable to verify the session." : error.message
     });
   }
-};
+}
