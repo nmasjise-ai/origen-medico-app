@@ -14,7 +14,8 @@ Este documento centraliza los requisitos. Las nuevas ideas se registran aquí; s
 - [x] Recuperación de contraseña por correo y vínculo seguro de UID con expediente en namespace Preview; impedir auto-registro sin invitación válida.
 - [ ] Roles y permisos de mínimo privilegio para médico, nutricionista, recepción, tienda y paciente.
 - [ ] Pruebas con Firebase Emulator para visitante, médico, nutricionista, recepción, paciente A y paciente B.
-- [ ] Eliminar expedientes/datos clínicos de `localStorage`; no exponer PII clínica en URLs, logs ni notificaciones externas.
+- [x] Eliminar expedientes/datos clínicos de `localStorage` del frontend heredado.
+- [ ] Verificar que no se exponga PII clínica en URLs, logs ni notificaciones externas.
 - [ ] Auditoría de cambios clínicos y administrativos.
 - [ ] Respaldos restringidos, restauración probada y política de retención.
 - [ ] Consentimiento informado, aviso de privacidad, términos y registro versionado de aceptación.
