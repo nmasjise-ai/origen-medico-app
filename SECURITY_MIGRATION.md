@@ -15,6 +15,7 @@ Esta rama contiene una implementación preliminar del backend de administración
 - `api/admin/bootstrap.js`: endpoint POST restringido por UID y correo configurados en variables privadas; asigna `admin: true` como custom claim, preservando claims existentes.
 - `api/auth/session.js`: endpoint GET para verificar la identidad y exponer si el token tiene el claim de administrador.
 - `api/admin/legacy-audit.js`: endpoint solo médico que consulta el documento legado mediante Firebase Admin y devuelve exclusivamente presencia, conteos e IDs de demostración conocidos; no devuelve nombres, teléfonos ni contenido clínico.
+- `App.jsx`: el navegador ya no lee ni escribe el estado clínico en `localStorage`, ni se suscribe al documento monolítico `clinic_state`; el panel queda en demostración de solo lectura hasta integrar repositorios por paciente. Se eliminaron los handlers antiguos de exportación/restauración del objeto local y la carga del QR como Base64.
 - `App.jsx`: panel de Configuración incluye el botón «Revisar datos antiguos» para invocar esa auditoría con el ID token del médico.
 - `App.jsx`: login con correo/contraseña; no crea sesiones anónimas; el acceso al panel médico depende del claim `admin: true`; el cierre de sesión limpia la copia local.
 - `firestore.rules`: reglas detalladas para el esquema por paciente, con perfiles vinculados por `users/{uid}.patientId`, documentos internos del médico, informes de síntomas y registros diarios validados. Son reglas objetivo y no deben publicarse antes de integrar el frontend y superar las pruebas del emulador.
@@ -65,6 +66,6 @@ El endpoint `POST /api/admin/bootstrap` solo asigna el claim cuando tanto el UID
 - No utilizar datos reales de pacientes durante el desarrollo y las pruebas iniciales.
 - El backend de Preview inicializa Firebase Admin y el registro de Vercel confirmó que el bootstrap asignó `admin: true` a la cuenta médica.
 - Las nuevas reglas y pruebas están en GitHub, pero todavía no se han ejecutado satisfactoriamente en el emulador ni se han publicado en Firebase.
-- El frontend aún conserva el modelo monolítico y el estado de demostración. El indicador `Sin sincronización clínica` debe considerarse un bloqueo operativo: no usar para altas ni seguimiento de pacientes reales.
+- El frontend conserva aún el modelo visual de demostración, pero el cliente ya no consulta el documento monolítico ni almacena expedientes en `localStorage`. El indicador `Sin sincronización clínica` y los bloqueos deben mantenerse hasta integrar los repositorios individuales: no usar para altas ni seguimiento de pacientes reales.
 - El portal de pacientes todavía no está habilitado para cuentas individuales; la navegación de paciente solo se conserva para vista previa del médico.
 - El panel médico todavía usa el modelo legado de un documento compartido y la sincronización está bloqueada por las reglas actuales. No cargar pacientes reales ni anunciar la aplicación como lista para uso clínico hasta completar la migración.
