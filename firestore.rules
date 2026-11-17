@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function ownsPatient(patientId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/patients/$(patientId)).data.authUid == request.auth.uid;
+    }
+
+    // Private user profile: each account can read its own profile.
+    // Only trusted server code should assign roles or link authUid to patient records.
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid
+        && !('role' in request.resource.data)
+        && !('admin' in request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    // One document per patient. Only the doctor (custom admin claim) can create,
+    // update, or delete. A patient can read only the record linked to their UID.
+    match /patients/{patientId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.authUid == request.auth.uid);
+      allow create, update, delete: if isAdmin();
+
+      match /{subcollection}/{documentId} {
+        allow read: if isAdmin() || ownsPatient(patientId);
+        // Patient-originated symptom/check-in writes should be moved behind
+        // validated, narrowly scoped documents or callable server functions
+        // before enabling patient write access.
+        allow write: if isAdmin();
+      }
+    }
+
+    // Public catalog/config contains no patient data. Keep it read-only for visitors.
+    match /publicContent/{documentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Intentionally deny the legacy shared clinic state and all unspecified paths.
+    match /artifacts/{document=**} {
+      allow read, write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
