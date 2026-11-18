@@ -65,7 +65,7 @@ export function normalizePatientProfile(input) {
 
   let phoneE164 = null;
   if (input.phone !== undefined && input.phone !== null && String(input.phone).trim() !== "") {
-    const digits = String(input.phone).replace(/\\D/g, "");
+    const digits = String(input.phone).replace(/[^0-9]/g, "");
     if (digits.length < 8 || digits.length > MAX_PHONE_DIGITS) {
       fail("El teléfono debe contener entre 8 y 15 dígitos.");
     }
