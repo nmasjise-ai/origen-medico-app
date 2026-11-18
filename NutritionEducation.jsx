@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import NutritionFAQ from './NutritionFAQ.jsx';
+import ProteinCalculator from './ProteinCalculator.jsx';
 import { BookOpen, Hand, Beef, Wheat, Droplets, Leaf, Info, ChevronDown, ChevronUp } from 'lucide-react';
 
 const guides = [
@@ -57,10 +58,11 @@ export default function NutritionEducation() {
         <div className="mt-6 flex flex-wrap gap-2">
           <button onClick={() => setActiveSection('portions')} className={`rounded-xl px-4 py-2 text-sm font-semibold ${activeSection === 'portions' ? 'bg-[#231F1A] text-[#DFBD69]' : 'border border-[#E6D9C0] bg-white text-[#5C4D3C]'}`}>Método de la mano</button>
           <button onClick={() => setActiveSection('swaps')} className={`rounded-xl px-4 py-2 text-sm font-semibold ${activeSection === 'swaps' ? 'bg-[#231F1A] text-[#DFBD69]' : 'border border-[#E6D9C0] bg-white text-[#5C4D3C]'}`}>Equivalencias locales</button>
+          <button onClick={() => setActiveSection('protein')} className={`rounded-xl px-4 py-2 text-sm font-semibold ${activeSection === 'protein' ? 'bg-[#231F1A] text-[#DFBD69]' : 'border border-[#E6D9C0] bg-white text-[#5C4D3C]'}`}>Mi proteína</button>
         </div>
       </div>
 
-      {activeSection === 'portions' ? (
+      {activeSection === 'protein' ? <ProteinCalculator /> : activeSection === 'portions' ? (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Hand className="h-5 w-5 text-[#9A742C]" />
