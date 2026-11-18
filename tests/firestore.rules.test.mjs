@@ -48,6 +48,22 @@ before(async () => {
       linkedUid: "patient-b"
     });
 
+    await setDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/users/preview-patient-a"), {
+      patientId: "preview-patient-a"
+    });
+    await setDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/users/preview-patient-b"), {
+      patientId: "preview-patient-b"
+    });
+    await setDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a"), {
+      displayName: "Paciente Preview A", accountStatus: "linked", linkedUid: "preview-patient-a"
+    });
+    await setDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-b"), {
+      displayName: "Paciente Preview B", accountStatus: "linked", linkedUid: "preview-patient-b"
+    });
+    await setDoc(doc(db, "previewEnvironments/otro-entorno/patients/preview-patient-a"), {
+      displayName: "Registro de otro entorno", accountStatus: "linked", linkedUid: "preview-patient-a"
+    });
+
     await setDoc(doc(db, "publicContent/home"), {
       title: "ORIGEN Médico"
     });
@@ -274,4 +290,49 @@ test("patient mapping alone is insufficient without reciprocal linked UID", asyn
 
   await assertFails(getDoc(doc(db, "patients/patient-a")));
   await assertFails(getDoc(doc(db, "patients/patient-a/prescriptions/rx-1")));
+});
+
+
+test("Preview patient can read only their own isolated record and mapping", async () => {
+  const db = testEnv.authenticatedContext("preview-patient-a", { email_verified: true }).firestore();
+  const ownPatient = "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a";
+  const otherPatient = "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-b";
+
+  await assertSucceeds(getDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/users/preview-patient-a")));
+  await assertSucceeds(getDoc(doc(db, ownPatient)));
+  await assertFails(getDoc(doc(db, otherPatient)));
+  await assertFails(getDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/users/preview-patient-b")));
+  await assertFails(getDocs(collection(db, "previewEnvironments/mejoras-seguridad-origen/patients")));
+  await assertFails(getDoc(doc(db, "previewEnvironments/otro-entorno/patients/preview-patient-a")));
+});
+
+test("Preview patient can append a valid daily log only to their own record", async () => {
+  const db = testEnv.authenticatedContext("preview-patient-a").firestore();
+  await assertSucceeds(addDoc(collection(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/dailyLogs"), {
+    dateKey: "2026-11-18", proteinGrams: 85, waterMl: 2000,
+    electrolytesTaken: false, createdAt: serverTimestamp()
+  }));
+  await assertFails(addDoc(collection(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-b/dailyLogs"), {
+    dateKey: "2026-11-18", proteinGrams: 85, waterMl: 2000,
+    electrolytesTaken: false, createdAt: serverTimestamp()
+  }));
+});
+
+test("Preview patient cannot access internal notes or alter clinical records", async () => {
+  const db = testEnv.authenticatedContext("preview-patient-a").firestore();
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/doctorNotes/private-1"), { note: "internal" });
+    await setDoc(doc(context.firestore(), "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/measurements/metric-1"), { weightKg: 80 });
+  });
+  await assertFails(getDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/doctorNotes/private-1")));
+  await assertFails(setDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/measurements/forged"), { weightKg: 1 }));
+});
+
+test("verified administrator can manage Preview records but unverified administrator cannot", async () => {
+  const adminDb = testEnv.authenticatedContext("preview-doctor", { admin: true, email_verified: true }).firestore();
+  const unverifiedDb = testEnv.authenticatedContext("preview-unverified", { admin: true, email_verified: false }).firestore();
+  await assertSucceeds(getDocs(collection(adminDb, "previewEnvironments/mejoras-seguridad-origen/patients")));
+  await assertSucceeds(setDoc(doc(adminDb, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/measurements/admin-metric"), { weightKg: 80 }));
+  await assertFails(getDoc(doc(unverifiedDb, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a")));
+  await assertFails(setDoc(doc(unverifiedDb, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/measurements/forged"), { weightKg: 1 }));
 });
