@@ -37,11 +37,15 @@ before(async () => {
 
     await setDoc(doc(db, "patients/patient-a"), {
       displayName: "Paciente A",
-      status: "active"
+      status: "active",
+      accountStatus: "linked",
+      linkedUid: "patient-a"
     });
     await setDoc(doc(db, "patients/patient-b"), {
       displayName: "Paciente B",
-      status: "active"
+      status: "active",
+      accountStatus: "linked",
+      linkedUid: "patient-b"
     });
 
     await setDoc(doc(db, "publicContent/home"), {
@@ -69,7 +73,7 @@ test("visitor can read public content but cannot read patient records", async ()
 });
 
 test("doctor with admin claim can list and manage patient records", async () => {
-  const db = testEnv.authenticatedContext("doctor-uid", { admin: true }).firestore();
+  const db = testEnv.authenticatedContext("doctor-uid", { admin: true, email_verified: true }).firestore();
 
   await assertSucceeds(getDocs(collection(db, "patients")));
   await assertSucceeds(getDoc(doc(db, "patients/patient-a")));
@@ -82,7 +86,7 @@ test("doctor with admin claim can list and manage patient records", async () => 
 });
 
 test("patient can read only the record linked to their own UID", async () => {
-  const db = testEnv.authenticatedContext("patient-a").firestore();
+  const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
 
   await assertSucceeds(getDoc(doc(db, "users/patient-a")));
   await assertSucceeds(getDoc(doc(db, "patients/patient-a")));
@@ -241,4 +245,33 @@ test("only an administrator can read audit logs and internal notes", async () =>
   await assertFails(setDoc(doc(adminDb, "patients/patient-a/auditLogs/forged"), {
     action: "forged"
   }));
+});
+
+test("unverified administrator claim cannot read or manage clinical records", async () => {
+  const db = testEnv.authenticatedContext("unverified-doctor", {
+    admin: true,
+    email_verified: false
+  }).firestore();
+
+  await assertFails(getDoc(doc(db, "patients/patient-a")));
+  await assertFails(getDocs(collection(db, "patients")));
+  await assertFails(
+    setDoc(doc(db, "patients/patient-a/measurements/forged"), {
+      weightKg: 1
+    })
+  );
+});
+
+test("patient mapping alone is insufficient without reciprocal linked UID", async () => {
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await setDoc(doc(db, "users/patient-spoof"), { patientId: "patient-a" });
+  });
+
+  const db = testEnv.authenticatedContext("patient-spoof", {
+    email_verified: true
+  }).firestore();
+
+  await assertFails(getDoc(doc(db, "patients/patient-a")));
+  await assertFails(getDoc(doc(db, "patients/patient-a/prescriptions/rx-1")));
 });
