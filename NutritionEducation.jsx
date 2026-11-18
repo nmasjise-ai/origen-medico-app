@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import NutritionFAQ from './NutritionFAQ.jsx';
 import { BookOpen, Hand, Beef, Wheat, Droplets, Leaf, Info, ChevronDown, ChevronUp } from 'lucide-react';
 
 const guides = [
@@ -110,6 +111,8 @@ export default function NutritionEducation() {
           </div>
         </div>
       )}
+
+      <NutritionFAQ />
 
       <div className="rounded-2xl border border-[#E6D9C0] bg-[#FAF6EE] p-4 text-xs leading-relaxed text-[#735318]">
         <strong>Contenido educativo general.</strong> No reemplaza la consulta médica o nutricional. Si tienes alergias, enfermedad renal, diabetes u otra condición que requiera ajustes, sigue tu plan individual.
