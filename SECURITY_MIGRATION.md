@@ -118,3 +118,12 @@ Implementación de la rama `mejoras-seguridad-origen`, commit `86687fb56e19e4490
 - La prueba manual en navegador de esta fase queda pendiente hasta disponer de un Preview actualizado. Mantener exclusivamente datos ficticios.
 
 La fase se considera **implementada y validada por CI**, pero no cerrada funcionalmente hasta completar la prueba manual en Preview. No fusionar el PR, no publicar reglas Firestore ni usar expedientes reales.
+
+## Revisión de continuidad — 17/11/2026
+- Corrección de normalización telefónica: `api/_lib/patient-validation.js` ahora filtra caracteres con `/[^0-9]/g` antes de validar y construir el número E.164.
+- Prueba añadida en `tests/patient-validation.test.mjs` para `712 345 67` y `+591 712-34567`; ambos deben normalizarse a `+59171234567`.
+- Commit de la prueba: `0a7840803bcec24765fca4c51d685d9c351c9511`.
+- Vercel confirmó deployment `READY` para ese commit en `mejoras-seguridad-origen`; esto confirma que el build de Preview se completó.
+- La suite de Firebase Emulator/Node no se ha vuelto a ejecutar después de estos dos commits; no declarar los nuevos cambios como probados por CI hasta contar con el resultado.
+- Preview asociado: `https://origen-medico-app-git-mejoras-seguridad-origen-origen-medico.vercel.app`. Mantener datos ficticios.
+- El PR continúa sujeto a revisión; no fusionar, publicar reglas Firestore ni desplegar a producción.
