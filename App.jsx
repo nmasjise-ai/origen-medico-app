@@ -3348,16 +3348,27 @@ function App() {
                           </span>
                         </div>
                         <p className="text-xs text-[#6F6250]">{patient.phoneE164 || 'Sin teléfono'}{patient.ageYears ? ` · ${patient.ageYears} años` : ''}</p>
-                        {(patient.email || patient.invitedEmail) && (
+                        {(patient.email || patient.invitedEmail || patient.lastAccessAt) && (
                           <div className="rounded-xl bg-[#FAF6EE] px-3 py-2 space-y-1">
-                            <p className="flex items-start gap-2 text-xs text-[#735318] break-all">
-                              <span aria-hidden="true">✉</span>
-                              <span>{patient.email || patient.invitedEmail}</span>
-                            </p>
-                            <p className="text-[10px] font-semibold text-emerald-700">
-                              {patient.accountStatus === 'linked' ? 'Correo vinculado y verificado' : patient.accountStatus === 'invited' ? 'Correo de invitación' : 'Correo pendiente de vinculación'}
-                            </p>
-                            {patient.linkedAt && <p className="text-[10px] text-[#6F6250]">Vinculada el {new Date(patient.linkedAt).toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' })}</p>}
+                            {(patient.email || patient.invitedEmail) && (
+                              <>
+                                <p className="flex items-start gap-2 text-xs text-[#735318] break-all">
+                                  <span aria-hidden="true">✉</span>
+                                  <span>{patient.email || patient.invitedEmail}</span>
+                                </p>
+                                <p className="text-[10px] font-semibold text-emerald-700">
+                                  {patient.accountStatus === 'linked' ? 'Correo vinculado y verificado' : patient.accountStatus === 'invited' ? 'Correo de invitación' : 'Correo pendiente de vinculación'}
+                                </p>
+                              </>
+                            )}
+                            {patient.linkedAt && <p className="text-[10px] text-[#6F6250]">Cuenta vinculada: {new Date(patient.linkedAt).toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' })}</p>}
+                            {patient.accountStatus === 'linked' && (
+                              <p className="text-[10px] text-[#6F6250]">
+                                Último acceso: {patient.lastAccessAt
+                                  ? new Date(patient.lastAccessAt).toLocaleString('es-BO', { timeZone: 'America/La_Paz', dateStyle: 'short', timeStyle: 'short' })
+                                  : 'Aún no registrado'}
+                              </p>
+                            )}
                           </div>
                         )}
                         <div className="flex flex-wrap gap-2">
