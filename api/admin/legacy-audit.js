@@ -1,5 +1,10 @@
 import { isVerifiedAdministrator } from "../_lib/admin-authorization.js";
 import { getAdminFirestore, verifyRequestUser } from "../_lib/firebase-admin.js";
+import {
+  getPreviewInvitationsCollection,
+  getPreviewPatientsCollection,
+  getPreviewUsersCollection
+} from "../_lib/staging-firestore.js";
 
 const DEFAULT_APP_ID = "origen-medico-glpi-bo";
 const MAX_ARTIFACT_IDS_TO_SCAN = 100;
@@ -42,6 +47,11 @@ function countPayload(payload) {
 
 function addCounts(total, current) {
   for (const key of Object.keys(total)) total[key] += current[key] || 0;
+}
+
+async function countCollection(collectionRef) {
+  const aggregate = await collectionRef.count().get();
+  return aggregate.data().count || 0;
 }
 
 async function readLegacyDocument(db, appId) {
@@ -98,17 +108,27 @@ export default async function handler(req, res) {
 
     const db = getAdminFirestore();
 
+    // Read-only count comparison between legacy root collections and the
+    // isolated Preview namespace. No patient fields or identifiers are read.
+    const previewPatients = getPreviewPatientsCollection(db);
+    const previewUsers = getPreviewUsersCollection(db);
+    const previewInvitations = getPreviewInvitationsCollection(db);
+    const [legacyRootPatients, legacyRootUsers, previewPatientCount, previewUserCount, previewInvitationCount] =
+      await Promise.all([
+        countCollection(db.collection("patients")),
+        countCollection(db.collection("users")),
+        countCollection(previewPatients),
+        countCollection(previewUsers),
+        countCollection(previewInvitations)
+      ]);
+
     // Enumerate top-level collections and return document counts only.
-    // Collection names/counts are schema metadata; no document fields are read.
     const rootCollectionRefs = await db.listCollections();
     const rootCollectionSummary = await Promise.all(
-      rootCollectionRefs.slice(0, 100).map(async (collectionRef) => {
-        const aggregate = await collectionRef.count().get();
-        return {
-          collection: collectionRef.id,
-          documents: aggregate.data().count || 0
-        };
-      })
+      rootCollectionRefs.slice(0, 100).map(async (collectionRef) => ({
+        collection: collectionRef.id,
+        documents: await countCollection(collectionRef)
+      }))
     );
 
     const artifactDocuments = await db.collection("artifacts").listDocuments();
@@ -146,17 +166,20 @@ export default async function handler(req, res) {
       rootCollectionsScanned: Math.min(rootCollectionRefs.length, 100),
       rootCollectionsTruncated: rootCollectionRefs.length > 100,
       rootCollections: rootCollectionSummary,
+      storageLocations: {
+        legacyRootPatients,
+        legacyRootUsers,
+        previewPatients: previewPatientCount,
+        previewUsers: previewUserCount,
+        previewInvitations: previewInvitationCount
+      },
       defaultPathChecked: true,
       scanTruncated: truncated,
       updatedAt: lastUpdated,
       payloadBytes: totalPayloadBytes,
       unparsedDocuments: unparsedCount,
       counts: totals,
-      message: found.length === 0
-        ? "No se encontró ningún documento clínico legado en la ruta predeterminada ni en los documentos encontrados bajo artifacts. No se devolvió contenido clínico."
-        : unparsedCount > 0
-          ? "Se encontraron documentos legados; algunos no pudieron interpretarse. No se devolvió contenido clínico."
-          : "Auditoría ampliada completada. Se revisó la ruta predeterminada y las raíces de artifacts encontradas. No se devolvieron nombres, teléfonos ni contenido clínico."
+      message: "Auditoría de solo lectura completada. Se compararon conteos de colecciones antiguas y del espacio Preview, además de revisar artifacts. No se devolvieron nombres, teléfonos ni contenido clínico; no se modificó ningún registro."
     });
   } catch (error) {
     console.error("Legacy data audit failed:", error?.name || "Error", error?.code || "");
