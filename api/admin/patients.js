@@ -1,7 +1,7 @@
 import { isVerifiedAdministrator } from "../_lib/admin-authorization.js";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminFirestore, verifyRequestUser } from "../_lib/firebase-admin.js";
-import { getPreviewPatientsCollection } from "../_lib/staging-firestore.js";
+import { getPreviewPatientsCollection, getPreviewUsersCollection } from "../_lib/staging-firestore.js";
 import { normalizeNewPatient } from "../_lib/patient-validation.js";
 
 const MAX_RESULTS = 100;
@@ -36,8 +36,16 @@ export default async function handler(req, res) {
         .limit(MAX_RESULTS)
         .get();
 
-      const patients = snapshot.docs.map((document) => {
+      const usersCollection = getPreviewUsersCollection(db);
+      const patients = await Promise.all(snapshot.docs.map(async (document) => {
         const data = document.data();
+        let lastAccessAt = null;
+
+        if (data.accountStatus === "linked" && data.linkedUid) {
+          const userSnapshot = await usersCollection.doc(data.linkedUid).get();
+          if (userSnapshot.exists) lastAccessAt = asIso(userSnapshot.get("lastAccessAt"));
+        }
+
         return {
           id: document.id,
           displayName: data.displayName || "",
@@ -51,10 +59,11 @@ export default async function handler(req, res) {
           invitedEmail: data.invitedEmail || null,
           email: data.email || data.invitedEmail || null,
           linkedAt: asIso(data.linkedAt),
+          lastAccessAt,
           createdAt: asIso(data.createdAt),
           updatedAt: asIso(data.updatedAt)
         };
-      });
+      }));
 
       return res.status(200).json({ patients, count: patients.length, limit: MAX_RESULTS });
     }
