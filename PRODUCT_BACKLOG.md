@@ -312,3 +312,43 @@ El deployment confirmado corresponde al commit `0a7840803bcec24765fca4c51d685d9c
 4. Implementar cálculo de 5 días calendario y proceso idempotente de suspensión/reactivación.
 5. Incorporar avisos, filtros y auditoría en el panel médico.
 6. Ejecutar pruebas funcionales completas en Preview; mantener producción desactivada.
+
+
+## Plan de ejecución — Administración de cuentas y seguimiento (18/11/2026)
+
+### Fase 1 — Gestión manual de acceso (en implementación)
+- [x] Definir estados independientes del vínculo: `portalAccessStatus` enabled/suspended.
+- [x] Añadir helper de autorización de acceso; las cuentas antiguas sin campo se consideran habilitadas para compatibilidad.
+- [x] Aplicar el bloqueo en backend en `/api/patient/session` y `/api/patient/profile`.
+- [x] Crear endpoint administrativo PATCH `/api/admin/patients/{patientId}/access` con validación de motivo, doble verificación de vínculo, actualización del mapping de usuario y expediente, y audit log.
+- [x] Exponer el estado de acceso en la lista administrativa.
+- [x] Añadir controles UI para suspender/reactivar desde el panel médico.
+- [x] Añadir pruebas unitarias de helper/validación.
+- [ ] Esperar GitHub Actions y Vercel Preview READY para el HEAD final; realizar prueba funcional con dos cuentas ficticias.
+- [ ] Verificar suspensión de sesión ya iniciada y respuesta de acceso suspendido sin exposición de datos clínicos.
+
+### Fase 2 — Planes y pagos (pendiente)
+- [ ] Definir catálogo inicial de planes, periodicidad y reglas de renovación.
+- [ ] Crear modelo de pagos append-only con importe/moneda, periodo cubierto, fecha, método, referencia y actor que confirma.
+- [ ] Separar comprobante recibido de pago confirmado.
+- [ ] Crear endpoints administrativos y permisos mínimos para registro/confirmación.
+- [ ] Mostrar estado de pago, vencimiento e historial en panel.
+
+### Fase 3 — Tolerancia y suspensión automática (pendiente)
+- [ ] Calcular cinco días calendario posteriores al vencimiento en `America/La_Paz`.
+- [ ] Avisos de próximo vencimiento y durante tolerancia.
+- [ ] Proceso idempotente que suspenda al inicio del día siguiente al quinto día si sigue impago.
+- [ ] Pago confirmado durante tolerancia o tras suspensión reactiva acceso, salvo otra suspensión vigente.
+- [ ] Pruebas de fin de mes/año, zona horaria, reintentos y pagos concurrentes.
+
+### Fase 4 — Auditoría y roles (pendiente)
+- [ ] Historial administrativo legible por expediente.
+- [ ] Excepciones temporales con motivo y fecha de expiración.
+- [ ] Permisos diferenciados médico/recepción; recepción no accede a contenido clínico.
+- [ ] Auditoría de cambios de acceso, planes, pagos y excepciones.
+
+### Fase 5 — QA integral (pendiente)
+- [ ] Sesiones independientes A/B, autorización cruzada y manipulación de IDs.
+- [ ] Pruebas de sesión existente tras suspensión y reactivación.
+- [ ] Pruebas funcionales escritorio/móvil, revisión de privacidad y restauración.
+- [ ] Mantener Preview con datos ficticios; no fusionar ni habilitar producción hasta aprobación explícita.
