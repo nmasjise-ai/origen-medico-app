@@ -139,3 +139,52 @@ Los roles se asignan desde servidor. Nunca se confía en un rol enviado por el n
 - [ ] Revisión final de seguridad/privacidad antes de pacientes reales.
 
 **Principio clínico:** una alerta nunca sustituye atención urgente; una solicitud de medicamento no es una receta ni una venta/dispensación autorizada.
+
+
+---
+
+## Nuevas propuestas — Nutrición práctica y herramientas de bajo impacto
+Estas funciones se incorporan al alcance futuro. Se implementarán de forma incremental, preferentemente como componentes/pantallas independientes, sin reescribir el expediente, la autenticación ni la capa de datos existente.
+
+### N1 — Herramientas educativas de nutrición (prioridad inicial)
+- [ ] **Método de la mano y la taza:** guía visual de porciones de proteína (palma), carbohidratos (puño), grasas (pulgar) y verduras (dos manos abiertas). Incluir ejemplos de alimentos locales. Aclarar que es una guía aproximada y que las porciones se individualizan.
+- [ ] **Centro educativo ORIGEN:** artículos breves, consejos e infografías revisados por profesional; categorías de alimentación, hidratación, actividad física, conservación de masa muscular y tratamiento GLP-1. Mostrar fecha/estado de revisión y evitar publicar contenido clínico no aprobado.
+- [ ] **Equivalencias de alimentos locales:** alternativas por grupo alimentario y porciones aproximadas con ingredientes disponibles en mercados y supermercados de Santa Cruz. Diferenciar equivalencia práctica de equivalencia nutricional calculada.
+- [ ] **Guía de tolerancia gastrointestinal:** información sobre náuseas, reflujo, diarrea y estreñimiento; consejos generales y señales de alarma. No clasificar alimentos como universalmente prohibidos ni sustituir evaluación clínica.
+- [ ] **Semáforo/registro de hidratación:** registro diario simple y visual de líquidos. Metas individualizadas por profesional; no recomendar automáticamente electrolitos, sales de rehidratación o magnesio.
+- [ ] **Calculadora de proteína:** mostrar objetivo indicado/revisado por profesional y traducirlo a combinaciones de alimentos. Usar una base nutricional fiable, cantidades explícitas y advertir que el colágeno no equivale a una fuente completa de proteína para todos los objetivos.
+
+### N2 — Menús y seguimiento nutricional
+- [ ] **Menús con alimentos cotidianos bolivianos:** opciones económicas, intermedias y flexibles, con alternativas por disponibilidad, alergias y preferencias.
+- [ ] **Modos de menú:** pérdida de peso con preservación muscular; recomposición corporal; y tolerancia gastrointestinal. Son plantillas de planificación, no diagnósticos ni prescripciones automáticas.
+- [ ] **Lista de compras:** derivada del menú aprobado, con cantidades aproximadas y agrupación por categoría.
+- [ ] **Aprobación profesional:** el paciente solo visualiza el menú personalizado cuando el nutricionista/profesional autorizado lo revisa y publica.
+
+### N3 — Mejoras administrativas sencillas
+- [ ] **Buscador rápido de pacientes:** búsqueda por nombre o identificador, respetando los permisos del usuario.
+- [ ] **Tarjeta de progreso:** resumen visual con evolución de peso, cintura y otros indicadores disponibles; incluir fechas y evitar interpretaciones automáticas no validadas.
+- [ ] **Preguntas frecuentes:** respuestas generales revisadas y derivación a consulta cuando la pregunta requiera valoración individual.
+- [ ] **Encuesta de satisfacción:** encuesta breve posterior a consulta/servicio, con resultados agregados para administración.
+- [ ] **Rotación de sitio de aplicación:** registro educativo de los sitios utilizados, conforme a las instrucciones del producto y del profesional; no recomendar dosis ni sustituir la técnica enseñada.
+- [ ] **Cumpleaños y controles pendientes:** recordatorios administrativos visibles solo para roles autorizados; mensajes externos discretos y con consentimiento.
+
+### N4 — Panel “Hoy en ORIGEN” para el paciente
+- [ ] Vista única con tareas del día: comidas/plan publicado, objetivo de proteína, hidratación, actividad y próximo control.
+- [ ] Mostrar únicamente objetivos y planes aprobados y datos que el paciente tenga permiso para consultar.
+- [ ] Registrar progreso sin penalizaciones ni mensajes que fomenten conductas alimentarias compulsivas.
+
+### Orden recomendado de implementación
+1. Documentación y diseño funcional de componentes educativos, sin tocar datos clínicos.
+2. Centro educativo y método de la mano con contenido estático revisado.
+3. Equivalencias locales y guía gastrointestinal.
+4. Registro de hidratación y calculadora proteica, inicialmente con datos ingresados/objetivos revisados por profesional.
+5. Menús personalizados y lista de compras, después de definir la fuente de datos nutricionales y el flujo de aprobación.
+6. Buscador, tarjeta de progreso y mejoras administrativas, verificando roles y privacidad antes de habilitarlas.
+7. Integraciones y notificaciones solo después de superar las pruebas de seguridad y consentimiento.
+
+### Criterios de aceptación para estas propuestas
+- [ ] Cada componente nuevo funciona de forma aislada y no rompe expediente, inicio de sesión ni navegación existente.
+- [ ] Los datos clínicos o personales se leen únicamente desde fuentes autorizadas; no se duplican en almacenamiento local inseguro.
+- [ ] El contenido educativo tiene responsable y fecha de revisión.
+- [ ] Las metas nutricionales son individualizadas y revisadas; no hay diagnóstico, prescripción ni ajuste farmacológico automático.
+- [ ] Se prueban estados vacíos, errores, móvil y escritorio antes de marcar cada función como completada.
