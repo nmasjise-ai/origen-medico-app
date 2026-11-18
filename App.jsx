@@ -515,6 +515,7 @@ function App() {
   const [legacyAuditResult, setLegacyAuditResult] = useState(null);
   const [legacyAuditError, setLegacyAuditError] = useState('');
   const [cloudPatients, setCloudPatients] = useState([]);
+  const [cloudPatientSearch, setCloudPatientSearch] = useState('');
   const [cloudPatientsLoading, setCloudPatientsLoading] = useState(false);
   const [cloudPatientsError, setCloudPatientsError] = useState('');
   const [cloudPatientSaving, setCloudPatientSaving] = useState(false);
@@ -3307,6 +3308,17 @@ function App() {
                     </button>
                   </div>
 
+                  <div className="relative">
+                    <input
+                      type="search"
+                      value={cloudPatientSearch}
+                      onChange={(event) => setCloudPatientSearch(event.target.value)}
+                      placeholder="Buscar por nombre, correo o teléfono"
+                      aria-label="Buscar pacientes por nombre, correo o teléfono"
+                      className="w-full px-3 py-2.5 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] text-sm"
+                    />
+                  </div>
+
                   {cloudPatientsLoading && <p className="text-sm text-[#6F6250]">Consultando la base de pruebas…</p>}
 
                   {!cloudPatientsLoading && cloudPatients.length === 0 && !cloudPatientsError && (
@@ -3316,7 +3328,12 @@ function App() {
                   )}
 
                   <div className="space-y-2">
-                    {cloudPatients.map((patient) => (
+                    {cloudPatients.filter((patient) => {
+                      const query = cloudPatientSearch.trim().toLowerCase();
+                      if (!query) return true;
+                      return [patient.displayName, patient.email, patient.invitedEmail, patient.phoneE164]
+                        .some((value) => String(value || '').toLowerCase().includes(query));
+                    }).map((patient) => (
                       <div key={patient.id} className="rounded-2xl border border-[#E6D9C0] p-4 space-y-3">
                         <div className="flex items-center justify-between gap-2">
                           <strong className="text-sm">{patient.displayName}</strong>
@@ -3332,11 +3349,16 @@ function App() {
                         </div>
                         <p className="text-xs text-[#6F6250]">{patient.phoneE164 || 'Sin teléfono'}{patient.ageYears ? ` · ${patient.ageYears} años` : ''}</p>
                         {(patient.email || patient.invitedEmail) && (
-                          <p className="flex items-center gap-2 text-xs text-[#735318] break-all">
-                            <span aria-hidden="true">✉</span>
-                            <span>{patient.email || patient.invitedEmail}</span>
-                            {patient.accountStatus === 'linked' && <span className="text-[10px] text-emerald-700 font-semibold">Correo vinculado</span>}
-                          </p>
+                          <div className="rounded-xl bg-[#FAF6EE] px-3 py-2 space-y-1">
+                            <p className="flex items-start gap-2 text-xs text-[#735318] break-all">
+                              <span aria-hidden="true">✉</span>
+                              <span>{patient.email || patient.invitedEmail}</span>
+                            </p>
+                            <p className="text-[10px] font-semibold text-emerald-700">
+                              {patient.accountStatus === 'linked' ? 'Correo vinculado y verificado' : patient.accountStatus === 'invited' ? 'Correo de invitación' : 'Correo pendiente de vinculación'}
+                            </p>
+                            {patient.linkedAt && <p className="text-[10px] text-[#6F6250]">Vinculada el {new Date(patient.linkedAt).toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' })}</p>}
+                          </div>
                         )}
                         <div className="flex flex-wrap gap-2">
                           <button
