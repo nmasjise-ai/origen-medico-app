@@ -64,6 +64,15 @@ before(async () => {
       displayName: "Registro de otro entorno", accountStatus: "linked", linkedUid: "preview-patient-a"
     });
 
+    // Seed protected Preview fixtures in the initial disabled-rules setup.
+    // This avoids reopening a Firestore instance after its settings are locked.
+    await setDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/doctorNotes/private-1"), {
+      note: "internal"
+    });
+    await setDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/measurements/metric-1"), {
+      weightKg: 80
+    });
+
     await setDoc(doc(db, "publicContent/home"), {
       title: "ORIGEN Médico"
     });
@@ -320,10 +329,6 @@ test("Preview patient can append a valid daily log only to their own record", as
 
 test("Preview patient cannot access internal notes or alter clinical records", async () => {
   const db = testEnv.authenticatedContext("preview-patient-a").firestore();
-  await testEnv.withSecurityRulesDisabled(async (context) => {
-    await setDoc(doc(context.firestore(), "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/doctorNotes/private-1"), { note: "internal" });
-    await setDoc(doc(context.firestore(), "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/measurements/metric-1"), { weightKg: 80 });
-  });
   await assertFails(getDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/doctorNotes/private-1")));
   await assertFails(setDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/measurements/forged"), { weightKg: 1 }));
 });
