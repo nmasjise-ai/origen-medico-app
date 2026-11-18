@@ -198,12 +198,12 @@ Esta sección aclara la diferencia entre componentes de demostración y funcione
 ### Estado confirmado en el código revisado
 - [x] Componente independiente `NutritionEducation.jsx` creado con método visual de porciones y equivalencias aproximadas.
 - [x] Pestaña Centro Educativo conectada a la vista `appMode === 'patient'` (demostración).
-- [ ] **Pendiente:** integrar Centro Educativo en el portal real `appMode === 'patient_portal'`; actualmente ese portal muestra tarjetas “Próximamente” y no consume todavía datos clínicos individuales.
+- [x] Centro Educativo integrado también en el portal real `appMode === 'patient_portal'` como recurso estático, sin lecturas ni escrituras clínicas; pendiente build y revisión visual.
 - [x] Base de autenticación por correo/contraseña, invitación de un solo uso y enlace UID → expediente implementada en Preview según el alcance del PR.
 - [ ] **Pendiente:** completar pruebas de invitación, verificación de correo y aislamiento entre dos cuentas/pacientes ficticios.
 - [x] Alta, listado, ficha individual, historia clínica y antropometría disponibles en el panel de pruebas del médico.
 - [ ] **Pendiente:** validación de permisos por rol, reglas Firestore y pruebas automatizadas de acceso/denegación.
-- [ ] **Pendiente:** ejecutar compilación y pruebas del commit que añadió Centro Educativo; la confirmación de archivos en GitHub no sustituye una compilación.
+- [ ] **Pendiente:** ejecutar compilación y pruebas de los últimos commits educativos; la confirmación de archivos en GitHub no sustituye una compilación.
 - [ ] **Pendiente:** validar despliegue Preview correspondiente al HEAD actual y probarlo en escritorio/móvil.
 - [ ] **Pendiente:** el PR #1 continúa en borrador y no debe fusionarse ni desplegarse a producción hasta cumplir los criterios de salida.
 
