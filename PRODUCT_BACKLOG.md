@@ -188,3 +188,37 @@ Estas funciones se incorporan al alcance futuro. Se implementarán de forma incr
 - [ ] El contenido educativo tiene responsable y fecha de revisión.
 - [ ] Las metas nutricionales son individualizadas y revisadas; no hay diagnóstico, prescripción ni ajuste farmacológico automático.
 - [ ] Se prueban estados vacíos, errores, móvil y escritorio antes de marcar cada función como completada.
+
+
+---
+
+## Revisión de estado real y brechas detectadas — 18/11/2026
+Esta sección aclara la diferencia entre componentes de demostración y funciones habilitadas para cuentas individuales. No marcar como lista para pacientes una función que solo esté presente en la vista demo.
+
+### Estado confirmado en el código revisado
+- [x] Componente independiente `NutritionEducation.jsx` creado con método visual de porciones y equivalencias aproximadas.
+- [x] Pestaña Centro Educativo conectada a la vista `appMode === 'patient'` (demostración).
+- [ ] **Pendiente:** integrar Centro Educativo en el portal real `appMode === 'patient_portal'`; actualmente ese portal muestra tarjetas “Próximamente” y no consume todavía datos clínicos individuales.
+- [x] Base de autenticación por correo/contraseña, invitación de un solo uso y enlace UID → expediente implementada en Preview según el alcance del PR.
+- [ ] **Pendiente:** completar pruebas de invitación, verificación de correo y aislamiento entre dos cuentas/pacientes ficticios.
+- [x] Alta, listado, ficha individual, historia clínica y antropometría disponibles en el panel de pruebas del médico.
+- [ ] **Pendiente:** validación de permisos por rol, reglas Firestore y pruebas automatizadas de acceso/denegación.
+- [ ] **Pendiente:** ejecutar compilación y pruebas del commit que añadió Centro Educativo; la confirmación de archivos en GitHub no sustituye una compilación.
+- [ ] **Pendiente:** validar despliegue Preview correspondiente al HEAD actual y probarlo en escritorio/móvil.
+- [ ] **Pendiente:** el PR #1 continúa en borrador y no debe fusionarse ni desplegarse a producción hasta cumplir los criterios de salida.
+
+### Siguiente secuencia segura
+1. Confirmar build y Preview del HEAD actual, sin generar despliegues repetidos innecesarios.
+2. Revisar visualmente la vista demo y corregir cualquier error de interfaz del Centro Educativo.
+3. Diseñar e integrar el Centro Educativo en el portal individual real, manteniendo contenido estático y sin leer/escribir datos clínicos.
+4. Añadir FAQ y contenido educativo revisado, con responsable y fecha de revisión.
+5. Implementar calculadora proteica como herramienta informativa separada; el objetivo debe ser introducido/revisado por el profesional, con fuente nutricional documentada.
+6. Implementar tarjeta de progreso solo cuando el portal paciente disponga de endpoint seguro de lectura limitada para su propio expediente.
+7. Implementar hidratación/diario solo después de definir persistencia por paciente, reglas y auditoría.
+8. Antes de pacientes reales: pruebas Firebase Emulator, roles, acceso cruzado A/B, consentimiento, auditoría, respaldo/restauración y revisión de privacidad.
+
+### Restricciones operativas vigentes
+- Mantener cambios en `mejoras-seguridad-origen`; PR #1 en borrador.
+- No modificar `main`, no fusionar, no desplegar a producción y no publicar reglas Firestore sin aprobación explícita.
+- No usar expedientes reales en Preview.
+- Evitar cambios de autenticación, reglas, esquema Firestore o migración mientras se construyen componentes educativos estáticos.
