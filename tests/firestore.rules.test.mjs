@@ -230,7 +230,7 @@ test("patient symptom reports and prescription requests cannot be altered or del
 
 test("only an administrator can read audit logs and internal notes", async () => {
   const patientDb = testEnv.authenticatedContext("patient-a").firestore();
-  const adminDb = testEnv.authenticatedContext("doctor-uid", { admin: true }).firestore();
+  const adminDb = testEnv.authenticatedContext("doctor-uid", { admin: true, email_verified: true }).firestore();
 
   await testEnv.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), "patients/patient-a/auditLogs/event-1"), {
