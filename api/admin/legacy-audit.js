@@ -1,3 +1,4 @@
+import { isVerifiedAdministrator } from "../_lib/admin-authorization.js";
 import { getAdminFirestore, verifyRequestUser } from "../_lib/firebase-admin.js";
 
 const DEFAULT_APP_ID = "origen-medico-glpi-bo";
@@ -91,7 +92,7 @@ export default async function handler(req, res) {
 
   try {
     const decoded = await verifyRequestUser(req);
-    if (decoded.admin !== true) {
+    if (!isVerifiedAdministrator(decoded)) {
       return res.status(403).json({ error: "Administrator access required." });
     }
 
