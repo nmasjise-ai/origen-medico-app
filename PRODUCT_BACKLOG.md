@@ -268,3 +268,47 @@ El deployment confirmado corresponde al commit `0a7840803bcec24765fca4c51d685d9c
 - [ ] Mantener el PR en borrador; no fusionar, no publicar reglas Firestore y no introducir pacientes reales en Preview.
 
 **Hallazgos de revisión:** las rutas API de paciente y administrador verifican token Firebase, autorización y namespace de Preview; los endpoints que devuelven datos clínicos usan `Cache-Control: no-store`. Las reglas Firestore versionadas describen el modelo objetivo en rutas raíz; el flujo Preview actual usa API server-side y un namespace anidado, por lo que no debe asumirse que el acceso directo del SDK cliente a ese namespace está habilitado. Antes de habilitar escrituras directas del paciente (diarios/síntomas/solicitudes) se deben añadir reglas y pruebas específicas para el namespace y validar el modelo final.
+
+
+## Nueva especificación — Gestión de cuentas, acceso y pagos (18/11/2026)
+
+### Decisiones confirmadas
+- [x] Mostrar en cada expediente el correo asociado a la cuenta; distinguir correo de invitación de correo verificado/vinculado.
+- [x] Mostrar fecha de vinculación cuando exista y mantener la identificación por nombre, teléfono y expediente.
+- [x] Separar estrictamente el estado comercial del estado de acceso: el pago pendiente/vencido no modifica ni elimina el expediente clínico.
+- [x] Política de vencimiento: **5 días calendario de tolerancia** posteriores a la fecha de vencimiento del periodo pagado.
+- [x] Al finalizar los 5 días calendario sin pago confirmado, el acceso del paciente pasa a suspendido por motivo de pago.
+- [x] Registrar pago confirmado por personal autorizado permite recalcular el próximo vencimiento y rehabilitar el acceso, sujeto a que no exista otra causa de suspensión.
+
+### Modelo de estados
+- **Estado de pago:** al día / pendiente / vencido / en verificación.
+- **Estado de acceso:** habilitado / en tolerancia / suspendido / excepción manual.
+- **Estado de seguimiento o plan:** activo / finalizado / pausado. No debe inferirse automáticamente del estado de pago.
+- Guardar, como mínimo: plan contratado, periodo cubierto, fecha de vencimiento, inicio y fin de tolerancia, estado de pago, estado de acceso, fecha de último pago confirmado y actor que registró el pago.
+- Calcular la tolerancia con fechas calendario en la zona horaria America/La_Paz, no como 120 horas desde un instante arbitrario. La fecha límite será el quinto día calendario posterior al vencimiento; la suspensión se ejecuta al comenzar el día siguiente si continúa impago.
+
+### Experiencia del paciente y del equipo
+- Mostrar aviso de próximo vencimiento antes de vencer y aviso de pago pendiente durante los 5 días de tolerancia.
+- Indicar claramente la fecha límite de tolerancia y el canal/procedimiento de regularización configurado por el consultorio.
+- En suspensión, mostrar una pantalla informativa sin permitir el acceso al portal clínico del paciente; no mostrar detalles clínicos en esa pantalla.
+- El panel médico conserva el acceso autorizado al expediente y permite consultar el historial de pagos y cambios de acceso.
+- Permitir excepción manual temporal por médico administrador, con motivo obligatorio, fecha de expiración y registro de auditoría.
+- La recepción podrá registrar/verificar pagos solo con permiso específico; no obtiene acceso a notas ni contenido clínico.
+
+### Requisitos técnicos y de seguridad antes de activar
+- La autorización de acceso se aplica en servidor/backend para cada endpoint del paciente; ocultar botones o pantallas no es suficiente.
+- La suspensión debe invalidar o rechazar sesiones/tokens existentes en las rutas protegidas, no solo impedir nuevos inicios de sesión.
+- La rehabilitación requiere pago marcado como confirmado por usuario autorizado; un comprobante cargado o una solicitud no equivalen a pago confirmado.
+- Toda transición (vencimiento, inicio/fin de tolerancia, suspensión, excepción, pago y reactivación) debe generar auditoría con actor o proceso, fecha, motivo y valores anterior/nuevo.
+- La tarea automática debe ser idempotente, tolerar reintentos y no suspender si existe pago confirmado o excepción vigente.
+- No borrar, archivar ni alterar mediciones, tratamientos, recetas, notas ni historial clínico al suspender una cuenta.
+- Añadir pruebas de límites de fecha (incluido fin de mes/año), zona horaria, pago durante tolerancia, pago posterior a suspensión, excepciones, sesión ya abierta y aislamiento entre pacientes.
+- Implementar primero en Preview con datos ficticios. No habilitar cobros automáticos, suspensiones en producción ni migraciones de datos reales hasta superar revisión y pruebas end-to-end.
+
+### Próxima secuencia de implementación
+1. Completar y validar la visualización del correo vinculado en la lista administrativa.
+2. Diseñar campos y endpoints de suscripción/pagos y control de acceso; revisar roles de médico y recepción.
+3. Implementar control de acceso server-side y pruebas de sesión ya abierta.
+4. Implementar cálculo de 5 días calendario y proceso idempotente de suspensión/reactivación.
+5. Incorporar avisos, filtros y auditoría en el panel médico.
+6. Ejecutar pruebas funcionales completas en Preview; mantener producción desactivada.
