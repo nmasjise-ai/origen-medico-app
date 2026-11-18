@@ -41,3 +41,30 @@ test("rejects missing configuration or incomplete token claims", () => {
   assert.equal(isConfiguredAdministrator({ uid: configuredUid, email: configuredEmail, email_verified: true }, "", configuredEmail), false);
   assert.equal(isConfiguredAdministrator({ uid: configuredUid, email: configuredEmail, email_verified: true }, configuredUid, ""), false);
 });
+
+import test from "node:test";
+import assert from "node:assert/strict";
+import { isVerifiedAdministrator } from "../api/_lib/admin-authorization.js";
+
+test("accepts an administrator with a verified email and UID", () => {
+  assert.equal(isVerifiedAdministrator({
+    uid: "admin-uid",
+    email: "doctor@example.com",
+    email_verified: true,
+    admin: true
+  }), true);
+});
+
+test("rejects missing, unverified or non-admin sessions", () => {
+  const base = {
+    uid: "admin-uid",
+    email: "doctor@example.com",
+    email_verified: true,
+    admin: true
+  };
+  assert.equal(isVerifiedAdministrator(null), false);
+  assert.equal(isVerifiedAdministrator({ ...base, email_verified: false }), false);
+  assert.equal(isVerifiedAdministrator({ ...base, admin: false }), false);
+  assert.equal(isVerifiedAdministrator({ ...base, email: "" }), false);
+  assert.equal(isVerifiedAdministrator({ ...base, uid: "" }), false);
+});
