@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import NutritionEducation from './NutritionEducation.jsx';
+import FinanceModule from './FinanceModule.jsx';
 import {
   Activity, AlertTriangle, ArrowRight, Award, Bell, BookOpen, Calendar,
   Check, CheckCircle2, ChevronDown, ChevronRight, ClipboardCheck, Clock,
   Copy, Download, Droplets, Edit3, ExternalLink, FileText, Flame,
   HeartPulse, HelpCircle, Info, Lock, MapPin, MessageCircle, Plus,
-  Printer, QrCode, RefreshCw, Save, Scale, Search, Settings, ShieldAlert,
+  Printer, QrCode, RefreshCw, Save, Scale, Search, Settings, ShieldAlert, Package,
   ShieldCheck, ShoppingBag, Sparkles, Stethoscope, Syringe, Trash2,
   TrendingDown, TrendingUp, Upload, User, UserPlus, Users, Utensils, X
 } from 'lucide-react';
@@ -3176,7 +3177,8 @@ function App() {
               { id: 'cloud_patients', label: 'Pacientes en nube (Pruebas)', icon: Users },
               { id: 'patient_detail', label: 'Expediente Demo', icon: ClipboardCheck },
               { id: 'vademecum', label: 'Vademécum GLP-1 (31 Marcas Bolivia)', icon: BookOpen },
-              { id: 'settings', label: 'Configuración Consultorio (Sin Código)', icon: Settings }
+              { id: 'settings', label: 'Configuración Consultorio (Sin Código)', icon: Settings },
+              { id: 'finance', label: 'ORIGEN Finanzas', icon: Package }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -4349,6 +4351,7 @@ function App() {
               </div>
             </div>
           )}
+          {doctorTab === 'finance' && <FinanceModule user={user} isAdmin={isAdmin} />}
         </main>
       )}
 
