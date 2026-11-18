@@ -62,10 +62,11 @@ export default async function handler(req, res) {
       .limit(MAX_MEASUREMENTS)
       .get();
 
+    const patientData = patientSnapshot.data();
     return res.status(200).json({
-      patient: toPatientVisibleProfile(patientSnapshot.data(), patientSnapshot.id),
+      patient: toPatientVisibleProfile(patientData, patientSnapshot.id),
       measurements: measurementsSnapshot.docs.map((document) =>
-        toPatientVisibleMeasurement(document.data(), document.id)
+        toPatientVisibleMeasurement(document.data(), document.id, patientData.heightCm)
       )
     });
   } catch (error) {
