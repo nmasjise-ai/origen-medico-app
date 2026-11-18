@@ -21,10 +21,27 @@ test("normalizes a valid Bolivian patient profile and measurements", () => {
   assert.equal(result.initialMeasurement.waistCm, 96);
 });
 
-test("allows a minimal profile without optional details", () => {
+test("allows a minimal profile without optional details and keeps demographics empty", () => {
   const result = normalizeNewPatient({ displayName: "Paciente de prueba" });
   assert.equal(result.phoneE164, null);
+  assert.equal(result.ageYears, null);
+  assert.equal(result.birthDate, null);
+  assert.equal(result.heightCm, null);
   assert.deepEqual(result.initialMeasurement, {});
+});
+
+test("uses a manually supplied age only when birth date is absent", () => {
+  const manualAge = normalizePatientProfile({ displayName: "Paciente", ageYears: "34" });
+  assert.equal(manualAge.ageYears, 34);
+  assert.equal(manualAge.birthDate, null);
+
+  const withBirthDate = normalizePatientProfile({
+    displayName: "Paciente",
+    ageYears: "34",
+    birthDate: "1990-05-10"
+  });
+  assert.equal(withBirthDate.birthDate, "1990-05-10");
+  assert.notEqual(withBirthDate.ageYears, 34);
 });
 
 test("rejects missing or short names", () => {
