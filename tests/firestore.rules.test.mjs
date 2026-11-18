@@ -13,7 +13,9 @@ import {
   getDoc,
   getDocs,
   serverTimestamp,
-  setDoc
+  setDoc,
+  updateDoc,
+  deleteDoc
 } from "firebase/firestore";
 
 const PROJECT_ID = "demo-origen-medico";
@@ -164,4 +166,79 @@ test("patient cannot assign their own patientId or role", async () => {
       role: "doctor"
     })
   );
+});
+
+
+test("patient cannot read another user's private account mapping", async () => {
+  const db = testEnv.authenticatedContext("patient-a").firestore();
+
+  await assertFails(getDoc(doc(db, "users/patient-b")));
+  await assertFails(getDocs(collection(db, "users")));
+});
+
+test("patient daily logs are append-only", async () => {
+  const db = testEnv.authenticatedContext("patient-a").firestore();
+  const logRef = doc(db, "patients/patient-a/dailyLogs/log-1");
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "patients/patient-a/dailyLogs/log-1"), {
+      dateKey: "2026-11-17",
+      proteinGrams: 90,
+      waterMl: 2100,
+      electrolytesTaken: false,
+      createdAt: new Date()
+    });
+  });
+
+  await assertFails(updateDoc(logRef, { waterMl: 2500 }));
+  await assertFails(deleteDoc(logRef));
+});
+
+test("patient symptom reports and prescription requests cannot be altered or deleted", async () => {
+  const db = testEnv.authenticatedContext("patient-a").firestore();
+  const symptomRef = doc(db, "patients/patient-a/symptomReports/symptom-1");
+  const requestRef = doc(db, "patients/patient-a/prescriptionRequests/request-1");
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const adminDb = context.firestore();
+    await setDoc(doc(adminDb, "patients/patient-a/symptomReports/symptom-1"), {
+      symptom: "nausea",
+      severity: 2,
+      durationMinutes: 30,
+      notes: "",
+      occurredAt: new Date(),
+      createdAt: new Date()
+    });
+    await setDoc(doc(adminDb, "patients/patient-a/prescriptionRequests/request-1"), {
+      category: "consulta",
+      requestedProduct: "",
+      message: "Necesito hablar con mi médico",
+      status: "pending",
+      createdAt: new Date()
+    });
+  });
+
+  await assertFails(updateDoc(symptomRef, { severity: 1 }));
+  await assertFails(deleteDoc(symptomRef));
+  await assertFails(updateDoc(requestRef, { status: "approved" }));
+  await assertFails(deleteDoc(requestRef));
+});
+
+test("only an administrator can read audit logs and internal notes", async () => {
+  const patientDb = testEnv.authenticatedContext("patient-a").firestore();
+  const adminDb = testEnv.authenticatedContext("doctor-uid", { admin: true }).firestore();
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), "patients/patient-a/auditLogs/event-1"), {
+      action: "patient.created"
+    });
+  });
+
+  await assertFails(getDoc(doc(patientDb, "patients/patient-a/auditLogs/event-1")));
+  await assertFails(getDoc(doc(patientDb, "patients/patient-a/doctorNotes/note-1")));
+  await assertSucceeds(getDoc(doc(adminDb, "patients/patient-a/auditLogs/event-1")));
+  await assertSucceeds(getDoc(doc(adminDb, "patients/patient-a/doctorNotes/note-1")));
+  await assertFails(setDoc(doc(adminDb, "patients/patient-a/auditLogs/forged"), {
+    action: "forged"
+  }));
 });
