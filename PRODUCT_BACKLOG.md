@@ -222,3 +222,17 @@ Esta sección aclara la diferencia entre componentes de demostración y funcione
 - No modificar `main`, no fusionar, no desplegar a producción y no publicar reglas Firestore sin aprobación explícita.
 - No usar expedientes reales en Preview.
 - Evitar cambios de autenticación, reglas, esquema Firestore o migración mientras se construyen componentes educativos estáticos.
+
+---
+
+## Revisión de continuidad — 17/11/2026
+- [x] Corregida la normalización del teléfono: se eliminan caracteres no numéricos antes de formar el E.164 boliviano (`+591`).
+- [x] Añadida prueba de regresión para números locales con espacios y números internacionales con espacios/guiones.
+- [x] Confirmado que la rama de Preview contiene el commit `0a7840803bcec24765fca4c51d685d9c351c9511`.
+- [x] Vercel reporta el deployment de ese commit como `READY`; la compilación de Vite del deployment terminó correctamente.
+- [ ] **Pendiente:** ejecutar explícitamente la suite Node/Firebase Emulator correspondiente a los commits posteriores a la última CI documentada; el estado READY de Vercel confirma el build, no la suite de pruebas.
+- [ ] **Pendiente:** abrir y probar visualmente este Preview actualizado en escritorio y móvil con datos ficticios.
+- [ ] **Pendiente:** completar pruebas funcionales de invitaciones, activación y aislamiento A/B.
+
+### Notas de verificación
+El deployment confirmado corresponde al commit `0a7840803bcec24765fca4c51d685d9c351c9511`, rama `mejoras-seguridad-origen`, estado Vercel `READY`. URL de Preview: `https://origen-medico-app-git-mejoras-seguridad-origen-origen-medico.vercel.app`. Este enlace identifica el Preview; si Vercel Authentication está activa, se requiere el acceso compartible vigente.
