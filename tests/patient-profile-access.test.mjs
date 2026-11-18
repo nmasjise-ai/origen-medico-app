@@ -148,6 +148,35 @@ test("patient A is denied if the account mapping points to patient B", async () 
   });
 });
 
+test("suspended linked patients cannot read their profile or measurements", async () => {
+  const database = makeDatabase({
+    users: {
+      uid_AAAAAAAA: {
+        uid: "uid_AAAAAAAA",
+        role: "patient",
+        patientId: "patient_AAAAA",
+        portalAccessStatus: "suspended"
+      }
+    },
+    patients: {
+      patient_AAAAA: {
+        displayName: "Paciente A",
+        linkedUid: "uid_AAAAAAAA",
+        accountStatus: "linked"
+      }
+    }
+  });
+
+  const handler = createPatientProfileHandler(dependenciesFor("uid_AAAAAAAA", database));
+  const res = responseRecorder();
+
+  await handler({ method: "GET" }, res);
+
+  assert.equal(res.statusCode, 403);
+  assert.equal(res.body.accessSuspended, true);
+  assert.deepEqual(database.requestedPatientIds, ["patient_AAAAA"]);
+});
+
 test("unverified users and administrators cannot use the patient profile endpoint", async () => {
   for (const decoded of [
     { uid: "uid_AAAAAAAA", admin: false, email_verified: false },
