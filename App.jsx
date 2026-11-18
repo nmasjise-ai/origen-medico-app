@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import NutritionEducation from './NutritionEducation.jsx';
 import {
   Activity, AlertTriangle, ArrowRight, Award, Bell, BookOpen, Calendar,
   Check, CheckCircle2, ChevronDown, ChevronRight, ClipboardCheck, Clock,
@@ -539,7 +540,7 @@ function App() {
   // Navegación de modos principales
   const [appMode, setAppMode] = useState(() => patientInvitationToken ? 'activation' : 'public'); // 'public' | 'login' | 'activation' | 'patient_portal' | 'patient' (demo) | 'doctor'
   const [activePatientId, setActivePatientId] = useState('pat-sofia');
-  const [patientTab, setPatientTab] = useState('today'); // 'today' | 'meals' | 'symptoms' | 'progress' | 'rx'
+  const [patientTab, setPatientTab] = useState('today'); // 'today' | 'meals' | 'symptoms' | 'progress' | 'rx' | 'education'
   const [doctorTab, setDoctorTab] = useState('triage'); // 'triage' | 'patient_detail' | 'vademecum' | 'settings'
   const [selectedDoctorPatientId, setSelectedDoctorPatientId] = useState('pat-sofia');
 
@@ -2313,7 +2314,8 @@ function App() {
               { id: 'meals', label: 'Plan 7 Días', icon: Utensils },
               { id: 'symptoms', label: 'Síntomas & SOS', icon: HeartPulse, badge: isSosModeActive ? 'SOS' : null },
               { id: 'progress', label: 'Evolución & Dosis', icon: TrendingDown },
-              { id: 'rx', label: 'Recetas & Farmacorp/Chávez', icon: FileText, count: currentPatient.prescriptions.length }
+              { id: 'rx', label: 'Recetas & Farmacorp/Chávez', icon: FileText, count: currentPatient.prescriptions.length },
+              { id: 'education', label: 'Centro Educativo', icon: BookOpen }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -2342,6 +2344,9 @@ function App() {
               );
             })}
           </nav>
+
+          {/* CENTRO EDUCATIVO: COMPONENTE INDEPENDIENTE, SIN PERSISTENCIA CLÍNICA */}
+          {patientTab === 'education' && <NutritionEducation />}
 
           {/* PESTAÑA 1: MI DÍA GLP-1 */}
           {patientTab === 'today' && (
