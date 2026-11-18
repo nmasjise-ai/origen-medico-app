@@ -352,3 +352,39 @@ El deployment confirmado corresponde al commit `0a7840803bcec24765fca4c51d685d9c
 - [ ] Pruebas de sesión existente tras suspensión y reactivación.
 - [ ] Pruebas funcionales escritorio/móvil, revisión de privacidad y restauración.
 - [ ] Mantener Preview con datos ficticios; no fusionar ni habilitar producción hasta aprobación explícita.
+
+
+## ORIGEN FINANZAS — módulo administrativo independiente (diseño e implementación por fases)
+
+**Objetivo:** administrar inventario, caja, ingresos, egresos, compras y rentabilidad desde formularios de la web app, sin editar código ni acceder a Firebase/GitHub para las operaciones diarias. El módulo no almacena ni muestra diagnósticos, síntomas, notas ni datos clínicos.
+
+### Reglas de diseño
+- Moneda base BOB (Bs) y zona horaria `America/La_Paz`.
+- Acceso solo para administrador y roles administrativos expresamente autorizados; el rol se valida en servidor.
+- Persistencia separada del expediente: `previewEnvironments/mejoras-seguridad-origen/financeProducts` y colecciones financieras propias.
+- En Preview solo datos ficticios. No migrar inventario, pacientes ni movimientos reales.
+- No borrar productos con movimientos: desactivar/archivar y conservar auditoría.
+- La edición de ficha no cambia existencias. El stock se modifica únicamente mediante movimientos trazables (compra/entrada, venta/salida, consumo interno, devolución o ajuste autorizado).
+- No permitir stock negativo por defecto; ajustes requieren motivo y registro de actor/fecha.
+- Compras y ventas deberán generar sus movimientos de inventario y financieros en una operación atómica para evitar doble conteo.
+- Separar cobrado, pendiente por cobrar, ingresos, egresos y resultado operativo.
+- Cada alta, edición, ajuste, venta, compra y cierre de caja genera auditoría.
+
+### Fases
+1. **Catálogo e inventario:** formulario para alta/edición/desactivación, categoría, costo, precio, unidad, proveedor, stock mínimo y campos opcionales de lote/vencimiento. Stock inicial registrado como apertura; cambios posteriores solo por movimientos.
+2. **Movimientos y compras:** entradas/salidas, proveedores, comprobantes, lote/vencimiento, consumo interno y ajustes autorizados.
+3. **Caja e ingresos/egresos:** consultas, curaciones, sueroterapia, fisioterapia/kinesiología, venta de productos, programas y otros; gastos por categoría; efectivo/transferencia/QR/otros.
+4. **Ventas y servicios:** registro desde interfaz, descuento automático de stock, recibos internos y estados de pago.
+5. **Costos y rentabilidad:** costo real, margen por producto/servicio, cuentas por cobrar y resultado operativo.
+6. **Dashboard y reportes:** cierre diario, resumen semanal/mensual, bajo stock, vencimientos y exportación.
+
+### Estado de implementación — 18/11/2026
+- [x] Alcance y reglas de separación clínica/financiera documentados.
+- [x] Endpoint inicial de catálogo en Preview: listar, crear, editar y desactivar productos con autenticación de administrador y auditoría.
+- [x] Validación de datos: categorías permitidas, importes no negativos, cantidades enteras y edición general sin modificar existencias.
+- [ ] Interfaz visual conectada al endpoint.
+- [ ] Pruebas de integración con Firebase Emulator y aislamiento del namespace financiero.
+- [ ] Movimientos de inventario y compras.
+- [ ] Caja, ingresos, egresos, ventas, reportes y cierres.
+- [ ] Roles administrativos diferenciados y permisos de mínimo privilegio.
+- [ ] Validación manual en Preview antes de cualquier uso real.
