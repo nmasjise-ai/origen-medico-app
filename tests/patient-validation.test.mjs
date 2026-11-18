@@ -88,3 +88,10 @@ test("rejects invalid height and excessive clinical history", () => {
   assert.throws(() => normalizePatientProfile({ displayName: "Paciente", heightCm: 40 }), /talla/i);
   assert.throws(() => normalizePatientProfile({ displayName: "Paciente", allergies: "x".repeat(2001) }), /alergias/i);
 });
+
+test("normalizes phone numbers containing spaces, hyphens and country prefix", () => {
+  const local = normalizePatientProfile({ displayName: "Paciente", phone: "712 345 67" });
+  const international = normalizePatientProfile({ displayName: "Paciente", phone: "+591 712-34567" });
+  assert.equal(local.phoneE164, "+59171234567");
+  assert.equal(international.phoneE164, "+59171234567");
+});
