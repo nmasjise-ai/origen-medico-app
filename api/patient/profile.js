@@ -45,7 +45,8 @@ export function createPatientProfileHandler(dependencies = {}) {
         });
       }
 
-      const patientId = getLinkedPatientId(userSnapshot.data(), decoded.uid);
+      const userData = userSnapshot.data();
+      const patientId = getLinkedPatientId(userData, decoded.uid);
       if (!patientId) {
         return res.status(404).json({
           error: "Esta cuenta todavía no está vinculada a un expediente."
@@ -54,21 +55,24 @@ export function createPatientProfileHandler(dependencies = {}) {
 
       const patientRef = getPatientsCollection(db).doc(patientId);
       const patientSnapshot = await patientRef.get();
-      if (
-        !patientSnapshot.exists ||
-        !isPatientRecordLinkedToUser(patientSnapshot.data(), decoded.uid)
-      ) {
-      const access = getPatientPortalAccessState(userSnapshot.data(), patientSnapshot.data());
+      if (!patientSnapshot.exists) {
+        return res.status(404).json({
+          error: "No se encontró un expediente vinculado a esta cuenta."
+        });
+      }
+
+      const patientData = patientSnapshot.data();
+      if (!isPatientRecordLinkedToUser(patientData, decoded.uid)) {
+        return res.status(404).json({
+          error: "No se encontró un expediente vinculado a esta cuenta."
+        });
+      }
+
+      const access = getPatientPortalAccessState(userData, patientData);
       if (!access.enabled) {
         return res.status(403).json({
           accessSuspended: true,
           error: "El acceso al portal está temporalmente suspendido. Contacta al consultorio para recibir asistencia."
-        });
-      }
-
-
-        return res.status(404).json({
-          error: "No se encontró un expediente vinculado a esta cuenta."
         });
       }
 
@@ -78,7 +82,6 @@ export function createPatientProfileHandler(dependencies = {}) {
         .limit(MAX_MEASUREMENTS)
         .get();
 
-      const patientData = patientSnapshot.data();
       return res.status(200).json({
         patient: toPatientVisibleProfile(patientData, patientSnapshot.id),
         measurements: measurementsSnapshot.docs.map((document) =>
