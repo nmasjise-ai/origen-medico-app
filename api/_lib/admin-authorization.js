@@ -9,14 +9,16 @@ export function isConfiguredAdministrator(decoded, configuredUid, configuredEmai
   return decoded.uid === configuredUid && tokenEmail === expectedEmail;
 }
 
-export function isVerifiedAdministrator(decoded) {
+// Bootstrap is the only operation that relies on a verified email address.
+// Once the admin claim has been issued, every protected request checks both
+// the signed custom claim and the configured administrator UID.
+export function isVerifiedAdministrator(decoded, configuredUid = process.env.ORIGEN_ADMIN_UID) {
   return Boolean(
     decoded &&
+    typeof configuredUid === "string" &&
+    configuredUid.length > 0 &&
     typeof decoded.uid === "string" &&
-    decoded.uid.length > 0 &&
-    decoded.admin === true &&
-    decoded.email_verified === true &&
-    typeof decoded.email === "string" &&
-    decoded.email.trim().length > 0
+    decoded.uid === configuredUid &&
+    decoded.admin === true
   );
 }
