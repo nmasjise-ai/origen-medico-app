@@ -1,3 +1,20 @@
+## Revisión de continuidad — 18/11/2026: autorización de sesión del paciente
+- [x] Añadido helper `api/_lib/patient-session-authorization.js` para validar que el documento de mapeo pertenece al UID autenticado, tiene rol `patient` y contiene un identificador de expediente con formato permitido.
+- [x] El endpoint `api/patient/session.js` ahora valida el UID almacenado y el formato de `patientId` antes de consultar el expediente.
+- [x] Añadida comprobación explícita de que el expediente mantiene `linkedUid` igual al UID autenticado y `accountStatus === linked`.
+- [x] Añadidas pruebas unitarias para mapeos ausentes, UID distinto, rol incorrecto, identificadores manipulados y expedientes no vinculados.
+- [ ] **Pendiente:** ejecutar suite Node/Firebase Emulator y build para el HEAD actual; Vercel READY no sustituye las pruebas unitarias.
+- [ ] **Pendiente:** prueba funcional A/B con dos cuentas ficticias en Preview.
+- [ ] **Pendiente:** comprobar que la sesión se comporta correctamente si un mapeo Firestore está incompleto o corrupto.
+
+
+### Secuencia prioritaria siguiente
+1. Ejecutar y confirmar pruebas automatizadas del HEAD actual.
+2. Completar pruebas de invitación/activación y aislamiento A/B en Preview con cuentas ficticias.
+3. Revisar todos los endpoints del portal paciente y crear pruebas de autorización por recurso.
+4. Definir persistencia, validación y permisos para lecturas clínicas del portal real.
+5. Cerrar privacidad, consentimiento, auditoría, copias de seguridad y recuperación antes de producción.
+
 # ORIGEN Médico — Product Backlog y alcance funcional V1
 
 **Marca:** ORIGEN Médico — Nutrición Clínica & Terapia GLP-1  
