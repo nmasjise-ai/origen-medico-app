@@ -7,6 +7,7 @@ import {
   getLinkedPatientId,
   isPatientRecordLinkedToUser
 } from "../_lib/patient-session-authorization.js";
+import { getPatientPortalAccessState } from "../_lib/patient-portal-access.js";
 import {
   toPatientVisibleProfile,
   toPatientVisibleMeasurement
@@ -57,6 +58,15 @@ export function createPatientProfileHandler(dependencies = {}) {
         !patientSnapshot.exists ||
         !isPatientRecordLinkedToUser(patientSnapshot.data(), decoded.uid)
       ) {
+      const access = getPatientPortalAccessState(userSnapshot.data(), patientSnapshot.data());
+      if (!access.enabled) {
+        return res.status(403).json({
+          accessSuspended: true,
+          error: "El acceso al portal está temporalmente suspendido. Contacta al consultorio para recibir asistencia."
+        });
+      }
+
+
         return res.status(404).json({
           error: "No se encontró un expediente vinculado a esta cuenta."
         });
