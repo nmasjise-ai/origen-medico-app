@@ -10,6 +10,20 @@ function asIso(value) {
   return value?.toDate ? value.toDate().toISOString() : null;
 }
 
+function normalizeStoredDemographics(data) {
+  let ageYears = data.ageYears ?? null;
+  let birthDate = data.birthDate || null;
+  const createdDate = asIso(data.createdAt)?.slice(0, 10) || null;
+
+  // Older Preview forms could persist today's date and age 0 as defaults.
+  // Treat that exact creation-date + zero-age combination as missing data.
+  if (Number(ageYears) === 0 && birthDate && createdDate === birthDate) {
+    ageYears = null;
+    birthDate = null;
+  }
+  return { ageYears, birthDate };
+}
+
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -48,9 +62,11 @@ export default async function handler(req, res) {
           waistCm: data.waistCm ?? null,
           muscleKg: data.muscleKg ?? null,
           bodyFatPct: data.bodyFatPct ?? null,
-          heightCm: data.heightCm ?? patientSnapshot.data().heightCm ?? null,
-          bmi: data.weightKg && (data.heightCm ?? patientSnapshot.data().heightCm)
-            ? Number((data.weightKg / Math.pow((data.heightCm ?? patientSnapshot.data().heightCm) / 100, 2)).toFixed(1))
+          // Height is snapshotted per measurement. Do not backfill historical
+          // records from the mutable profile height.
+          heightCm: data.heightCm ?? null,
+          bmi: data.weightKg && data.heightCm
+            ? Number((data.weightKg / Math.pow(data.heightCm / 100, 2)).toFixed(1))
             : null,
           recordedAt: asIso(data.recordedAt),
           source: data.source || "manual"
@@ -58,13 +74,14 @@ export default async function handler(req, res) {
       });
 
       const data = patientSnapshot.data();
+      const demographics = normalizeStoredDemographics(data);
       return res.status(200).json({
         patient: {
           id: patientSnapshot.id,
           displayName: data.displayName || "",
           phoneE164: data.phoneE164 || null,
-          ageYears: data.ageYears ?? null,
-          birthDate: data.birthDate || null,
+          ageYears: demographics.ageYears,
+          birthDate: demographics.birthDate,
           sexAtBirth: data.sexAtBirth || null,
           heightCm: data.heightCm ?? null,
           activeDiagnoses: data.activeDiagnoses || "",
