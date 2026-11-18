@@ -24,10 +24,10 @@ export default async function handler(req, res) {
     // Dynamic import keeps the endpoint invocable and allows safe error handling
     // if the Firebase Admin SDK or private service-account configuration fails.
     const { getAdminAuth, verifyRequestUser } = await import("../_lib/firebase-admin.js");
+    const { isConfiguredAdministrator } = await import("../_lib/admin-authorization.js");
     const decoded = await verifyRequestUser(req);
-    const email = (decoded.email || "").trim().toLowerCase();
 
-    if (decoded.uid !== configuredUid || email !== configuredEmail) {
+    if (!isConfiguredAdministrator(decoded, configuredUid, configuredEmail)) {
       return res.status(403).json({ error: "Not authorized to bootstrap the administrator." });
     }
 
