@@ -27,6 +27,33 @@ const firebaseConfig = {
 const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
 const auth = app ? getAuth(app) : null;
 
+const getPatientActivityStatus = (lastAccessAt) => {
+  if (!lastAccessAt) {
+    return { label: 'Sin actividad', detail: 'Aún no ha iniciado sesión', className: 'bg-slate-100 text-slate-700' };
+  }
+
+  const lastAccess = new Date(lastAccessAt);
+  if (Number.isNaN(lastAccess.getTime())) {
+    return { label: 'Sin actividad', detail: 'Fecha de acceso no disponible', className: 'bg-slate-100 text-slate-700' };
+  }
+
+  const elapsedMs = Date.now() - lastAccess.getTime();
+  if (elapsedMs < 0) {
+    return { label: 'Acceso reciente', detail: 'Último acceso registrado', className: 'bg-emerald-100 text-emerald-800' };
+  }
+
+  const elapsedDays = Math.floor(elapsedMs / 86400000);
+  if (elapsedDays <= 7) {
+    return { label: 'Reciente', detail: elapsedDays === 0 ? 'Ingresó hoy' : `Ingresó hace ${elapsedDays} día(s)`, className: 'bg-emerald-100 text-emerald-800' };
+  }
+
+  if (elapsedDays > 30) {
+    return { label: 'Inactivo', detail: `Sin ingresar hace ${elapsedDays} días`, className: 'bg-amber-100 text-amber-800' };
+  }
+
+  return { label: 'Actividad intermedia', detail: `Último ingreso hace ${elapsedDays} días`, className: 'bg-sky-100 text-sky-800' };
+};
+
 // ============================================================================
 // EMBLEMA OFICIAL: ORIGEN MÉDICO (ÁRBOL DE LA VIDA DORADO)
 // ============================================================================
@@ -3362,11 +3389,20 @@ function App() {
                               </>
                             )}
                             {patient.linkedAt && <p className="text-[10px] text-[#6F6250]">Cuenta vinculada: {new Date(patient.linkedAt).toLocaleDateString('es-BO', { timeZone: 'America/La_Paz' })}</p>}
-                            {patient.accountStatus === 'linked' && (
+                            {patient.accountStatus === 'linked' && (() => {
+                              const activity = getPatientActivityStatus(patient.lastAccessAt);
+                              return (
+                                <div className="flex flex-wrap items-center gap-2 pt-1">
+                                  <span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold ${activity.className}`}>
+                                    {activity.label}
+                                  </span>
+                                  <span className="text-[10px] text-[#6F6250]">{activity.detail}</span>
+                                </div>
+                              );
+                            })()}
+                            {patient.accountStatus === 'linked' && patient.lastAccessAt && (
                               <p className="text-[10px] text-[#6F6250]">
-                                Último acceso: {patient.lastAccessAt
-                                  ? new Date(patient.lastAccessAt).toLocaleString('es-BO', { timeZone: 'America/La_Paz', dateStyle: 'short', timeStyle: 'short' })
-                                  : 'Aún no registrado'}
+                                Último acceso: {new Date(patient.lastAccessAt).toLocaleString('es-BO', { timeZone: 'America/La_Paz', dateStyle: 'short', timeStyle: 'short' })}
                               </p>
                             )}
                           </div>
