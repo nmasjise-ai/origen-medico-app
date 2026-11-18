@@ -3,6 +3,10 @@ import {
   getPreviewPatientsCollection,
   getPreviewUsersCollection
 } from "../_lib/staging-firestore.js";
+import {
+  getLinkedPatientId,
+  isPatientRecordLinkedToUser
+} from "../_lib/patient-session-authorization.js";
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -22,17 +26,20 @@ export default async function handler(req, res) {
     const users = getPreviewUsersCollection(db);
     const userSnapshot = await users.doc(decoded.uid).get();
 
-    if (!userSnapshot.exists || userSnapshot.get("role") !== "patient") {
+    if (!userSnapshot.exists) {
       return res.status(404).json({ linked: false, error: "Esta cuenta todavía no está vinculada a un expediente." });
     }
 
-    const patientId = userSnapshot.get("patientId");
+    const patientId = getLinkedPatientId(userSnapshot.data(), decoded.uid);
+    if (!patientId) {
+      return res.status(404).json({ linked: false, error: "Esta cuenta todavía no está vinculada a un expediente." });
+    }
+
     const patientSnapshot = await getPreviewPatientsCollection(db).doc(patientId).get();
 
     if (
       !patientSnapshot.exists ||
-      patientSnapshot.get("linkedUid") !== decoded.uid ||
-      patientSnapshot.get("accountStatus") !== "linked"
+      !isPatientRecordLinkedToUser(patientSnapshot.data(), decoded.uid)
     ) {
       return res.status(404).json({ linked: false, error: "No se encontró un expediente vinculado a esta cuenta." });
     }
