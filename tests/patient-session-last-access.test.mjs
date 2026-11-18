@@ -100,6 +100,17 @@ test("unlinked, unverified, or mismatched patients do not record last access", a
       user: { uid: "uid_AAAAAAAA", role: "patient", patientId: "patient_AAAAA" },
       patient: { linkedUid: "uid_BBBBBBBB", accountStatus: "linked" },
       expected: 404
+    },
+    {
+      decoded: { uid: "uid_AAAAAAAA", email_verified: true, admin: false },
+      user: {
+        uid: "uid_AAAAAAAA",
+        role: "patient",
+        patientId: "patient_AAAAA",
+        portalAccessStatus: "suspended"
+      },
+      patient: { linkedUid: "uid_AAAAAAAA", accountStatus: "linked" },
+      expected: 403
     }
   ];
 
