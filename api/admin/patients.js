@@ -60,6 +60,9 @@ export default async function handler(req, res) {
           email: data.email || data.invitedEmail || null,
           linkedAt: asIso(data.linkedAt),
           lastAccessAt,
+          portalAccessStatus: data.portalAccessStatus || "enabled",
+          portalAccessReason: data.portalAccessReason || null,
+          portalAccessChangedAt: asIso(data.portalAccessChangedAt),
           createdAt: asIso(data.createdAt),
           updatedAt: asIso(data.updatedAt)
         };
