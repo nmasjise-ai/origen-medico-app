@@ -1999,13 +1999,21 @@ function App() {
               La activación y el vínculo seguro de tu cuenta están completados. Estamos habilitando por etapas las secciones de mediciones, tratamiento, nutrición, síntomas y calendario.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {['Mi expediente y mediciones','Mi tratamiento y controles','Mi plan nutricional','Mis síntomas y alertas','Mi calendario','Educación y recursos'].map((label) => (
+              {['Mi expediente y mediciones','Mi tratamiento y controles','Mi plan nutricional','Mis síntomas y alertas','Mi calendario'].map((label) => (
                 <div key={label} className="rounded-xl border border-[#E6D9C0] bg-[#FAF6EE] p-4 text-sm font-semibold text-[#735318]">
                   {label}
-                  <span className="block text-[10px] font-normal text-[#8C7A63] mt-1">Próximamente</span>
+                  <span className="block text-[10px] font-normal text-[#8C7A63] mt-1">En preparación</span>
                 </div>
               ))}
             </div>
+          </section>
+          <section className="space-y-4">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-[#9A742C]">Recursos para pacientes</span>
+              <h2 className="mt-1 font-serif text-2xl font-bold text-[#231F1A]">Educación y orientación nutricional</h2>
+              <p className="mt-1 text-sm text-[#5C4D3C]">Material educativo general. No reemplaza tu plan individual ni las indicaciones de tu equipo de salud.</p>
+            </div>
+            <NutritionEducation />
           </section>
         </main>
       )}
