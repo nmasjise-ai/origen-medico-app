@@ -65,6 +65,14 @@ export default async function handler(req, res) {
         occurredAt: FieldValue.serverTimestamp(), initialStock: product.initialStock,
         source: "admin_api"
       });
+      const openingMovementRef = ref.collection("inventoryMovements").doc();
+      batch.create(openingMovementRef, {
+        type: "opening_balance", quantity: product.initialStock,
+        previousStock: 0, resultingStock: product.initialStock,
+        reason: "Stock inicial al crear el producto",
+        actorUid: decoded.uid, occurredAt: FieldValue.serverTimestamp(),
+        source: "product_creation"
+      });
       await batch.commit();
       return res.status(201).json({
         product: { id: ref.id, ...product, currentStock: product.initialStock, active: true },
