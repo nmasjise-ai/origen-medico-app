@@ -530,7 +530,7 @@ function App() {
   });
   const [cloudMeasurementSaving, setCloudMeasurementSaving] = useState(false);
   const [cloudMeasurementForm, setCloudMeasurementForm] = useState({
-    weightKg: '', waistCm: '', muscleKg: '', bodyFatPct: ''
+    weightKg: '', heightCm: '', waistCm: '', muscleKg: '', bodyFatPct: ''
   });
   const [syncStatus, setSyncStatus] = useState('connecting'); // 'connecting' | 'synced' | 'local'
   const [toastMessage, setToastMessage] = useState(null);
@@ -751,7 +751,7 @@ function App() {
       setCloudProfileForm({
         displayName: payload.patient?.displayName || '',
         phone: (payload.patient?.phoneE164 || '').replace(/^\+/, ''),
-        ageYears: payload.patient?.ageYears ?? '',
+        ageYears: Number(payload.patient?.ageYears) > 0 ? payload.patient.ageYears : '',
         birthDate: payload.patient?.birthDate || '',
         sexAtBirth: payload.patient?.sexAtBirth || '',
         heightCm: payload.patient?.heightCm ?? '',
@@ -818,6 +818,7 @@ function App() {
       const idToken = await user.getIdToken();
       const measurement = {
         weightKg: cloudMeasurementForm.weightKg,
+        heightCm: cloudMeasurementForm.heightCm,
         waistCm: cloudMeasurementForm.waistCm,
         muscleKg: cloudMeasurementForm.muscleKg,
         bodyFatPct: cloudMeasurementForm.bodyFatPct
@@ -840,7 +841,7 @@ function App() {
         throw new Error(payload.error || 'No se pudo registrar la medición.');
       }
 
-      setCloudMeasurementForm({ weightKg: '', waistCm: '', muscleKg: '', bodyFatPct: '' });
+      setCloudMeasurementForm({ weightKg: '', heightCm: '', waistCm: '', muscleKg: '', bodyFatPct: '' });
       showToast('Control registrado en la base de pruebas.');
       await loadCloudPatientDetails(selectedCloudPatient.patient.id);
       await loadCloudPatients(user);
@@ -3433,7 +3434,7 @@ function App() {
 
                       {cloudRecordTab === 'summary' && (() => {
                         const latest = (selectedCloudPatient.measurements || [])[0] || {};
-                        const height = selectedCloudPatient.patient.heightCm || latest.heightCm;
+                        const height = latest.heightCm ?? selectedCloudPatient.patient.heightCm;
                         const bmi = latest.weightKg && height
                           ? (latest.weightKg / Math.pow(height / 100, 2)).toFixed(1)
                           : null;
@@ -3473,7 +3474,18 @@ function App() {
                               ) : (
                                 <p className="text-xs text-[#6F6250] mt-2">Registra al menos dos pesos para visualizar la tendencia.</p>
                               )}
-                              {weightSeries.length > 0 && <p className="text-[10px] text-[#8C7A63]">Últimos {weightSeries.length} registros con peso · La gráfica muestra tendencia, no un objetivo terapéutico.</p>}
+                              {weightSeries.length > 0 && (
+                                <div className="mt-2 space-y-1">
+                                  <p className="text-[10px] text-[#8C7A63]">Últimos {weightSeries.length} registros con peso · Tendencia descriptiva, no objetivo terapéutico.</p>
+                                  <div className="flex flex-wrap gap-2 text-[10px] text-[#6F6250]">
+                                    {weightSeries.map((item, index) => (
+                                      <span key={item.id || index} className="rounded-md bg-[#FAF6EE] px-2 py-1">
+                                        {item.recordedAt ? new Date(item.recordedAt).toLocaleDateString('es-BO') : 'Sin fecha'}: <strong>{item.weightKg} kg</strong>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                             <div className="rounded-2xl bg-[#FAF6EE] p-3">
                               <strong className="text-xs">Datos generales</strong>
@@ -3496,11 +3508,11 @@ function App() {
                             <label className="text-[10px] font-bold">Teléfono / WhatsApp
                               <input value={cloudProfileForm.phone} onChange={(e) => setCloudProfileForm((p) => ({ ...p, phone: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" placeholder="71234567" />
                             </label>
-                            <label className="text-[10px] font-bold">Edad (años, si no se conoce fecha de nacimiento)
-                              <input type="number" min="1" max="120" value={cloudProfileForm.ageYears} disabled={Boolean(cloudProfileForm.birthDate)} onChange={(e) => setCloudProfileForm((p) => ({ ...p, ageYears: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs disabled:opacity-60" />
+                            <label className="text-[10px] font-bold">Edad en años (si no se conoce la fecha de nacimiento)
+                              <input type="number" min="1" max="120" value={cloudProfileForm.ageYears} disabled={Boolean(cloudProfileForm.birthDate)} onChange={(e) => setCloudProfileForm((p) => ({ ...p, ageYears: e.target.value }))} placeholder="No registrada" className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs disabled:opacity-60" />
                             </label>
                             <label className="text-[10px] font-bold">Fecha de nacimiento
-                              <input type="date" value={cloudProfileForm.birthDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setCloudProfileForm((p) => ({ ...p, birthDate: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
+                              <input type="date" value={cloudProfileForm.birthDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setCloudProfileForm((p) => ({ ...p, birthDate: e.target.value, ageYears: e.target.value ? '' : p.ageYears }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
                             </label>
                             <label className="text-[10px] font-bold">Sexo biológico
                               <select value={cloudProfileForm.sexAtBirth} onChange={(e) => setCloudProfileForm((p) => ({ ...p, sexAtBirth: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs">
@@ -3539,21 +3551,28 @@ function App() {
                               <div className="overflow-x-auto">
                                 <table className="w-full text-xs text-left">
                                   <thead><tr className="text-[#8C7A63]">
-                                    <th className="py-2 pr-2">Fecha y hora</th><th className="py-2 pr-2">Registro</th><th className="py-2 pr-2">Peso</th><th className="py-2 pr-2">Talla</th><th className="py-2 pr-2">IMC</th><th className="py-2 pr-2">Cintura</th><th className="py-2 pr-2">Músculo</th><th className="py-2">Grasa</th>
+                                    <th className="py-2 pr-2">Fecha y hora</th><th className="py-2 pr-2">Registro</th><th className="py-2 pr-2">Peso</th><th className="py-2 pr-2">Δ peso</th><th className="py-2 pr-2">Talla</th><th className="py-2 pr-2">IMC</th><th className="py-2 pr-2">Cintura</th><th className="py-2 pr-2">Δ cintura</th><th className="py-2 pr-2">Músculo</th><th className="py-2">Grasa</th>
                                   </tr></thead>
                                   <tbody>
-                                    {(selectedCloudPatient.measurements || []).map((measurement) => (
-                                      <tr key={measurement.id} className="border-t border-[#E6D9C0]">
-                                        <td className="py-2 pr-2 whitespace-nowrap">{measurement.recordedAt ? new Date(measurement.recordedAt).toLocaleString('es-BO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
-                                        <td className="py-2 pr-2 whitespace-nowrap">{measurement.source === 'initial_registration' ? 'Inicial' : measurement.source === 'manual_control' ? 'Control' : 'Registro'}</td>
-                                        <td className="py-2 pr-2">{measurement.weightKg ?? '—'} kg</td>
-                                        <td className="py-2 pr-2">{measurement.heightCm ?? selectedCloudPatient.patient.heightCm ?? '—'} cm</td>
-                                        <td className="py-2 pr-2">{measurement.bmi ?? (measurement.weightKg && (measurement.heightCm || selectedCloudPatient.patient.heightCm) ? (measurement.weightKg / Math.pow((measurement.heightCm || selectedCloudPatient.patient.heightCm) / 100, 2)).toFixed(1) : '—')}</td>
-                                        <td className="py-2 pr-2">{measurement.waistCm ?? '—'} cm</td>
-                                        <td className="py-2 pr-2">{measurement.muscleKg ?? '—'} kg</td>
-                                        <td className="py-2">{measurement.bodyFatPct ?? '—'}%</td>
-                                      </tr>
-                                    ))}
+                                    {(selectedCloudPatient.measurements || []).map((measurement, index, rows) => {
+                                      const previous = rows[index + 1];
+                                      const weightDelta = measurement.weightKg != null && previous?.weightKg != null ? Number((measurement.weightKg - previous.weightKg).toFixed(1)) : null;
+                                      const waistDelta = measurement.waistCm != null && previous?.waistCm != null ? Number((measurement.waistCm - previous.waistCm).toFixed(1)) : null;
+                                      return (
+                                        <tr key={measurement.id} className="border-t border-[#E6D9C0]">
+                                          <td className="py-2 pr-2 whitespace-nowrap">{measurement.recordedAt ? new Date(measurement.recordedAt).toLocaleString('es-BO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                                          <td className="py-2 pr-2 whitespace-nowrap">{measurement.source === 'initial_registration' ? 'Inicial' : measurement.source === 'manual_control' ? 'Control' : 'Registro'}</td>
+                                          <td className="py-2 pr-2 whitespace-nowrap">{measurement.weightKg ?? '—'} kg</td>
+                                          <td className="py-2 pr-2 whitespace-nowrap">{weightDelta == null ? '—' : (weightDelta > 0 ? '+' : '') + weightDelta + ' kg'}</td>
+                                          <td className="py-2 pr-2 whitespace-nowrap">{measurement.heightCm ?? '—'} cm</td>
+                                          <td className="py-2 pr-2">{measurement.bmi ?? '—'}</td>
+                                          <td className="py-2 pr-2 whitespace-nowrap">{measurement.waistCm ?? '—'} cm</td>
+                                          <td className="py-2 pr-2 whitespace-nowrap">{waistDelta == null ? '—' : (waistDelta > 0 ? '+' : '') + waistDelta + ' cm'}</td>
+                                          <td className="py-2 pr-2">{measurement.muscleKg ?? '—'} kg</td>
+                                          <td className="py-2">{measurement.bodyFatPct ?? '—'}%</td>
+                                        </tr>
+                                      );
+                                    })}
                                   </tbody>
                                 </table>
                               </div>
@@ -3561,9 +3580,10 @@ function App() {
                           </div>
                           <form onSubmit={handleCreateCloudMeasurement} className="rounded-2xl border border-[#E6D9C0] p-3 space-y-3">
                             <strong className="text-xs">Registrar nuevo control (solo pruebas)</strong>
-                            <p className="text-[10px] text-[#8C7A63]">La talla se toma del perfil vigente para calcular el IMC. Si cambia, actualízala en Historia clínica antes del control.</p>
+                            <p className="text-[10px] text-[#8C7A63]">La talla se registra en cada control. Si la dejas vacía, se utilizará la talla vigente del perfil y quedará guardada como referencia histórica.</p>
                             <div className="grid grid-cols-2 gap-2">
                               <input type="number" min="20" max="400" step="0.1" placeholder="Peso kg" value={cloudMeasurementForm.weightKg} onChange={(e) => setCloudMeasurementForm((p) => ({ ...p, weightKg: e.target.value }))} className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
+                              <input type="number" min="80" max="250" step="0.1" placeholder={'Talla cm (' + (selectedCloudPatient.patient.heightCm || 'opcional') + ')'} value={cloudMeasurementForm.heightCm} onChange={(e) => setCloudMeasurementForm((p) => ({ ...p, heightCm: e.target.value }))} className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
                               <input type="number" min="30" max="250" step="0.1" placeholder="Cintura cm" value={cloudMeasurementForm.waistCm} onChange={(e) => setCloudMeasurementForm((p) => ({ ...p, waistCm: e.target.value }))} className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
                               <input type="number" min="2" max="150" step="0.1" placeholder="Músculo kg" value={cloudMeasurementForm.muscleKg} onChange={(e) => setCloudMeasurementForm((p) => ({ ...p, muscleKg: e.target.value }))} className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
                               <input type="number" min="1" max="75" step="0.1" placeholder="Grasa corporal %" value={cloudMeasurementForm.bodyFatPct} onChange={(e) => setCloudMeasurementForm((p) => ({ ...p, bodyFatPct: e.target.value }))} className="w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
