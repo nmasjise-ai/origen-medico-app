@@ -3331,6 +3331,13 @@ function App() {
                           </span>
                         </div>
                         <p className="text-xs text-[#6F6250]">{patient.phoneE164 || 'Sin teléfono'}{patient.ageYears ? ` · ${patient.ageYears} años` : ''}</p>
+                        {(patient.email || patient.invitedEmail) && (
+                          <p className="flex items-center gap-2 text-xs text-[#735318] break-all">
+                            <span aria-hidden="true">✉</span>
+                            <span>{patient.email || patient.invitedEmail}</span>
+                            {patient.accountStatus === 'linked' && <span className="text-[10px] text-emerald-700 font-semibold">Correo vinculado</span>}
+                          </p>
+                        )}
                         <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
