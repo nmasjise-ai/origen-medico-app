@@ -42,8 +42,6 @@ test("rejects missing configuration or incomplete token claims", () => {
   assert.equal(isConfiguredAdministrator({ uid: configuredUid, email: configuredEmail, email_verified: true }, configuredUid, ""), false);
 });
 
-import test from "node:test";
-import assert from "node:assert/strict";
 import { isVerifiedAdministrator } from "../api/_lib/admin-authorization.js";
 
 test("accepts an administrator with a verified email and UID", () => {
