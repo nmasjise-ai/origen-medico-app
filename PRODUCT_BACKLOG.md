@@ -210,7 +210,7 @@ Esta sección aclara la diferencia entre componentes de demostración y funcione
 ### Siguiente secuencia segura
 1. Confirmar build y Preview del HEAD actual, sin generar despliegues repetidos innecesarios.
 2. Revisar visualmente la vista demo y corregir cualquier error de interfaz del Centro Educativo.
-3. Diseñar e integrar el Centro Educativo en el portal individual real, manteniendo contenido estático y sin leer/escribir datos clínicos.
+3. Mantener el Centro Educativo integrado en el portal individual real como contenido estático; revisar build y presentación.
 4. Añadir FAQ y contenido educativo revisado, con responsable y fecha de revisión.
 5. Implementar calculadora proteica como herramienta informativa separada; el objetivo debe ser introducido/revisado por el profesional, con fuente nutricional documentada.
 6. Implementar tarjeta de progreso solo cuando el portal paciente disponga de endpoint seguro de lectura limitada para su propio expediente.
