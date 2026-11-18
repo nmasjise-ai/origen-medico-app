@@ -147,12 +147,12 @@ Los roles se asignan desde servidor. Nunca se confía en un rol enviado por el n
 Estas funciones se incorporan al alcance futuro. Se implementarán de forma incremental, preferentemente como componentes/pantallas independientes, sin reescribir el expediente, la autenticación ni la capa de datos existente.
 
 ### N1 — Herramientas educativas de nutrición (prioridad inicial)
-- [ ] **Método de la mano y la taza:** guía visual de porciones de proteína (palma), carbohidratos (puño), grasas (pulgar) y verduras (dos manos abiertas). Incluir ejemplos de alimentos locales. Aclarar que es una guía aproximada y que las porciones se individualizan.
-- [ ] **Centro educativo ORIGEN:** artículos breves, consejos e infografías revisados por profesional; categorías de alimentación, hidratación, actividad física, conservación de masa muscular y tratamiento GLP-1. Mostrar fecha/estado de revisión y evitar publicar contenido clínico no aprobado.
-- [ ] **Equivalencias de alimentos locales:** alternativas por grupo alimentario y porciones aproximadas con ingredientes disponibles en mercados y supermercados de Santa Cruz. Diferenciar equivalencia práctica de equivalencia nutricional calculada.
-- [ ] **Guía de tolerancia gastrointestinal:** información sobre náuseas, reflujo, diarrea y estreñimiento; consejos generales y señales de alarma. No clasificar alimentos como universalmente prohibidos ni sustituir evaluación clínica.
+- [x] **Método de la mano y la taza:** guía visual de porciones de proteína (palma), carbohidratos (puño), grasas (pulgar) y verduras (dos manos abiertas). Incluir ejemplos de alimentos locales. Aclarar que es una guía aproximada y que las porciones se individualizan.
+- [x] **Centro educativo ORIGEN:** artículos breves, consejos e infografías revisados por profesional; categorías de alimentación, hidratación, actividad física, conservación de masa muscular y tratamiento GLP-1. Mostrar fecha/estado de revisión y evitar publicar contenido clínico no aprobado.
+- [x] **Equivalencias de alimentos locales:** alternativas por grupo alimentario y porciones aproximadas con ingredientes disponibles en mercados y supermercados de Santa Cruz. Diferenciar equivalencia práctica de equivalencia nutricional calculada.
+- [x] **Guía de tolerancia gastrointestinal:** información sobre náuseas, reflujo, diarrea y estreñimiento; consejos generales y señales de alarma. No clasificar alimentos como universalmente prohibidos ni sustituir evaluación clínica.
 - [ ] **Semáforo/registro de hidratación:** registro diario simple y visual de líquidos. Metas individualizadas por profesional; no recomendar automáticamente electrolitos, sales de rehidratación o magnesio.
-- [ ] **Calculadora de proteína:** mostrar objetivo indicado/revisado por profesional y traducirlo a combinaciones de alimentos. Usar una base nutricional fiable, cantidades explícitas y advertir que el colágeno no equivale a una fuente completa de proteína para todos los objetivos.
+- [x] **Calculadora de proteína:** mostrar objetivo indicado/revisado por profesional y traducirlo a combinaciones de alimentos. Usar una base nutricional fiable, cantidades explícitas y advertir que el colágeno no equivale a una fuente completa de proteína para todos los objetivos.
 
 ### N2 — Menús y seguimiento nutricional
 - [ ] **Menús con alimentos cotidianos bolivianos:** opciones económicas, intermedias y flexibles, con alternativas por disponibilidad, alergias y preferencias.
@@ -203,8 +203,8 @@ Esta sección aclara la diferencia entre componentes de demostración y funcione
 - [ ] **Pendiente:** completar pruebas de invitación, verificación de correo y aislamiento entre dos cuentas/pacientes ficticios.
 - [x] Alta, listado, ficha individual, historia clínica y antropometría disponibles en el panel de pruebas del médico.
 - [ ] **Pendiente:** validación de permisos por rol, reglas Firestore y pruebas automatizadas de acceso/denegación.
-- [ ] **Pendiente:** ejecutar compilación y pruebas de los últimos commits educativos; la confirmación de archivos en GitHub no sustituye una compilación.
-- [ ] **Pendiente:** validar despliegue Preview correspondiente al HEAD actual y probarlo en escritorio/móvil.
+- [x] Compilación del Preview verificada para el commit 0a7840803bcec24765fca4c51d685d9c351c9511; pruebas Node/Firebase Emulator posteriores a los últimos commits aún pendientes.
+- [x] Deployment Preview del commit 0a7840803bcec24765fca4c51d685d9c351c9511 confirmado READY; pendiente revisión visual manual en escritorio/móvil.
 - [ ] **Pendiente:** el PR #1 continúa en borrador y no debe fusionarse ni desplegarse a producción hasta cumplir los criterios de salida.
 
 ### Siguiente secuencia segura
