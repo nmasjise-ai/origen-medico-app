@@ -4144,6 +4144,16 @@ function App() {
                           <div className="col-span-2 text-amber-800">Documentos que requieren revisión técnica: <strong>{legacyAuditResult.unparsedDocuments}</strong></div>
                         )}
                       </div>
+                      {legacyAuditResult.storageLocations && (
+                        <div className="border-t border-[#E6D9C0] pt-2 space-y-1">
+                          <strong>Comparación de ubicaciones (solo cantidades)</strong>
+                          <div className="flex justify-between gap-3"><span>Pacientes antiguos (raíz)</span><strong>{legacyAuditResult.storageLocations.legacyRootPatients}</strong></div>
+                          <div className="flex justify-between gap-3"><span>Usuarios antiguos (raíz)</span><strong>{legacyAuditResult.storageLocations.legacyRootUsers}</strong></div>
+                          <div className="flex justify-between gap-3"><span>Expedientes del espacio de pruebas</span><strong>{legacyAuditResult.storageLocations.previewPatients}</strong></div>
+                          <div className="flex justify-between gap-3"><span>Usuarios vinculados en pruebas</span><strong>{legacyAuditResult.storageLocations.previewUsers}</strong></div>
+                          <div className="flex justify-between gap-3"><span>Invitaciones en pruebas</span><strong>{legacyAuditResult.storageLocations.previewInvitations}</strong></div>
+                        </div>
+                      )}
                       {Array.isArray(legacyAuditResult.rootCollections) && legacyAuditResult.rootCollections.length > 0 && (
                         <div className="border-t border-[#E6D9C0] pt-2 space-y-1">
                           <strong>Colecciones principales (solo cantidades)</strong>
