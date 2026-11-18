@@ -127,3 +127,17 @@ La fase se considera **implementada y validada por CI**, pero no cerrada funcion
 - La suite de Firebase Emulator/Node no se ha vuelto a ejecutar después de estos dos commits; no declarar los nuevos cambios como probados por CI hasta contar con el resultado.
 - Preview asociado: `https://origen-medico-app-git-mejoras-seguridad-origen-origen-medico.vercel.app`. Mantener datos ficticios.
 - El PR continúa sujeto a revisión; no fusionar, publicar reglas Firestore ni desplegar a producción.
+
+## Revisión de continuidad — 18/11/2026: autorización de sesión del paciente
+
+Se endureció `api/patient/session.js` con un helper independiente `api/_lib/patient-session-authorization.js`:
+
+- El documento `users/{uid}` debe contener el mismo UID autenticado, rol `patient` y un `patientId` con formato válido antes de consultar el expediente.
+- El expediente debe existir y conservar `linkedUid` igual al UID autenticado, además de `accountStatus: linked`.
+- Las pruebas unitarias cubren UID diferente, rol incorrecto, mapeo ausente, ID con formato manipulable y expediente no vinculado.
+- No se modificó el esquema de Firestore, no se migraron datos y no se publicaron reglas.
+
+**Estado de validación:** las pruebas fueron añadidas, pero todavía no se ha confirmado su ejecución en GitHub Actions o local. El estado Vercel READY solo confirma despliegue/build y no debe interpretarse como suite de pruebas aprobada.
+
+Siguientes pasos: ejecutar pruebas del HEAD, completar QA A/B con dos cuentas ficticias, revisar autorización de cada endpoint de lectura clínica y documentar consentimiento, auditoría y recuperación antes de producción.
+
