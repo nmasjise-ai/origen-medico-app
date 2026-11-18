@@ -80,7 +80,6 @@ export default async function handler(req, res) {
         email,
         role: "patient",
         patientId: patientSnapshot.id,
-        invitationHash: tokenHash,
         createdAt: FieldValue.serverTimestamp(),
         linkedAt: FieldValue.serverTimestamp()
       });
