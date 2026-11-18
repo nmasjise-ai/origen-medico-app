@@ -688,6 +688,36 @@ function App() {
     }
   }, [user, isAdmin]);
 
+  const handlePortalAccessChange = async (patient) => {
+    if (!user || !isAdmin || !patient?.id) return;
+    const currentlySuspended = patient.portalAccessStatus === 'suspended';
+    const action = currentlySuspended ? 'reactivate' : 'suspend';
+    const reason = window.prompt(
+      currentlySuspended
+        ? 'Motivo de la reactivación (opcional):'
+        : 'Motivo de la suspensión (obligatorio):'
+    );
+    if (reason === null) return;
+    if (!currentlySuspended && reason.trim().length < 5) {
+      showToast('Escribe un motivo de al menos 5 caracteres.');
+      return;
+    }
+    try {
+      const idToken = await user.getIdToken();
+      const response = await fetch(`/api/admin/patients/${encodeURIComponent(patient.id)}/access`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${idToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, reason: reason.trim() })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'No se pudo cambiar el acceso.');
+      showToast(payload.message || 'Acceso actualizado.');
+      await loadCloudPatients(user);
+    } catch (error) {
+      showToast(error.message || 'No se pudo cambiar el acceso.');
+    }
+  };
+
   const handleCreateCloudPatient = async (event) => {
     event.preventDefault();
 
@@ -3407,6 +3437,16 @@ function App() {
                             )}
                           </div>
                         )}
+                        {patient.accountStatus === 'linked' && (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold ${patient.portalAccessStatus === 'suspended' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                              {patient.portalAccessStatus === 'suspended' ? 'Acceso suspendido' : 'Acceso habilitado'}
+                            </span>
+                            {patient.portalAccessStatus === 'suspended' && patient.portalAccessReason && (
+                              <span className="text-[10px] text-[#6F6250]">Motivo: {patient.portalAccessReason}</span>
+                            )}
+                          </div>
+                        )}
                         <div className="flex flex-wrap gap-2">
                           <button
                             type="button"
@@ -3416,6 +3456,15 @@ function App() {
                           >
                             {cloudPatientDetailLoading && selectedCloudPatient?.patient?.id === patient.id ? 'Abriendo…' : 'Abrir ficha provisional'}
                           </button>
+                          {patient.accountStatus === 'linked' && (
+                            <button
+                              type="button"
+                              onClick={() => handlePortalAccessChange(patient)}
+                              className={`px-3 py-2 rounded-xl text-xs font-bold border ${patient.portalAccessStatus === 'suspended' ? 'border-emerald-300 text-emerald-800 bg-emerald-50' : 'border-rose-300 text-rose-800 bg-rose-50'}`}
+                            >
+                              {patient.portalAccessStatus === 'suspended' ? 'Reactivar acceso' : 'Suspender acceso'}
+                            </button>
+                          )}
                         </div>
 
                         {patient.accountStatus !== 'linked' && (
