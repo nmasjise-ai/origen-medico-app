@@ -40,23 +40,28 @@ export function createPatientSessionHandler(dependencies = {}) {
         return res.status(404).json({ linked: false, error: "Esta cuenta todavía no está vinculada a un expediente." });
       }
 
-      const patientId = getLinkedPatientId(userSnapshot.data(), decoded.uid);
+      const userData = userSnapshot.data();
+      const patientId = getLinkedPatientId(userData, decoded.uid);
       if (!patientId) {
         return res.status(404).json({ linked: false, error: "Esta cuenta todavía no está vinculada a un expediente." });
       }
 
       const patientSnapshot = await getPatientsCollection(db).doc(patientId).get();
-      if (!patientSnapshot.exists || !isPatientRecordLinkedToUser(patientSnapshot.data(), decoded.uid)) {
-      const access = getPatientPortalAccessState(userSnapshot.data(), patientSnapshot.data());
+      if (!patientSnapshot.exists) {
+        return res.status(404).json({ linked: false, error: "No se encontró un expediente vinculado a esta cuenta." });
+      }
+
+      const patientData = patientSnapshot.data();
+      if (!isPatientRecordLinkedToUser(patientData, decoded.uid)) {
+        return res.status(404).json({ linked: false, error: "No se encontró un expediente vinculado a esta cuenta." });
+      }
+
+      const access = getPatientPortalAccessState(userData, patientData);
       if (!access.enabled) {
         return res.status(403).json({
           accessSuspended: true,
           error: "El acceso al portal está temporalmente suspendido. Contacta al consultorio para recibir asistencia."
         });
-      }
-
-
-        return res.status(404).json({ linked: false, error: "No se encontró un expediente vinculado a esta cuenta." });
       }
 
       // Store access metadata only on the authenticated user's mapping.
@@ -66,15 +71,14 @@ export function createPatientSessionHandler(dependencies = {}) {
         lastAccessSource: "patient_portal"
       });
 
-      const patient = patientSnapshot.data();
       return res.status(200).json({
         linked: true,
         patient: {
           id: patientSnapshot.id,
-          displayName: patient.displayName || "",
-          email: patient.email || decoded.email,
-          ageYears: patient.ageYears ?? null,
-          status: patient.status || "active"
+          displayName: patientData.displayName || "",
+          email: patientData.email || decoded.email,
+          ageYears: patientData.ageYears ?? null,
+          status: patientData.status || "active"
         }
       });
     } catch (error) {
