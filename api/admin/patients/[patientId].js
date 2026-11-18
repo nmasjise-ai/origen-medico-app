@@ -1,3 +1,4 @@
+import { isVerifiedAdministrator } from "../../_lib/admin-authorization.js";
 import { FieldValue } from "firebase-admin/firestore";
 import { getAdminFirestore, verifyRequestUser } from "../../_lib/firebase-admin.js";
 import { getPreviewPatientsCollection } from "../../_lib/staging-firestore.js";
@@ -19,7 +20,7 @@ export default async function handler(req, res) {
 
   try {
     const decoded = await verifyRequestUser(req);
-    if (decoded.admin !== true) {
+    if (!isVerifiedAdministrator(decoded)) {
       return res.status(403).json({ error: "Se requiere una cuenta médica autorizada." });
     }
 
