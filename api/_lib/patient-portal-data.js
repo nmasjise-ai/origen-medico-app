@@ -9,7 +9,7 @@ function asIso(value) {
 }
 
 export function toPatientVisibleProfile(data, id) {
-  const heightCm = Number.isFinite(data?.heightCm) ? data.heightCm : null;
+  const heightCm = Number.isFinite(data?.heightCm) && data.heightCm > 0 ? data.heightCm : null;
   return {
     id,
     displayName: typeof data?.displayName === "string" ? data.displayName : "",
@@ -35,13 +35,15 @@ export function toPatientVisibleProfile(data, id) {
 }
 
 export function toPatientVisibleMeasurement(data, id, fallbackHeightCm = null) {
-  const weightKg = Number.isFinite(data?.weightKg) ? data.weightKg : null;
-  const heightCm = Number.isFinite(data?.heightCm)
+  const weightKg = Number.isFinite(data?.weightKg) && data.weightKg > 0 ? data.weightKg : null;
+  const heightCm = Number.isFinite(data?.heightCm) && data.heightCm > 0
     ? data.heightCm
-    : Number.isFinite(fallbackHeightCm) ? fallbackHeightCm : null;
-  const waistCm = Number.isFinite(data?.waistCm) ? data.waistCm : null;
-  const muscleKg = Number.isFinite(data?.muscleKg) ? data.muscleKg : null;
-  const bodyFatPct = Number.isFinite(data?.bodyFatPct) ? data.bodyFatPct : null;
+    : Number.isFinite(fallbackHeightCm) && fallbackHeightCm > 0 ? fallbackHeightCm : null;
+  const waistCm = Number.isFinite(data?.waistCm) && data.waistCm > 0 ? data.waistCm : null;
+  const muscleKg = Number.isFinite(data?.muscleKg) && data.muscleKg > 0 ? data.muscleKg : null;
+  const bodyFatPct = Number.isFinite(data?.bodyFatPct) && data.bodyFatPct >= 0 && data.bodyFatPct <= 100
+    ? data.bodyFatPct
+    : null;
   const bmi = weightKg && heightCm
     ? Number((weightKg / Math.pow(heightCm / 100, 2)).toFixed(1))
     : null;
