@@ -34,9 +34,11 @@ export function toPatientVisibleProfile(data, id) {
   };
 }
 
-export function toPatientVisibleMeasurement(data, id) {
+export function toPatientVisibleMeasurement(data, id, fallbackHeightCm = null) {
   const weightKg = Number.isFinite(data?.weightKg) ? data.weightKg : null;
-  const heightCm = Number.isFinite(data?.heightCm) ? data.heightCm : null;
+  const heightCm = Number.isFinite(data?.heightCm)
+    ? data.heightCm
+    : Number.isFinite(fallbackHeightCm) ? fallbackHeightCm : null;
   const waistCm = Number.isFinite(data?.waistCm) ? data.waistCm : null;
   const muscleKg = Number.isFinite(data?.muscleKg) ? data.muscleKg : null;
   const bodyFatPct = Number.isFinite(data?.bodyFatPct) ? data.bodyFatPct : null;
