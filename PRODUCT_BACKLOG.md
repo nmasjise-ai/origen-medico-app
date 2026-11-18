@@ -253,3 +253,18 @@ Esta sección aclara la diferencia entre componentes de demostración y funcione
 
 ### Notas de verificación
 El deployment confirmado corresponde al commit `0a7840803bcec24765fca4c51d685d9c351c9511`, rama `mejoras-seguridad-origen`, estado Vercel `READY`. URL de Preview: `https://origen-medico-app-git-mejoras-seguridad-origen-origen-medico.vercel.app`. Este enlace identifica el Preview; si Vercel Authentication está activa, se requiere el acceso compartible vigente.
+
+## Revisión de seguridad y continuidad — 18/11/2026 (actualización)
+
+- [x] GitHub Actions para HEAD `1acd1d7277113e508a269a0cf07dde9858627b18`: **69/69 pruebas aprobadas** en Firebase Emulator/Node y compilación Vite correcta.
+- [x] Vercel Preview actualizado al mismo commit: deployment `dpl_AQb6Vf4Q6J1f6pAHPjCQ5hFLBxoP`, estado **READY**. No equivale a QA funcional del navegador.
+- [x] Confirmadas las variables de entorno de Preview asociadas a la rama: `ORIGEN_PREVIEW_DATA_NAMESPACE`, `ORIGEN_ADMIN_UID`, `ORIGEN_ADMIN_EMAIL` y `FIREBASE_SERVICE_ACCOUNT_JSON`. Se inspeccionaron nombres/ámbitos sin revelar valores secretos.
+- [x] Verificada la configuración del namespace fijo de Preview; producción no utiliza ese namespace por estas rutas.
+- [ ] **Pendiente crítico:** completar flujo funcional de invitación, verificación de correo, activación y acceso de dos pacientes ficticios (A/B) en Preview.
+- [ ] **Pendiente de defensa en profundidad:** definir limitación de solicitudes para `POST /api/invitations/validate`. No hay configuración personalizada de Firewall ni Edge Config en el proyecto; no implementar limitación en memoria de funciones serverless.
+- [ ] **Pendiente:** revisar dependencias con `npm audit` y fijar instalación reproducible mediante lockfile; no ejecutar actualizaciones forzadas ni publicar cambios de dependencias sin revisar compatibilidad.
+- [ ] **Pendiente:** validar el bootstrap del administrador en Preview con la cuenta autorizada, sin exponer UID, correo ni credenciales en el repositorio.
+- [ ] **Pendiente:** ejecutar auditoría de colecciones legadas desde el Preview actualizado y revisar sus resultados sin extraer contenido clínico.
+- [ ] Mantener el PR en borrador; no fusionar, no publicar reglas Firestore y no introducir pacientes reales en Preview.
+
+**Hallazgos de revisión:** las rutas API de paciente y administrador verifican token Firebase, autorización y namespace de Preview; los endpoints que devuelven datos clínicos usan `Cache-Control: no-store`. Las reglas Firestore versionadas describen el modelo objetivo en rutas raíz; el flujo Preview actual usa API server-side y un namespace anidado, por lo que no debe asumirse que el acceso directo del SDK cliente a ese namespace está habilitado. Antes de habilitar escrituras directas del paciente (diarios/síntomas/solicitudes) se deben añadir reglas y pruebas específicas para el namespace y validar el modelo final.
