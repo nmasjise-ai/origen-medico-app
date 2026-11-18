@@ -152,6 +152,74 @@ service cloud.firestore {
       }
     }
 
+    // Isolated Preview namespace. This mirrors the production data model while
+    // keeping Preview users and patient records separate from root collections.
+    function ownsPreviewPatient(environmentId, patientId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/users/$(request.auth.uid)).data.patientId == patientId
+        && get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data.linkedUid == request.auth.uid
+        && get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data.accountStatus == 'linked';
+    }
+
+    function canReadPreviewPatient(environmentId, patientId) {
+      return isAdmin() || ownsPreviewPatient(environmentId, patientId);
+    }
+
+    match /previewEnvironments/{environmentId}/users/{uid} {
+      allow get: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /previewEnvironments/{environmentId}/invitations/{invitationId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /previewEnvironments/{environmentId}/patients/{patientId} {
+      allow get: if canReadPreviewPatient(environmentId, patientId);
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+
+      match /measurements/{measurementId} {
+        allow read: if canReadPreviewPatient(environmentId, patientId);
+        allow write: if isAdmin();
+      }
+      match /treatmentEvents/{eventId} {
+        allow read: if canReadPreviewPatient(environmentId, patientId);
+        allow write: if isAdmin();
+      }
+      match /nutritionPlans/{planId} {
+        allow read: if canReadPreviewPatient(environmentId, patientId);
+        allow write: if isAdmin();
+      }
+      match /prescriptions/{prescriptionId} {
+        allow read: if canReadPreviewPatient(environmentId, patientId);
+        allow write: if isAdmin();
+      }
+      match /dailyLogs/{logId} {
+        allow read: if canReadPreviewPatient(environmentId, patientId);
+        allow create: if ownsPreviewPatient(environmentId, patientId) && validDailyLog();
+        allow update, delete: if isAdmin();
+      }
+      match /symptomReports/{reportId} {
+        allow read: if canReadPreviewPatient(environmentId, patientId);
+        allow create: if ownsPreviewPatient(environmentId, patientId) && validSymptomReport();
+        allow update, delete: if isAdmin();
+      }
+      match /prescriptionRequests/{requestId} {
+        allow read: if canReadPreviewPatient(environmentId, patientId);
+        allow create: if ownsPreviewPatient(environmentId, patientId) && validPrescriptionRequest();
+        allow update, delete: if isAdmin();
+      }
+      match /doctorNotes/{noteId} {
+        allow read, write: if isAdmin();
+      }
+      match /auditLogs/{eventId} {
+        allow read: if isAdmin();
+        allow write: if false;
+      }
+    }
+
     // Private clinic settings: payment details, internal contact settings and
     // operational configuration must never be available to unauthenticated visitors.
     match /clinicSettings/{documentId} {
