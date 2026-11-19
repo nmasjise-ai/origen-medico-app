@@ -5,6 +5,7 @@ import {
   RefreshCw, Scale, ShieldCheck, User, Utensils, Waves
 } from 'lucide-react';
 const NutritionEducation = React.lazy(() => import('./NutritionEducation.jsx'));
+import NutritionTracker from './NutritionTracker.jsx';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Inicio', icon: Home },
@@ -88,7 +89,7 @@ function WeightChart({ measurements }) {
   );
 }
 
-export default function PatientPortal({ profile, data, loading, error, onRefresh }) {
+export default function PatientPortal({ profile, data, loading, error, onRefresh, dailyLog, dailyLogLoading, dailyLogError, dailyLogSaving, onSaveDailyLog }) {
   const [activeTab, setActiveTab] = useState('home');
   const patient = data?.patient || {};
   const measurements = Array.isArray(data?.measurements) ? data.measurements : [];
@@ -157,9 +158,13 @@ export default function PatientPortal({ profile, data, loading, error, onRefresh
               </Card>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[{icon:Droplets,title:'Hidratación',desc:'Seguimiento diario en preparación'},{icon:Utensils,title:'Nutrición',desc:'Recursos educativos disponibles'},{icon:Activity,title:'Actividad física',desc:'Registro diario en preparación'}].map((item) => <Card key={item.title} className="p-4"><item.icon className="h-5 w-5 text-[#A17B34]" /><p className="mt-3 text-sm font-semibold">{item.title}</p><p className="mt-1 text-xs text-[#8D7D65]">{item.desc}</p></Card>)}
-            </div>
+            <NutritionTracker
+              dailyLog={dailyLog}
+              loading={dailyLogLoading}
+              error={dailyLogError}
+              saving={dailyLogSaving}
+              onSave={onSaveDailyLog}
+            />
           </>
         ) : null}
 
