@@ -13,6 +13,8 @@ const NAV_ITEMS = [
   { id: 'profile', label: 'Perfil', icon: User }
 ];
 
+const hasValidWeight = (value) => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) && Number(value) > 0;
+
 const formatDate = (value) => {
   if (!value) return 'Sin fecha';
   const date = new Date(value);
@@ -41,7 +43,7 @@ const Metric = ({ label, value, suffix, icon: Icon, detail }) => (
 
 function WeightChart({ measurements }) {
   const series = useMemo(() => [...(measurements || [])]
-    .filter((item) => item.weightKg != null && Number.isFinite(Number(item.weightKg)))
+    .filter((item) => hasValidWeight(item.weightKg))
     .slice(0, 30)
     .reverse(), [measurements]);
 
@@ -91,8 +93,8 @@ export default function PatientPortal({ profile, data, loading, error, onRefresh
   const patient = data?.patient || {};
   const measurements = Array.isArray(data?.measurements) ? data.measurements : [];
   const latest = measurements[0] || {};
-  const firstWeight = [...measurements].reverse().find((item) => Number.isFinite(Number(item.weightKg)))?.weightKg;
-  const latestWeight = Number.isFinite(Number(latest.weightKg)) ? Number(latest.weightKg) : null;
+  const firstWeight = [...measurements].reverse().find((item) => hasValidWeight(item.weightKg))?.weightKg;
+  const latestWeight = hasValidWeight(latest.weightKg) ? Number(latest.weightKg) : null;
   const change = latestWeight != null && firstWeight != null ? Number((latestWeight - Number(firstWeight)).toFixed(1)) : null;
   const height = Number(latest.heightCm || patient.heightCm);
   const bmi = latest.bmi ?? (latestWeight != null && height > 0 ? (latestWeight / Math.pow(height / 100, 2)).toFixed(1) : null);
