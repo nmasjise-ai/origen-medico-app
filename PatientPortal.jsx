@@ -4,7 +4,7 @@ import {
   ChevronRight, ClipboardList, Droplets, HeartPulse, Home, Info,
   RefreshCw, Scale, ShieldCheck, User, Utensils, Waves
 } from 'lucide-react';
-import NutritionEducation from './NutritionEducation.jsx';
+const NutritionEducation = React.lazy(() => import('./NutritionEducation.jsx'));
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Inicio', icon: Home },
@@ -174,7 +174,9 @@ export default function PatientPortal({ profile, data, loading, error, onRefresh
         {activeTab === 'plan' ? (
           <div className="space-y-5">
             <Card className="p-5 sm:p-6"><p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#A17B34]">Educación y orientación</p><h2 className="mt-2 font-serif text-2xl font-bold">Aprende a cuidar tu bienestar</h2><p className="mt-2 text-sm leading-relaxed text-[#776A56]">Material educativo general. Tu plan nutricional individual y las indicaciones terapéuticas deben ser definidos por tu equipo de salud.</p></Card>
-            <NutritionEducation />
+            <React.Suspense fallback={<div className="rounded-2xl bg-[#FBF8F1] p-5 text-sm text-[#806126]">Cargando material educativo…</div>}>
+              <NutritionEducation />
+            </React.Suspense>
           </div>
         ) : null}
 

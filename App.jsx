@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import NutritionEducation from './NutritionEducation.jsx';
-import PatientPortal from './PatientPortal.jsx';
-import FinanceModule from './FinanceModule.jsx';
+
+// Cargar módulos secundarios solo cuando el usuario los abre reduce el bundle inicial.
+const NutritionEducation = React.lazy(() => import('./NutritionEducation.jsx'));
+const PatientPortal = React.lazy(() => import('./PatientPortal.jsx'));
+const FinanceModule = React.lazy(() => import('./FinanceModule.jsx'));
 import {
   Activity, AlertTriangle, ArrowRight, Award, Bell, BookOpen, Calendar,
   Check, CheckCircle2, ChevronDown, ChevronRight, ClipboardCheck, Clock,
@@ -2092,13 +2094,15 @@ function App() {
       )}
 
       {appMode === 'patient_portal' && (
-        <PatientPortal
-          profile={patientPortalProfile}
-          data={patientPortalData}
-          loading={patientPortalLoading}
-          error={patientPortalError}
-          onRefresh={() => loadPatientPortalData(user)}
-        />
+        <React.Suspense fallback={<div className="mx-auto max-w-4xl p-6 text-sm text-[#735318]">Cargando portal del paciente…</div>}>
+          <PatientPortal
+            profile={patientPortalProfile}
+            data={patientPortalData}
+            loading={patientPortalLoading}
+            error={patientPortalError}
+            onRefresh={() => loadPatientPortalData(user)}
+          />
+        </React.Suspense>
       )}
 
       {/* ==================================================================== */}
@@ -2437,7 +2441,11 @@ function App() {
           </nav>
 
           {/* CENTRO EDUCATIVO: COMPONENTE INDEPENDIENTE, SIN PERSISTENCIA CLÍNICA */}
-          {patientTab === 'education' && <NutritionEducation />}
+          {patientTab === 'education' && (
+            <React.Suspense fallback={<div className="rounded-2xl bg-[#FAF6EE] p-5 text-sm text-[#735318]">Cargando material educativo…</div>}>
+              <NutritionEducation />
+            </React.Suspense>
+          )}
 
           {/* PESTAÑA 1: MI DÍA GLP-1 */}
           {patientTab === 'today' && (
@@ -4211,7 +4219,11 @@ function App() {
               </div>
             </div>
           )}
-          {doctorTab === 'finance' && <FinanceModule user={user} isAdmin={isAdmin} />}
+          {doctorTab === 'finance' && (
+            <React.Suspense fallback={<div className="rounded-2xl bg-[#FAF6EE] p-5 text-sm text-[#735318]">Cargando ORIGEN Finanzas…</div>}>
+              <FinanceModule user={user} isAdmin={isAdmin} />
+            </React.Suspense>
+          )}
         </main>
       )}
 
