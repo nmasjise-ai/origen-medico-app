@@ -422,6 +422,19 @@ Esta prueba demuestra la revalidación server-side del endpoint de perfil en cad
 - [x] Se conserva Node.js 22 para instalar dependencias y compilar la aplicación, y Java Temurin 21 para Firebase Emulator.
 - [ ] Validar el workflow completo tras la actualización. No marcar como verificado hasta que el nuevo run termine correctamente.
 
+## ORIGEN NUTRI — Tracker Diario (19/11/2026)
+
+- [x] Ampliadas las reglas Firestore para admitir comidas realizadas y minutos de actividad, manteniendo compatibilidad con los campos previos.
+- [x] Añadidas pruebas de emulador para validación de campos, rangos, aislamiento entre pacientes y namespace Preview.
+- [x] Creada la interfaz inicial del Tracker Diario en el portal del paciente.
+- [x] Conectada la interfaz a lectura/escritura de Firestore en el namespace Preview con ID diario por fecha de Bolivia y bloqueo de sobrescritura desde el cliente.
+- [ ] **Pendiente CI:** confirmar que pasan las pruebas de reglas y el build del último commit.
+- [ ] **Pendiente:** prueba manual con dos cuentas ficticias vinculadas en Preview.
+- [ ] **Pendiente:** validar el guardado real tras desplegar las reglas en un entorno controlado; no desplegar reglas a producción en esta fase.
+- [ ] **Pendiente:** metas profesionales, planes aprobados y panel de revisión.
+
+**Límite actual:** las metas aún no se muestran ni se calculan automáticamente. El registro es descriptivo y el paciente solo puede enviar un registro diario. No se usa almacenamiento local para datos nutricionales.
+
 ## ORIGEN NUTRI — Inicio de implementación (19/11/2026)
 
 - [x] Definido alcance V1 y contrato de seguridad en `docs/ORIGEN_NUTRI_V1.md`.
