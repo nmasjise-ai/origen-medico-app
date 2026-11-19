@@ -401,3 +401,13 @@ El deployment confirmado corresponde al commit `0a7840803bcec24765fca4c51d685d9c
 - [ ] Conectar interfaz ORIGEN Finanzas al endpoint de catálogo y probar aislamiento financiero con datos ficticios.
 
 **Regla de continuidad:** los cambios recientes de interfaz no escriben ni migran datos. El expediente local sigue conservado como respaldo y los expedientes de nube continúan en el namespace Preview. No usar pacientes reales ni habilitar producción hasta completar QA.
+
+
+## QA de acceso durante sesión abierta — 19/11/2026
+
+- [x] Añadida prueba automatizada del portal del paciente: la misma identidad autenticada obtiene el perfil antes de la suspensión y recibe HTTP 403 en su siguiente solicitud protegida después de que el estado de acceso cambia a `suspended`.
+- [x] La prueba verifica que la segunda solicitud no vuelve a leer mediciones ni devuelve datos del paciente.
+- [ ] **Pendiente de QA manual:** repetir el flujo en el Preview con dos cuentas ficticias, manteniendo una sesión del paciente abierta mientras el administrador suspende el acceso.
+- [ ] **Pendiente:** comprobar visualmente la pantalla de acceso suspendido y su comportamiento en móvil/escritorio.
+
+Esta prueba demuestra la revalidación server-side del endpoint de perfil en cada solicitud; no equivale a invalidar el token de Firebase ni sustituye la validación end-to-end en navegador.

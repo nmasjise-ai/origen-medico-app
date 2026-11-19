@@ -15,6 +15,7 @@ function responseRecorder() {
 
 function makeDatabase({ users, patients, measurements = {} }) {
   const requestedPatientIds = [];
+  let measurementReads = 0;
   const db = {};
   const usersCollection = {
     doc(uid) {
@@ -52,6 +53,7 @@ function makeDatabase({ users, patients, measurements = {} }) {
                   assert.equal(count, 30);
                   return {
                     async get() {
+                      measurementReads += 1;
                       return {
                         docs: (measurements[patientId] || []).map((item, index) => ({
                           id: item.id || `measurement-${index + 1}`,
@@ -71,6 +73,7 @@ function makeDatabase({ users, patients, measurements = {} }) {
   return {
     db,
     requestedPatientIds,
+    getMeasurementReads: () => measurementReads,
     getPreviewUsersCollection: () => usersCollection,
     getPreviewPatientsCollection: () => patientsCollection
   };
@@ -205,4 +208,46 @@ test("patient profile endpoint rejects methods other than GET", async () => {
 
   assert.equal(res.statusCode, 405);
   assert.equal(res.headers.Allow, "GET");
+});
+
+
+test("an already-open patient portal is denied on its next profile request after suspension", async () => {
+  const userA = {
+    uid: "uid_AAAAAAAA",
+    role: "patient",
+    patientId: "patient_AAAAA"
+  };
+  const database = makeDatabase({
+    users: { uid_AAAAAAAA: userA },
+    patients: {
+      patient_AAAAA: {
+        displayName: "Paciente A",
+        linkedUid: "uid_AAAAAAAA",
+        accountStatus: "linked"
+      }
+    },
+    measurements: {
+      patient_AAAAA: [{ weightKg: 81, recordedAt: new Date("2026-11-19T10:00:00.000Z") }]
+    }
+  });
+  const handler = createPatientProfileHandler(dependenciesFor("uid_AAAAAAAA", database));
+
+  const firstResponse = responseRecorder();
+  await handler({ method: "GET" }, firstResponse);
+  assert.equal(firstResponse.statusCode, 200);
+  assert.equal(database.getMeasurementReads(), 1);
+
+  // Simulate an administrator suspending access while the same authenticated
+  // browser session remains open. The next protected API request must re-check
+  // the current Firestore access state rather than trusting the earlier response.
+  userA.portalAccessStatus = "suspended";
+
+  const nextResponse = responseRecorder();
+  await handler({ method: "GET" }, nextResponse);
+
+  assert.equal(nextResponse.statusCode, 403);
+  assert.equal(nextResponse.body.accessSuspended, true);
+  assert.equal("patient" in nextResponse.body, false);
+  assert.equal(database.getMeasurementReads(), 1);
+  assert.deepEqual(database.requestedPatientIds, ["patient_AAAAA", "patient_AAAAA"]);
 });
