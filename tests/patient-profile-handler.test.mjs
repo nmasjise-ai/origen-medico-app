@@ -61,6 +61,9 @@ function makeHandler({
         return {
           get: async () => patientSnapshot,
           collection: (name) => {
+            if (name === "dailyLogs") {
+              return { doc: () => ({ get: async () => ({ exists: false }) }) };
+            }
             assert.equal(name, "measurements");
             return {
               orderBy: (field, direction) => {
