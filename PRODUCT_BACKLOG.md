@@ -422,29 +422,32 @@ Esta prueba demuestra la revalidación server-side del endpoint de perfil en cad
 - [x] Se conserva Node.js 22 para instalar dependencias y compilar la aplicación, y Java Temurin 21 para Firebase Emulator.
 - [ ] Validar el workflow completo tras la actualización. No marcar como verificado hasta que el nuevo run termine correctamente.
 
-## ORIGEN NUTRI — Tracker Diario (19/11/2026)
+## ORIGEN NUTRI — Tracker Diario (actualizado 19/11/2026)
 
 - [x] Ampliadas las reglas Firestore para admitir comidas realizadas y minutos de actividad, manteniendo compatibilidad con los campos previos.
 - [x] Añadidas pruebas de emulador para validación de campos, rangos, aislamiento entre pacientes y namespace Preview.
 - [x] Creada la interfaz inicial del Tracker Diario en el portal del paciente.
 - [x] Conectada la interfaz a la ruta existente `/api/patient/profile` (GET/POST), que resuelve el expediente desde el UID autenticado y guarda un documento diario determinista por fecha de Bolivia mediante Admin SDK; no se añadió una ruta API nueva.
-- [ ] **Pendiente CI:** confirmar que pasan las pruebas de reglas y el build del último commit.
+- [x] Añadidas pruebas de API para identidad, correo verificado, rechazo de rol administrador, vínculo de UID, cuenta suspendida, validación de campos, duplicados y filtrado de metadatos.
+- [x] CI #271 aprobado para el commit `b492947`: límite de funciones, emulador Firestore y build frontend.
+- [x] El formulario reinicia sus valores al cambiar de cuenta para no conservar datos de la sesión anterior; valida campos obligatorios y muestra la fecha de Bolivia.
+- [ ] **Pendiente CI:** validar el último cambio de interfaz en el commit posterior al #271.
 - [ ] **Pendiente:** prueba manual con dos cuentas ficticias vinculadas en Preview.
-- [ ] **Pendiente:** validar el guardado real tras desplegar las reglas en un entorno controlado; no desplegar reglas a producción en esta fase.
+- [ ] **Pendiente:** comprobar el guardado/lectura real con autenticación Preview y revisar el namespace de staging; no desplegar reglas a producción.
 - [ ] **Pendiente:** metas profesionales, planes aprobados y panel de revisión.
 
-**Límite actual:** las metas aún no se muestran ni se calculan automáticamente. El registro es descriptivo y el paciente solo puede enviar un registro diario. No se usa almacenamiento local para datos nutricionales.
+**Límite actual:** las metas aún no se muestran ni se calculan automáticamente. El registro es descriptivo y el paciente solo puede enviar un registro diario. No se usa almacenamiento local para datos nutricionales. La API usa Admin SDK, por lo que las pruebas de reglas Firestore no sustituyen la prueba de autorización de la API con cuentas reales de Preview.
 
 ## ORIGEN NUTRI — Inicio de implementación (19/11/2026)
 
 - [x] Definido alcance V1 y contrato de seguridad en `docs/ORIGEN_NUTRI_V1.md`.
-- [x] Confirmado que el modelo versionado contempla `dailyLogs` y `nutritionPlans`; el portal del paciente aún muestra el seguimiento diario como “en preparación”.
+- [x] Confirmado que el modelo versionado contempla `dailyLogs` y `nutritionPlans`; Tracker Diario ya está integrado en el portal y conectado a la API de perfil.
 - [x] Revisadas las reglas actuales: existen reglas para `dailyLogs` en raíz y namespace Preview, con creación propia y sin edición/borrado por paciente; requieren pruebas específicas ampliadas para el esquema V1 antes de conectar la interfaz.
-- [ ] **Etapa 1:** ampliar pruebas de reglas Preview para campos de hidratación, proteína, comidas, actividad, duplicados y aislamiento A/B.
-- [ ] **Etapa 2:** implementar Tracker Diario persistente; las metas solo se mostrarán cuando estén asignadas por profesional.
+- [x] **Etapa 1:** ampliar pruebas de reglas Preview para campos de hidratación, proteína, comidas, actividad, duplicados y aislamiento A/B.
+- [x] **Etapa 2:** implementar Tracker Diario persistente mediante la API existente; las metas solo se mostrarán cuando estén asignadas por profesional.
 - [ ] **Etapa 3:** implementar metas profesionales y planes de 7 días con borrador/revisión/aprobación/publicación.
 - [ ] **Etapa 4:** lista de compras derivada del plan publicado.
 - [ ] **Etapa 5:** evolución, informes PDF y modo GLP-1 educativo.
 - [ ] No añadir una función API número 13 (límite Hobby 12/12); no usar almacenamiento local para datos clínicos; no habilitar producción.
 
-**Nota técnica:** las reglas actuales permiten una estructura acotada de diario con `dateKey`, `proteinGrams`, `waterMl`, `electrolytesTaken` y `createdAt`. La interfaz nueva necesita campos adicionales y pruebas antes de usarlos. No se cambió Firestore, sus reglas ni datos en esta primera entrega documental.
+**Nota técnica:** las reglas Firestore actuales permiten una estructura acotada de diario con `dateKey`, `proteinGrams`, `waterMl`, `electrolytesTaken`, `createdAt` y los campos opcionales validados `meals` y `activityMinutes`. La persistencia del portal se realiza mediante la API existente y Admin SDK dentro del namespace Preview. No se desplegaron reglas ni se modificaron datos reales.
