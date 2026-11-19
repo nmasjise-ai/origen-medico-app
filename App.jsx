@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import NutritionEducation from './NutritionEducation.jsx';
+import PatientPortal from './PatientPortal.jsx';
 import FinanceModule from './FinanceModule.jsx';
 import {
   Activity, AlertTriangle, ArrowRight, Award, Bell, BookOpen, Calendar,
@@ -2085,158 +2086,17 @@ function App() {
               className="w-full rounded-xl border border-[#E6D9C0] text-[#735318] font-semibold py-3 text-sm"
             >
               Volver al acceso público
-            </button>
-          </section>
-        </main>
+            </button      {appMode === 'patient_portal' && (
+        <PatientPortal
+          profile={patientPortalProfile}
+          data={patientPortalData}
+          loading={patientPortalLoading}
+          error={patientPortalError}
+          onRefresh={() => loadPatientPortalData(user)}
+        />
       )}
 
-      {/* PORTAL INICIAL DE PACIENTE VINCULADO — SIN DATOS DE DEMOSTRACIÓN */}
-      {appMode === 'patient_portal' && (
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 py-10 space-y-6">
-          <section className="rounded-3xl bg-[#231F1A] text-[#FFFDF9] p-7 sm:p-9 space-y-3">
-            <span className="text-xs uppercase tracking-wider text-[#DFBD69]">Acceso individual verificado</span>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold">Bienvenido a ORIGEN Médico</h1>
-            <p className="text-sm text-[#E9DDC8]">
-              {patientPortalProfile?.displayName ? `Hola, ${patientPortalProfile.displayName}. Tu cuenta está vinculada a tu expediente personal.` : 'Tu cuenta está vinculada a tu expediente personal.'}
-            </p>
-          </section>
-          <section className="rounded-3xl border border-[#E6D9C0] bg-[#FFFDF9] p-6 space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="font-serif text-2xl font-bold">Mi expediente y evolución</h2>
-                <p className="text-sm text-[#5C4D3C] mt-1">Información consultada desde tu expediente individual protegido.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => loadPatientPortalData(user)}
-                disabled={patientPortalLoading}
-                className="inline-flex items-center gap-2 rounded-xl border border-[#D4BC8B] px-3 py-2 text-sm font-semibold text-[#735318] hover:bg-[#FAF6EE] disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${patientPortalLoading ? 'animate-spin' : ''}`} />
-                Actualizar
-              </button>
-            </div>
-
-            {patientPortalLoading && (
-              <div className="rounded-xl bg-[#FAF6EE] p-4 text-sm text-[#735318]">Cargando tu expediente...</div>
-            )}
-            {patientPortalError && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">
-                {patientPortalError}
-              </div>
-            )}
-
-            {!patientPortalLoading && patientPortalData?.patient && (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="rounded-2xl bg-[#FAF6EE] border border-[#E6D9C0] p-4">
-                    <span className="text-xs text-[#8C7A63]">Talla registrada</span>
-                    <div className="text-2xl font-bold text-[#231F1A] mt-1">
-                      {patientPortalData.patient.heightCm ? `${patientPortalData.patient.heightCm} cm` : '—'}
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-[#FAF6EE] border border-[#E6D9C0] p-4">
-                    <span className="text-xs text-[#8C7A63]">Último peso</span>
-                    <div className="text-2xl font-bold text-[#231F1A] mt-1">
-                      {patientPortalData.measurements[0]?.weightKg != null ? `${patientPortalData.measurements[0].weightKg} kg` : '—'}
-                    </div>
-                  </div>
-                  <div className="rounded-2xl bg-[#FAF6EE] border border-[#E6D9C0] p-4">
-                    <span className="text-xs text-[#8C7A63]">Último IMC calculado</span>
-                    <div className="text-2xl font-bold text-[#231F1A] mt-1">
-                      {patientPortalData.measurements[0]?.bmi ?? '—'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl border border-[#E6D9C0] p-4">
-                    <div className="font-semibold text-[#735318] mb-1">Diagnósticos activos</div>
-                    <p className="text-[#5C4D3C] whitespace-pre-wrap">{patientPortalData.patient.activeDiagnoses || 'Sin información registrada.'}</p>
-                  </div>
-                  <div className="rounded-xl border border-[#E6D9C0] p-4">
-                    <div className="font-semibold text-[#735318] mb-1">Alergias</div>
-                    <p className="text-[#5C4D3C] whitespace-pre-wrap">{patientPortalData.patient.allergies || 'Sin información registrada.'}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-semibold text-[#231F1A]">Evolución del peso</h3>
-                    <span className="text-xs text-[#8C7A63]">Hasta 30 controles</span>
-                  </div>
-                  {patientPortalData.measurements.length > 0 ? (
-                    <div className="space-y-3">
-                      <div className="flex items-end gap-2 h-36 rounded-xl bg-[#FAF6EE] border border-[#E6D9C0] px-3 pt-4 pb-2 overflow-x-auto">
-                        {[...patientPortalData.measurements].reverse().map((measurement, index, list) => {
-                          const weights = list.map((item) => item.weightKg).filter((value) => Number.isFinite(value));
-                          const minWeight = weights.length ? Math.min(...weights) : 0;
-                          const maxWeight = weights.length ? Math.max(...weights) : 0;
-                          const range = Math.max(maxWeight - minWeight, 1);
-                          const barHeight = Number.isFinite(measurement.weightKg)
-                            ? 24 + ((measurement.weightKg - minWeight) / range) * 76
-                            : 8;
-                          return (
-                            <div key={measurement.id} className="flex flex-col items-center justify-end gap-1 min-w-8 h-full">
-                              <span className="text-[9px] text-[#735318] whitespace-nowrap">{measurement.weightKg ?? '—'}</span>
-                              <div
-                                className="w-5 rounded-t-md bg-[#9A742C]"
-                                style={{ height: `${barHeight}%` }}
-                                title={`${measurement.weightKg ?? 'Sin peso'} kg`}
-                              />
-                              <span className="text-[9px] text-[#8C7A63]">
-                                {measurement.recordedAt ? new Date(measurement.recordedAt).toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit' }) : index + 1}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <p className="text-xs text-[#8C7A63]">Los controles se muestran en orden cronológico. El gráfico representa los pesos registrados, sin estimar valores faltantes.</p>
-                    </div>
-                  ) : (
-                    <p className="rounded-xl bg-[#FAF6EE] p-4 text-sm text-[#8C7A63]">Todavía no hay mediciones registradas en tu expediente.</p>
-                  )}
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs uppercase text-[#8C7A63] border-b border-[#E6D9C0]">
-                      <tr><th className="py-2 pr-3">Fecha</th><th className="py-2 pr-3">Peso</th><th className="py-2 pr-3">IMC</th><th className="py-2">Cintura</th></tr>
-                    </thead>
-                    <tbody>
-                      {patientPortalData.measurements.map((measurement) => (
-                        <tr key={measurement.id} className="border-b border-[#F0E8D8]">
-                          <td className="py-2 pr-3 text-[#5C4D3C]">{measurement.recordedAt ? new Date(measurement.recordedAt).toLocaleDateString('es-BO') : '—'}</td>
-                          <td className="py-2 pr-3 font-semibold text-[#231F1A]">{measurement.weightKg != null ? `${measurement.weightKg} kg` : '—'}</td>
-                          <td className="py-2 pr-3 text-[#5C4D3C]">{measurement.bmi ?? '—'}</td>
-                          <td className="py-2 text-[#5C4D3C]">{measurement.waistCm != null ? `${measurement.waistCm} cm` : '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </section>
-
-          <section className="rounded-3xl border border-[#E6D9C0] bg-[#FFFDF9] p-6 space-y-3">
-            <h2 className="font-serif text-2xl font-bold">Otras secciones de tu seguimiento</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {['Mi tratamiento y controles','Mi plan nutricional','Mis síntomas y alertas','Mi calendario'].map((label) => (
-                <div key={label} className="rounded-xl border border-[#E6D9C0] bg-[#FAF6EE] p-4 text-sm font-semibold text-[#735318]">
-                  {label}
-                  <span className="block text-[10px] font-normal text-[#8C7A63] mt-1">En preparación</span>
-                </div>
-              ))}
-            </div>
-          </section>
-          <section className="space-y-4">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#9A742C]">Recursos para pacientes</span>
-              <h2 className="mt-1 font-serif text-2xl font-bold text-[#231F1A]">Educación y orientación nutricional</h2>
-              <p className="mt-1 text-sm text-[#5C4D3C]">Material educativo general. No reemplaza tu plan individual ni las indicaciones de tu equipo de salud.</p>
-            </div>
-            <NutritionEducation />
+>
           </section>
         </main>
       )}
