@@ -144,3 +144,29 @@ test("patient profile returns today's daily log without internal metadata", asyn
   assert.equal(res.body.dailyLog.dateKey, "2026-11-19");
   assert.equal("internalAudit" in res.body.dailyLog, false);
 });
+
+test("daily log API rejects administrator and unverified identities", async () => {
+  const cases = [
+    { decoded: { uid: "patient-a-uid", admin: true, email_verified: true } },
+    { decoded: { uid: "patient-a-uid", email_verified: false } }
+  ];
+
+  for (const options of cases) {
+    const { handler } = makeHarness(options);
+    const res = makeResponse();
+    await handler({ method: "POST", body: validBody }, res);
+    assert.equal(res.statusCode, 403);
+  }
+});
+
+test("daily log API rejects a user mapping that does not belong to the authenticated UID", async () => {
+  const { handler, store } = makeHarness({
+    userData: { uid: "patient-b-uid", role: "patient", patientId: "patient-b-qa" }
+  });
+  const res = makeResponse();
+
+  await handler({ method: "POST", body: validBody }, res);
+
+  assert.equal(res.statusCode, 404);
+  assert.equal(store.size, 0);
+});
