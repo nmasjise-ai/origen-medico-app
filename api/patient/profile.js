@@ -1,3 +1,4 @@
+import { FieldValue } from "firebase-admin/firestore";
 import { getAdminFirestore, verifyRequestUser } from "../_lib/firebase-admin.js";
 import {
   getPreviewPatientsCollection,
@@ -14,18 +15,42 @@ import {
 } from "../_lib/patient-portal-data.js";
 
 const MAX_MEASUREMENTS = 30;
+const getBoliviaDateKey = (date) => new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/La_Paz",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit"
+}).format(date);
+
+function validateDailyLog(body = {}) {
+  const allowed = ["waterMl", "proteinGrams", "activityMinutes", "meals"];
+  if (!body || typeof body !== "object" || Array.isArray(body)) return false;
+  if (Object.keys(body).some((key) => !allowed.includes(key))) return false;
+  if (!Number.isFinite(body.waterMl) || body.waterMl < 0 || body.waterMl > 7000) return false;
+  if (!Number.isFinite(body.proteinGrams) || body.proteinGrams < 0 || body.proteinGrams > 300) return false;
+  if (!Number.isInteger(body.activityMinutes) || body.activityMinutes < 0 || body.activityMinutes > 1440) return false;
+  const meals = body.meals;
+  if (!meals || typeof meals !== "object" || Array.isArray(meals)) return false;
+  const mealKeys = Object.keys(meals);
+  if (mealKeys.some((key) => !["breakfast", "lunch", "dinner", "snacks"].includes(key))) return false;
+  if (!["breakfast", "lunch", "dinner"].every((key) => typeof meals[key] === "boolean")) return false;
+  if ("snacks" in meals && typeof meals.snacks !== "boolean") return false;
+  return true;
+}
 
 export function createPatientProfileHandler(dependencies = {}) {
   const verifyUser = dependencies.verifyRequestUser || verifyRequestUser;
   const getFirestore = dependencies.getAdminFirestore || getAdminFirestore;
   const getUsersCollection = dependencies.getPreviewUsersCollection || getPreviewUsersCollection;
   const getPatientsCollection = dependencies.getPreviewPatientsCollection || getPreviewPatientsCollection;
+  const serverTimestamp = dependencies.serverTimestamp || (() => FieldValue.serverTimestamp());
+  const now = dependencies.now || (() => new Date());
 
   return async function patientProfileHandler(req, res) {
     res.setHeader("Cache-Control", "no-store");
 
-    if (req.method !== "GET") {
-      res.setHeader("Allow", "GET");
+    if (!["GET", "POST"].includes(req.method)) {
+      res.setHeader("Allow", "GET, POST");
       return res.status(405).json({ error: "Method not allowed." });
     }
 
@@ -76,17 +101,68 @@ export function createPatientProfileHandler(dependencies = {}) {
         });
       }
 
-      const measurementsSnapshot = await patientRef
-        .collection("measurements")
-        .orderBy("recordedAt", "desc")
-        .limit(MAX_MEASUREMENTS)
-        .get();
+      const dateKey = getBoliviaDateKey(now());
+      const dailyLogRef = patientRef.collection("dailyLogs").doc(dateKey);
+
+      if (req.method === "POST") {
+        if (!validateDailyLog(req.body)) {
+          return res.status(400).json({ error: "El registro diario contiene datos inválidos." });
+        }
+
+        try {
+          const entry = {
+            dateKey,
+            proteinGrams: req.body.proteinGrams,
+            waterMl: req.body.waterMl,
+            electrolytesTaken: false,
+            meals: req.body.meals,
+            activityMinutes: req.body.activityMinutes,
+            createdAt: serverTimestamp()
+          };
+          await dailyLogRef.create(entry);
+          return res.status(201).json({
+            saved: true,
+            dailyLog: {
+              dateKey,
+              proteinGrams: entry.proteinGrams,
+              waterMl: entry.waterMl,
+              electrolytesTaken: false,
+              meals: entry.meals,
+              activityMinutes: entry.activityMinutes
+            }
+          });
+        } catch (writeError) {
+          if (writeError.code === 6 || writeError.code === "already-exists" || writeError.code === "ALREADY_EXISTS") {
+            return res.status(409).json({ error: "Ya existe un registro diario enviado para hoy." });
+          }
+          throw writeError;
+        }
+      }
+
+      const [measurementsSnapshot, dailyLogSnapshot] = await Promise.all([
+        patientRef.collection("measurements")
+          .orderBy("recordedAt", "desc")
+          .limit(MAX_MEASUREMENTS)
+          .get(),
+        dailyLogRef.get()
+      ]);
+
+      const dailyLog = dailyLogSnapshot.exists
+        ? { id: dailyLogSnapshot.id, ...dailyLogSnapshot.data() }
+        : null;
 
       return res.status(200).json({
         patient: toPatientVisibleProfile(patientData, patientSnapshot.id),
         measurements: measurementsSnapshot.docs.map((document) =>
           toPatientVisibleMeasurement(document.data(), document.id, patientData.heightCm)
-        )
+        ),
+        dailyLog: dailyLog ? {
+          dateKey: dailyLog.dateKey,
+          proteinGrams: dailyLog.proteinGrams,
+          waterMl: dailyLog.waterMl,
+          meals: dailyLog.meals || null,
+          activityMinutes: dailyLog.activityMinutes ?? null
+        } : null
       });
     } catch (error) {
       const status = error.statusCode || 500;
