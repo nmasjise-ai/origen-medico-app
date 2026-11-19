@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
   Activity, ArrowDownRight, ArrowUpRight, CalendarDays, CheckCircle2,
   ChevronRight, ClipboardList, Droplets, HeartPulse, Home, Info,
-  RefreshCw, Scale, ShieldCheck, UserRound, Utensils, Waves
+  RefreshCw, Scale, ShieldCheck, User, Utensils, Waves
 } from 'lucide-react';
 import NutritionEducation from './NutritionEducation.jsx';
 
@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { id: 'home', label: 'Inicio', icon: Home },
   { id: 'evolution', label: 'Evolución', icon: Activity },
   { id: 'plan', label: 'Mi plan', icon: ClipboardList },
-  { id: 'profile', label: 'Perfil', icon: UserRound }
+  { id: 'profile', label: 'Perfil', icon: User }
 ];
 
 const formatDate = (value) => {
@@ -178,7 +178,7 @@ export default function PatientPortal({ profile, data, loading, error, onRefresh
 
         {activeTab === 'profile' ? (
           <div className="grid gap-5 lg:grid-cols-2">
-            <Card className="p-5 sm:p-6"><div className="flex items-center gap-3"><div className="rounded-2xl bg-[#F7F0E1] p-3 text-[#98732E]"><UserRound className="h-6 w-6" /></div><div><h2 className="font-serif text-xl font-bold">{displayName}</h2><p className="text-xs text-[#8D7D65]">Perfil vinculado al expediente</p></div></div><div className="mt-5 space-y-3 text-sm"><div className="flex justify-between border-b border-[#F1EBDD] pb-3"><span className="text-[#8D7D65]">Talla registrada</span><strong>{height ? height + ' cm' : '—'}</strong></div><div className="flex justify-between border-b border-[#F1EBDD] pb-3"><span className="text-[#8D7D65]">Fecha de nacimiento</span><strong>{patient.birthDate || 'No registrada'}</strong></div></div></Card>
+            <Card className="p-5 sm:p-6"><div className="flex items-center gap-3"><div className="rounded-2xl bg-[#F7F0E1] p-3 text-[#98732E]"><User className="h-6 w-6" /></div><div><h2 className="font-serif text-xl font-bold">{displayName}</h2><p className="text-xs text-[#8D7D65]">Perfil vinculado al expediente</p></div></div><div className="mt-5 space-y-3 text-sm"><div className="flex justify-between border-b border-[#F1EBDD] pb-3"><span className="text-[#8D7D65]">Talla registrada</span><strong>{height ? height + ' cm' : '—'}</strong></div><div className="flex justify-between border-b border-[#F1EBDD] pb-3"><span className="text-[#8D7D65]">Fecha de nacimiento</span><strong>{patient.birthDate || 'No registrada'}</strong></div></div></Card>
             <Card className="p-5 sm:p-6"><h3 className="font-serif text-lg font-bold">Información clínica visible</h3><div className="mt-4 space-y-4"><div><p className="text-xs font-semibold text-[#8A6728]">Diagnósticos activos</p><p className="mt-1 whitespace-pre-wrap text-sm text-[#71634E]">{patient.activeDiagnoses || 'Sin información registrada.'}</p></div><div className="border-t border-[#F1EBDD] pt-4"><p className="text-xs font-semibold text-[#8A6728]">Alergias</p><p className="mt-1 whitespace-pre-wrap text-sm text-[#71634E]">{patient.allergies || 'Sin información registrada.'}</p></div></div></Card>
           </div>
         ) : null}
