@@ -117,7 +117,7 @@ export default function PatientPortal({ profile, data, loading, error, onRefresh
       <main className="mx-auto max-w-6xl space-y-5 px-4 py-5 sm:space-y-6 sm:px-6 sm:py-8">
         <div className="flex items-center justify-between gap-3">
           <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#A17B34]">{tabTitle}</p><h1 className="mt-1 font-serif text-2xl font-bold text-[#2B251C] sm:text-3xl">{activeTab === 'home' ? 'Tu bienestar, paso a paso.' : tabTitle}</h1></div>
-          <div className="hidden rounded-2xl bg-[#F4EED ח] px-4 py-3 text-right sm:block"><p className="text-[10px] uppercase tracking-wider text-[#8B795C]">Cuenta vinculada</p><p className="text-xs font-semibold text-[#735318]">Acceso individual</p></div>
+          <div className="hidden rounded-2xl bg-[#F7F1E5] px-4 py-3 text-right sm:block"><p className="text-[10px] uppercase tracking-wider text-[#8B795C]">Cuenta vinculada</p><p className="text-xs font-semibold text-[#735318]">Acceso individual</p></div>
         </div>
 
         {error ? <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div> : null}
