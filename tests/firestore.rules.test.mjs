@@ -174,6 +174,84 @@ test("patient can append a bounded daily log to their own record", async () => {
   );
 });
 
+test("patient daily log accepts meal check-ins and bounded activity minutes", async () => {
+  const db = testEnv.authenticatedContext("patient-a").firestore();
+
+  await assertSucceeds(
+    setDoc(doc(db, "patients/patient-a/dailyLogs/2026-11-19"), {
+      dateKey: "2026-11-19",
+      proteinGrams: 95,
+      waterMl: 2200,
+      electrolytesTaken: false,
+      meals: { breakfast: true, lunch: true, dinner: false, snacks: true },
+      activityMinutes: 35,
+      createdAt: serverTimestamp()
+    })
+  );
+});
+
+test("patient daily log rejects invalid meals, activity and unexpected fields", async () => {
+  const db = testEnv.authenticatedContext("patient-a").firestore();
+  const base = {
+    dateKey: "2026-11-19",
+    proteinGrams: 95,
+    waterMl: 2200,
+    electrolytesTaken: false,
+    createdAt: serverTimestamp()
+  };
+
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/bad-meals"), {
+    ...base, meals: { breakfast: "yes", lunch: true, dinner: false }
+  }));
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/bad-activity"), {
+    ...base, activityMinutes: 1441
+  }));
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/extra-field"), {
+    ...base, calories: 2000
+  }));
+});
+
+test("patient can create daily logs only for their own patient record", async () => {
+  const db = testEnv.authenticatedContext("patient-a").firestore();
+  const payload = {
+    dateKey: "2026-11-19",
+    proteinGrams: 80,
+    waterMl: 1800,
+    electrolytesTaken: false,
+    meals: { breakfast: true, lunch: false, dinner: false },
+    activityMinutes: 20,
+    createdAt: serverTimestamp()
+  };
+
+  await assertFails(setDoc(doc(db, "patients/patient-b/dailyLogs/2026-11-19"), payload));
+});
+
+test("Preview patient can append a valid daily log only in their own Preview record", async () => {
+  const db = testEnv.authenticatedContext("preview-patient-a").firestore();
+  const payload = {
+    dateKey: "2026-11-19",
+    proteinGrams: 80,
+    waterMl: 1800,
+    electrolytesTaken: false,
+    meals: { breakfast: true, lunch: true, dinner: false },
+    activityMinutes: 20,
+    createdAt: serverTimestamp()
+  };
+
+  await assertSucceeds(setDoc(
+    doc(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/dailyLogs/2026-11-19"),
+    payload
+  ));
+  await assertFails(setDoc(
+    doc(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-b/dailyLogs/2026-11-19"),
+    payload
+  ));
+  await assertFails(setDoc(
+    doc(db, "previewEnvironments/otro-entorno/patients/preview-patient-a/dailyLogs/2026-11-19"),
+    payload
+  ));
+});
+
 test("patient cannot read internal doctor notes or write prescriptions", async () => {
   const db = testEnv.authenticatedContext("patient-a").firestore();
 
