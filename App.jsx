@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, reload, signOut, onAuthStateChanged, getIdTokenResult } from 'firebase/auth';
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 // Firestore is connected through patient-scoped repositories in the migration phase.
 
 // ============================================================================
@@ -30,6 +31,7 @@ const firebaseConfig = {
 };
 const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
 const auth = app ? getAuth(app) : null;
+const db = app ? getFirestore(app) : null;
 
 const getPatientActivityStatus = (lastAccessAt) => {
   if (!lastAccessAt) {
@@ -539,6 +541,10 @@ function App() {
   const [patientPortalData, setPatientPortalData] = useState(null);
   const [patientPortalLoading, setPatientPortalLoading] = useState(false);
   const [patientPortalError, setPatientPortalError] = useState('');
+  const [patientDailyLog, setPatientDailyLog] = useState(null);
+  const [patientDailyLogLoading, setPatientDailyLogLoading] = useState(false);
+  const [patientDailyLogSaving, setPatientDailyLogSaving] = useState(false);
+  const [patientDailyLogError, setPatientDailyLogError] = useState('');
   const [cloudInviteEmails, setCloudInviteEmails] = useState({});
   const [cloudInviteLoadingId, setCloudInviteLoadingId] = useState('');
   const [cloudInviteResult, setCloudInviteResult] = useState(null);
@@ -958,6 +964,26 @@ function App() {
         measurements: Array.isArray(payload.measurements) ? payload.measurements : []
       };
       setPatientPortalData(data);
+
+      // Preview daily nutrition entries are read directly from the isolated
+      // patient namespace. Firestore rules bind access to the authenticated UID.
+      setPatientDailyLogLoading(true);
+      setPatientDailyLogError('');
+      try {
+        if (!db || !account || !data.patient?.id) throw new Error('No se pudo identificar el expediente vinculado.');
+        const dateKey = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/La_Paz', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+        const logRef = doc(db, 'previewEnvironments', 'mejoras-seguridad-origen', 'patients', data.patient.id, 'dailyLogs', dateKey);
+        const logSnapshot = await getDoc(logRef);
+        setPatientDailyLog(logSnapshot.exists() ? { id: logSnapshot.id, ...logSnapshot.data() } : null);
+      } catch (dailyLogError) {
+        console.error('No se pudo cargar el registro diario:', dailyLogError?.code || dailyLogError?.name || 'Error');
+        setPatientDailyLog(null);
+        setPatientDailyLogError('No se pudo cargar el registro diario. Actualiza la página o contacta al consultorio.');
+      } finally {
+        setPatientDailyLogLoading(false);
+      }
       return data;
     } catch (err) {
       console.error('No se pudo cargar el expediente del paciente:', err);
@@ -966,6 +992,51 @@ function App() {
       return null;
     } finally {
       setPatientPortalLoading(false);
+    }
+  };
+
+  const handleSavePatientDailyLog = async (values) => {
+    const account = user;
+    const patientId = patientPortalData?.patient?.id;
+    if (!account || !patientId || !db) {
+      return { ok: false, message: 'No se pudo verificar tu sesión y expediente. Vuelve a iniciar sesión.' };
+    }
+
+    setPatientDailyLogSaving(true);
+    setPatientDailyLogError('');
+    try {
+      const dateKey = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/La_Paz', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).format(new Date());
+      const logRef = doc(db, 'previewEnvironments', 'mejoras-seguridad-origen', 'patients', patientId, 'dailyLogs', dateKey);
+      const existing = await getDoc(logRef);
+      if (existing.exists()) {
+        const saved = { id: existing.id, ...existing.data() };
+        setPatientDailyLog(saved);
+        return { ok: false, message: 'Ya existe un registro enviado para hoy. Los registros enviados no se pueden sobrescribir.' };
+      }
+
+      await setDoc(logRef, {
+        dateKey,
+        proteinGrams: values.proteinGrams,
+        waterMl: values.waterMl,
+        electrolytesTaken: false,
+        meals: values.meals,
+        activityMinutes: values.activityMinutes,
+        createdAt: serverTimestamp()
+      });
+      const savedSnapshot = await getDoc(logRef);
+      setPatientDailyLog(savedSnapshot.exists() ? { id: savedSnapshot.id, ...savedSnapshot.data() } : null);
+      return { ok: true };
+    } catch (saveError) {
+      console.error('No se pudo guardar el registro diario:', saveError?.code || saveError?.name || 'Error');
+      const message = saveError?.code === 'permission-denied'
+        ? 'Tu sesión no tiene permiso para guardar este registro. Verifica el acceso al portal.'
+        : 'No se pudo guardar el registro. Inténtalo nuevamente.';
+      setPatientDailyLogError(message);
+      return { ok: false, message };
+    } finally {
+      setPatientDailyLogSaving(false);
     }
   };
 
@@ -2100,6 +2171,11 @@ function App() {
             data={patientPortalData}
             loading={patientPortalLoading}
             error={patientPortalError}
+            dailyLog={patientDailyLog}
+            dailyLogLoading={patientDailyLogLoading}
+            dailyLogError={patientDailyLogError}
+            dailyLogSaving={patientDailyLogSaving}
+            onSaveDailyLog={handleSavePatientDailyLog}
             onRefresh={() => loadPatientPortalData(user)}
           />
         </React.Suspense>
