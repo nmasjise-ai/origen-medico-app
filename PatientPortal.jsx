@@ -41,7 +41,7 @@ const Metric = ({ label, value, suffix, icon: Icon, detail }) => (
 
 function WeightChart({ measurements }) {
   const series = useMemo(() => [...(measurements || [])]
-    .filter((item) => Number.isFinite(Number(item.weightKg)))
+    .filter((item) => item.weightKg != null && Number.isFinite(Number(item.weightKg)))
     .slice(0, 30)
     .reverse(), [measurements]);
 
