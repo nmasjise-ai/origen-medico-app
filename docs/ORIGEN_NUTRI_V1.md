@@ -11,7 +11,7 @@
 3. Metas y planes son asignados/editados por profesional autorizado. El paciente no puede cambiar su meta clínica.
 4. Un plan solo es visible al paciente cuando está aprobado y publicado.
 5. No usar `localStorage`, `sessionStorage`, URLs ni logs para datos clínicos o nutricionales.
-6. No añadir una nueva función API mientras Vercel Hobby esté en 12/12. Evaluar acceso Firestore cliente bajo reglas específicas y pruebas de emulador, o consolidar rutas existentes con revisión y autorización antes de retirar cualquier ruta.
+6. No añadir una nueva función API mientras Vercel Hobby esté en 12/12. El Tracker V1 reutiliza `GET/POST /api/patient/profile` con Firebase Admin SDK; el servidor deriva el expediente desde el UID autenticado y no confía en un `patientId` enviado por el navegador.
 7. No desplegar reglas Firestore a producción ni migrar datos reales en esta fase.
 
 ## Módulos V1
@@ -28,7 +28,7 @@ El registro debe tener fecha local `America/La_Paz`, fecha de creación del serv
 
 **Metas:** agua, proteína y actividad se muestran únicamente si un profesional las asignó. No calcular automáticamente objetivos de hidratación/proteína a partir del peso ni recomendar electrolitos. Si no existe una meta revisada, mostrar “Tu equipo aún no ha definido esta meta”.
 
-**Persistencia:** `previewEnvironments/{environmentId}/patients/{patientId}/dailyLogs/{logId}`. El `logId` debe ser determinista por paciente y fecha o existir una validación equivalente que evite duplicados diarios. La regla debe impedir update/delete por el paciente.
+**Persistencia:** `previewEnvironments/{environmentId}/patients/{patientId}/dailyLogs/{YYYY-MM-DD}`. El Tracker envía el registro a `POST /api/patient/profile`; el backend calcula la fecha `America/La_Paz`, valida campos y crea el documento mediante Admin SDK `create()` para impedir sobrescrituras. `GET /api/patient/profile` devuelve el registro del día. El cliente no escribe directamente en Firestore. Las reglas de Firestore mantienen la protección append-only como defensa adicional.
 
 ### 2. Plan nutricional de 7 días
 
