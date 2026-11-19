@@ -162,10 +162,11 @@ test("patient cannot create a symptom report for another patient or with invalid
 
 test("patient can append a bounded daily log to their own record", async () => {
   const db = testEnv.authenticatedContext("patient-a").firestore();
+  const dateKey = "2026-11-17";
 
   await assertSucceeds(
-    addDoc(collection(db, "patients/patient-a/dailyLogs"), {
-      dateKey: "2026-11-17",
+    setDoc(doc(db, `patients/patient-a/dailyLogs/${dateKey}`), {
+      dateKey,
       proteinGrams: 90,
       waterMl: 2100,
       electrolytesTaken: false,
@@ -395,12 +396,13 @@ test("Preview patient can read only their own isolated record and mapping", asyn
 
 test("Preview patient can append a valid daily log only to their own record", async () => {
   const db = testEnv.authenticatedContext("preview-patient-a").firestore();
-  await assertSucceeds(addDoc(collection(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/dailyLogs"), {
-    dateKey: "2026-11-18", proteinGrams: 85, waterMl: 2000,
+  const dateKey = "2026-11-18";
+  await assertSucceeds(setDoc(doc(db, `previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/dailyLogs/${dateKey}`), {
+    dateKey, proteinGrams: 85, waterMl: 2000,
     electrolytesTaken: false, createdAt: serverTimestamp()
   }));
-  await assertFails(addDoc(collection(db, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-b/dailyLogs"), {
-    dateKey: "2026-11-18", proteinGrams: 85, waterMl: 2000,
+  await assertFails(setDoc(doc(db, `previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-b/dailyLogs/${dateKey}`), {
+    dateKey, proteinGrams: 85, waterMl: 2000,
     electrolytesTaken: false, createdAt: serverTimestamp()
   }));
 });
@@ -505,9 +507,9 @@ test("daily log rejects malformed dates and values outside the current contract"
 
 test("daily log cannot be submitted twice under the same deterministic date ID", async () => {
   const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
-  const logRef = doc(db, "patients/patient-a/dailyLogs/2026-11-19");
+  const logRef = doc(db, "patients/patient-a/dailyLogs/2026-11-20");
   const payload = {
-    dateKey: "2026-11-19",
+    dateKey: "2026-11-20",
     proteinGrams: 90,
     waterMl: 2100,
     electrolytesTaken: false,
@@ -551,4 +553,22 @@ test("suspended Preview patient cannot append a daily log", async () => {
     electrolytesTaken: false,
     createdAt: serverTimestamp()
   }));
+});
+
+test("daily log document IDs must match the submitted date in root and Preview", async () => {
+  const payload = {
+    dateKey: "2026-11-21",
+    proteinGrams: 90,
+    waterMl: 2100,
+    electrolytesTaken: false,
+    createdAt: serverTimestamp()
+  };
+  const rootDb = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
+  const previewDb = testEnv.authenticatedContext("preview-patient-a", { email_verified: true }).firestore();
+
+  await assertFails(setDoc(doc(rootDb, "patients/patient-a/dailyLogs/not-the-date"), payload));
+  await assertFails(setDoc(
+    doc(previewDb, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/dailyLogs/not-the-date"),
+    payload
+  ));
 });

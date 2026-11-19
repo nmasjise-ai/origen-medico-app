@@ -150,7 +150,7 @@ service cloud.firestore {
       // previously submitted clinical records.
       match /dailyLogs/{logId} {
         allow read: if canReadPatient(patientId);
-        allow create: if ownsPatient(patientId) && validDailyLog();
+        allow create: if ownsPatient(patientId) && validDailyLog() && logId == request.resource.data.dateKey;
         allow update, delete: if isAdmin();
       }
 
@@ -230,7 +230,7 @@ service cloud.firestore {
       }
       match /dailyLogs/{logId} {
         allow read: if canReadPreviewPatient(environmentId, patientId);
-        allow create: if ownsPreviewPatient(environmentId, patientId) && validDailyLog();
+        allow create: if ownsPreviewPatient(environmentId, patientId) && validDailyLog() && logId == request.resource.data.dateKey;
         allow update, delete: if isAdmin();
       }
       match /symptomReports/{reportId} {

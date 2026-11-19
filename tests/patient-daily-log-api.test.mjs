@@ -14,8 +14,8 @@ function makeResponse() {
 function makeHarness({ userData, patientData, decoded } = {}) {
   const store = new Map();
   const uid = "patient-a-uid";
-  const patientId = "patient-a";
-  const resolvedUser = userData ?? { patientId };
+  const patientId = "patient-a-qa";
+  const resolvedUser = userData ?? { uid, role: "patient", patientId };
   const resolvedPatient = patientData ?? {
     displayName: "Paciente A", linkedUid: uid, accountStatus: "linked", heightCm: 170
   };

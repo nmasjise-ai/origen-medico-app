@@ -43,6 +43,17 @@ function makeDatabase({ users, patients, measurements = {} }) {
           };
         },
         collection(name) {
+          if (name === "dailyLogs") {
+            return {
+              doc(logId) {
+                return {
+                  async get() {
+                    return { id: logId, exists: false, data: () => undefined };
+                  }
+                };
+              }
+            };
+          }
           assert.equal(name, "measurements");
           return {
             orderBy(field, direction) {
@@ -198,16 +209,16 @@ test("unverified users and administrators cannot use the patient profile endpoin
   }
 });
 
-test("patient profile endpoint rejects methods other than GET", async () => {
+test("patient profile endpoint rejects methods other than GET and POST", async () => {
   const handler = createPatientProfileHandler({
     verifyRequestUser: async () => { throw new Error("must not authenticate"); }
   });
   const res = responseRecorder();
 
-  await handler({ method: "POST" }, res);
+  await handler({ method: "PATCH" }, res);
 
   assert.equal(res.statusCode, 405);
-  assert.equal(res.headers.Allow, "GET");
+  assert.equal(res.headers.Allow, "GET, POST");
 });
 
 
