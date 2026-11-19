@@ -2086,7 +2086,12 @@ function App() {
               className="w-full rounded-xl border border-[#E6D9C0] text-[#735318] font-semibold py-3 text-sm"
             >
               Volver al acceso público
-            </button      {appMode === 'patient_portal' && (
+            </button>
+          </section>
+        </main>
+      )}
+
+      {appMode === 'patient_portal' && (
         <PatientPortal
           profile={patientPortalProfile}
           data={patientPortalData}
@@ -2094,11 +2099,6 @@ function App() {
           error={patientPortalError}
           onRefresh={() => loadPatientPortalData(user)}
         />
-      )}
-
->
-          </section>
-        </main>
       )}
 
       {/* ==================================================================== */}
