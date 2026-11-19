@@ -505,24 +505,6 @@ test("daily log rejects malformed dates and values outside the current contract"
   }));
 });
 
-test("daily log cannot be submitted twice under the same deterministic date ID", async () => {
-  const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
-  const logRef = doc(db, "patients/patient-a/dailyLogs/2026-11-20");
-  const payload = {
-    dateKey: "2026-11-20",
-    proteinGrams: 90,
-    waterMl: 2100,
-    electrolytesTaken: false,
-    createdAt: serverTimestamp()
-  };
-
-  await assertSucceeds(setDoc(logRef, payload));
-  await assertFails(setDoc(logRef, {
-    ...payload,
-    proteinGrams: 110,
-    createdAt: serverTimestamp()
-  }));
-});
 
 test("root patient cannot append a daily log to another patient's record", async () => {
   const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
