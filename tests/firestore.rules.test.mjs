@@ -194,21 +194,22 @@ test("patient daily log accepts meal check-ins and bounded activity minutes", as
 test("patient daily log rejects invalid meals, activity and unexpected fields", async () => {
   const db = testEnv.authenticatedContext("patient-a").firestore();
   const base = {
-    dateKey: "2026-11-19",
     proteinGrams: 95,
     waterMl: 2200,
     electrolytesTaken: false,
     createdAt: serverTimestamp()
   };
 
-  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/bad-meals"), {
-    ...base, meals: { breakfast: "yes", lunch: true, dinner: false }
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-11-22"), {
+    ...base,
+    dateKey: "2026-11-22",
+    meals: { breakfast: "yes", lunch: true, dinner: false }
   }));
-  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/bad-activity"), {
-    ...base, activityMinutes: 1441
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-11-23"), {
+    ...base, dateKey: "2026-11-23", activityMinutes: 1441
   }));
-  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/extra-field"), {
-    ...base, calories: 2000
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-11-24"), {
+    ...base, dateKey: "2026-11-24", calories: 2000
   }));
 });
 
@@ -469,15 +470,15 @@ test("suspended Preview patient access is denied by Firestore rules", async () =
 });
 
 
-test("daily log rejects unsupported V1 fields until the schema and rules are migrated", async () => {
+test("daily log rejects unsupported schemaVersion while accepting current meal and activity fields", async () => {
   const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
 
-  await assertFails(addDoc(collection(db, "patients/patient-a/dailyLogs"), {
-    dateKey: "2026-11-19",
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-11-25"), {
+    dateKey: "2026-11-25",
     proteinGrams: 90,
     waterMl: 2100,
     electrolytesTaken: false,
-    meals: { breakfast: true, lunch: false, dinner: false, snacks: 0 },
+    meals: { breakfast: true, lunch: false, dinner: false, snacks: false },
     activityMinutes: 30,
     schemaVersion: 1,
     createdAt: serverTimestamp()
@@ -487,21 +488,20 @@ test("daily log rejects unsupported V1 fields until the schema and rules are mig
 test("daily log rejects malformed dates and values outside the current contract", async () => {
   const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
   const base = {
-    dateKey: "2026-11-19",
     proteinGrams: 90,
     waterMl: 2100,
     electrolytesTaken: false,
     createdAt: serverTimestamp()
   };
 
-  await assertFails(addDoc(collection(db, "patients/patient-a/dailyLogs"), {
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/19-11-2026"), {
     ...base, dateKey: "19-11-2026"
   }));
-  await assertFails(addDoc(collection(db, "patients/patient-a/dailyLogs"), {
-    ...base, proteinGrams: 301
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-11-26"), {
+    ...base, dateKey: "2026-11-26", proteinGrams: 301
   }));
-  await assertFails(addDoc(collection(db, "patients/patient-a/dailyLogs"), {
-    ...base, waterMl: 7001
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-11-27"), {
+    ...base, dateKey: "2026-11-27", waterMl: 7001
   }));
 });
 
@@ -509,8 +509,8 @@ test("daily log rejects malformed dates and values outside the current contract"
 test("root patient cannot append a daily log to another patient's record", async () => {
   const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
 
-  await assertFails(addDoc(collection(db, "patients/patient-b/dailyLogs"), {
-    dateKey: "2026-11-19",
+  await assertFails(setDoc(doc(db, "patients/patient-b/dailyLogs/2026-11-28"), {
+    dateKey: "2026-11-28",
     proteinGrams: 90,
     waterMl: 2100,
     electrolytesTaken: false,
@@ -528,8 +528,8 @@ test("suspended Preview patient cannot append a daily log", async () => {
     });
   });
 
-  await assertFails(addDoc(collection(db, patientPath + "/dailyLogs"), {
-    dateKey: "2026-11-19",
+  await assertFails(setDoc(doc(db, patientPath + "/dailyLogs/2026-11-29"), {
+    dateKey: "2026-11-29",
     proteinGrams: 90,
     waterMl: 2100,
     electrolytesTaken: false,
