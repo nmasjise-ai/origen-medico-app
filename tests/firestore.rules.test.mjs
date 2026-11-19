@@ -341,3 +341,49 @@ test("verified administrator can manage Preview records but unverified administr
   await assertFails(getDoc(doc(unverifiedDb, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a")));
   await assertFails(setDoc(doc(unverifiedDb, "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a/measurements/forged"), { weightKg: 1 }));
 });
+
+
+test("suspended root patient access is denied by Firestore rules", async () => {
+  const patientDb = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
+  const adminDb = testEnv.authenticatedContext("doctor-uid", { admin: true, email_verified: true }).firestore();
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await updateDoc(doc(db, "patients/patient-a"), { portalAccessStatus: "suspended" });
+  });
+
+  await assertFails(getDoc(doc(patientDb, "patients/patient-a")));
+  await assertFails(getDoc(doc(patientDb, "patients/patient-a/measurements/metric-1")));
+  await assertSucceeds(getDoc(doc(adminDb, "patients/patient-a")));
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await updateDoc(doc(db, "patients/patient-a"), { portalAccessStatus: "enabled" });
+    await updateDoc(doc(db, "users/patient-a"), { portalAccessStatus: "suspended" });
+  });
+
+  await assertFails(getDoc(doc(patientDb, "patients/patient-a")));
+});
+
+test("suspended Preview patient access is denied by Firestore rules", async () => {
+  const patientDb = testEnv.authenticatedContext("preview-patient-a", { email_verified: true }).firestore();
+  const ownPatient = "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a";
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await updateDoc(doc(db, ownPatient), { portalAccessStatus: "suspended" });
+  });
+
+  await assertFails(getDoc(doc(patientDb, ownPatient)));
+  await assertFails(getDoc(doc(patientDb, ownPatient + "/measurements/metric-1")));
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await updateDoc(doc(db, ownPatient), { portalAccessStatus: "enabled" });
+    await updateDoc(doc(db, "previewEnvironments/mejoras-seguridad-origen/users/preview-patient-a"), {
+      portalAccessStatus: "suspended"
+    });
+  });
+
+  await assertFails(getDoc(doc(patientDb, ownPatient)));
+});
