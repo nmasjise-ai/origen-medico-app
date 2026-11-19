@@ -16,7 +16,11 @@ service cloud.firestore {
       return signedIn()
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.patientId == patientId
         && get(/databases/$(database)/documents/patients/$(patientId)).data.linkedUid == request.auth.uid
-        && get(/databases/$(database)/documents/patients/$(patientId)).data.accountStatus == 'linked';
+        && get(/databases/$(database)/documents/patients/$(patientId)).data.accountStatus == 'linked'
+        && (!('portalAccessStatus' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
+          || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.portalAccessStatus == 'enabled')
+        && (!('portalAccessStatus' in get(/databases/$(database)/documents/patients/$(patientId)).data)
+          || get(/databases/$(database)/documents/patients/$(patientId)).data.portalAccessStatus == 'enabled');
     }
 
     function canReadPatient(patientId) {
@@ -158,7 +162,11 @@ service cloud.firestore {
       return signedIn()
         && get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/users/$(request.auth.uid)).data.patientId == patientId
         && get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data.linkedUid == request.auth.uid
-        && get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data.accountStatus == 'linked';
+        && get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data.accountStatus == 'linked'
+        && (!('portalAccessStatus' in get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/users/$(request.auth.uid)).data)
+          || get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/users/$(request.auth.uid)).data.portalAccessStatus == 'enabled')
+        && (!('portalAccessStatus' in get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data)
+          || get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data.portalAccessStatus == 'enabled');
     }
 
     function canReadPreviewPatient(environmentId, patientId) {
