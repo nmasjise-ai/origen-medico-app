@@ -427,7 +427,7 @@ Esta prueba demuestra la revalidación server-side del endpoint de perfil en cad
 - [x] Ampliadas las reglas Firestore para admitir comidas realizadas y minutos de actividad, manteniendo compatibilidad con los campos previos.
 - [x] Añadidas pruebas de emulador para validación de campos, rangos, aislamiento entre pacientes y namespace Preview.
 - [x] Creada la interfaz inicial del Tracker Diario en el portal del paciente.
-- [x] Conectada la interfaz a lectura/escritura de Firestore en el namespace Preview con ID diario por fecha de Bolivia y bloqueo de sobrescritura desde el cliente.
+- [x] Conectada la interfaz a la ruta existente `/api/patient/profile` (GET/POST), que resuelve el expediente desde el UID autenticado y guarda un documento diario determinista por fecha de Bolivia mediante Admin SDK; no se añadió una ruta API nueva.
 - [ ] **Pendiente CI:** confirmar que pasan las pruebas de reglas y el build del último commit.
 - [ ] **Pendiente:** prueba manual con dos cuentas ficticias vinculadas en Preview.
 - [ ] **Pendiente:** validar el guardado real tras desplegar las reglas en un entorno controlado; no desplegar reglas a producción en esta fase.
