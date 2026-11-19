@@ -387,3 +387,90 @@ test("suspended Preview patient access is denied by Firestore rules", async () =
 
   await assertFails(getDoc(doc(patientDb, ownPatient)));
 });
+
+
+test("daily log rejects unsupported V1 fields until the schema and rules are migrated", async () => {
+  const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
+
+  await assertFails(addDoc(collection(db, "patients/patient-a/dailyLogs"), {
+    dateKey: "2026-11-19",
+    proteinGrams: 90,
+    waterMl: 2100,
+    electrolytesTaken: false,
+    meals: { breakfast: true, lunch: false, dinner: false, snacks: 0 },
+    activityMinutes: 30,
+    schemaVersion: 1,
+    createdAt: serverTimestamp()
+  }));
+});
+
+test("daily log rejects malformed dates and values outside the current contract", async () => {
+  const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
+  const base = {
+    dateKey: "2026-11-19",
+    proteinGrams: 90,
+    waterMl: 2100,
+    electrolytesTaken: false,
+    createdAt: serverTimestamp()
+  };
+
+  await assertFails(addDoc(collection(db, "patients/patient-a/dailyLogs"), {
+    ...base, dateKey: "19-11-2026"
+  }));
+  await assertFails(addDoc(collection(db, "patients/patient-a/dailyLogs"), {
+    ...base, proteinGrams: 301
+  }));
+  await assertFails(addDoc(collection(db, "patients/patient-a/dailyLogs"), {
+    ...base, waterMl: 7001
+  }));
+});
+
+test("daily log cannot be submitted twice under the same deterministic date ID", async () => {
+  const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
+  const logRef = doc(db, "patients/patient-a/dailyLogs/2026-11-19");
+  const payload = {
+    dateKey: "2026-11-19",
+    proteinGrams: 90,
+    waterMl: 2100,
+    electrolytesTaken: false,
+    createdAt: serverTimestamp()
+  };
+
+  await assertSucceeds(setDoc(logRef, payload));
+  await assertFails(setDoc(logRef, {
+    ...payload,
+    proteinGrams: 110,
+    createdAt: serverTimestamp()
+  }));
+});
+
+test("root patient cannot append a daily log to another patient's record", async () => {
+  const db = testEnv.authenticatedContext("patient-a", { email_verified: true }).firestore();
+
+  await assertFails(addDoc(collection(db, "patients/patient-b/dailyLogs"), {
+    dateKey: "2026-11-19",
+    proteinGrams: 90,
+    waterMl: 2100,
+    electrolytesTaken: false,
+    createdAt: serverTimestamp()
+  }));
+});
+
+test("suspended Preview patient cannot append a daily log", async () => {
+  const db = testEnv.authenticatedContext("preview-patient-a", { email_verified: true }).firestore();
+  const patientPath = "previewEnvironments/mejoras-seguridad-origen/patients/preview-patient-a";
+
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    await updateDoc(doc(context.firestore(), patientPath), {
+      portalAccessStatus: "suspended"
+    });
+  });
+
+  await assertFails(addDoc(collection(db, patientPath + "/dailyLogs"), {
+    dateKey: "2026-11-19",
+    proteinGrams: 90,
+    waterMl: 2100,
+    electrolytesTaken: false,
+    createdAt: serverTimestamp()
+  }));
+});
