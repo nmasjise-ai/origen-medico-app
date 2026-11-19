@@ -414,3 +414,10 @@ Esta prueba demuestra la revalidación server-side del endpoint de perfil en cad
 
 
 - [x] Extendida la regresión de sesión abierta al endpoint `/api/patient/session`: el mismo usuario autenticado pasa de respuesta vinculada a HTTP 403 después de la suspensión; no se registra un segundo acceso ni se devuelve información del paciente.
+
+
+## Mantenimiento de GitHub Actions — 19/11/2026
+
+- [x] Actualizadas las acciones del workflow a versiones oficiales vigentes, fijadas por SHA: checkout v7.0.1, setup-node v7.1.0 y setup-java v6.3.0.
+- [x] Se conserva Node.js 22 para instalar dependencias y compilar la aplicación, y Java Temurin 21 para Firebase Emulator.
+- [ ] Validar el workflow completo tras la actualización. No marcar como verificado hasta que el nuevo run termine correctamente.
