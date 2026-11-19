@@ -11,7 +11,7 @@ function makeResponse() {
   };
 }
 
-function makeHarness({ userData, patientData, decoded } = {}) {
+function makeHarness({ userData, patientData, decoded, now } = {}) {
   const store = new Map();
   const uid = "patient-a-uid";
   const patientId = "patient-a-qa";
@@ -23,7 +23,7 @@ function makeHarness({ userData, patientData, decoded } = {}) {
   const handler = createPatientProfileHandler({
     verifyRequestUser: async () => resolvedDecoded,
     getAdminFirestore: () => ({}),
-    now: () => new Date("2026-11-19T12:00:00.000Z"),
+    now: now || (() => new Date("2026-11-19T12:00:00.000Z")),
     serverTimestamp: () => new Date("2026-11-19T12:00:00.000Z"),
     getPreviewUsersCollection: () => ({
       doc: () => ({ get: async () => ({ exists: Boolean(resolvedUser), data: () => resolvedUser }) })
@@ -169,4 +169,29 @@ test("daily log API rejects a user mapping that does not belong to the authentic
 
   assert.equal(res.statusCode, 404);
   assert.equal(store.size, 0);
+});
+
+
+test("daily log date key follows Bolivia local time across UTC midnight", async () => {
+  const { handler, store } = makeHarness({
+    now: () => new Date("2026-11-20T02:30:00.000Z")
+  });
+  const res = makeResponse();
+
+  await handler({ method: "POST", body: validBody }, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.dailyLog.dateKey, "2026-11-19");
+  assert.equal(store.has("2026-11-19"), true);
+  assert.equal(store.has("2026-11-20"), false);
+});
+
+test("daily log endpoint rejects unsupported HTTP methods", async () => {
+  const { handler } = makeHarness();
+  const res = makeResponse();
+
+  await handler({ method: "DELETE" }, res);
+
+  assert.equal(res.statusCode, 405);
+  assert.equal(res.headers.Allow, "GET, POST");
 });
