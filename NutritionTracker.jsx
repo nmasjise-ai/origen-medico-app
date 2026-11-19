@@ -24,9 +24,9 @@ export default function NutritionTracker({
   onSave,
   saving = false
 }) {
-  const [waterMl, setWaterMl] = useState('0');
-  const [proteinGrams, setProteinGrams] = useState('0');
-  const [activityMinutes, setActivityMinutes] = useState('0');
+  const [waterMl, setWaterMl] = useState('');
+  const [proteinGrams, setProteinGrams] = useState('');
+  const [activityMinutes, setActivityMinutes] = useState('');
   const [meals, setMeals] = useState({
     breakfast: false, lunch: false, dinner: false, snacks: false
   });
@@ -35,9 +35,9 @@ export default function NutritionTracker({
   useEffect(() => {
     if (!dailyLog) {
       // Evita conservar datos del paciente anterior si cambia la sesión/cuenta.
-      setWaterMl('0');
-      setProteinGrams('0');
-      setActivityMinutes('0');
+      setWaterMl('');
+      setProteinGrams('');
+      setActivityMinutes('');
       setMeals({ breakfast: false, lunch: false, dinner: false, snacks: false });
       setMessage('');
       return;
