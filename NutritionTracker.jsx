@@ -33,7 +33,15 @@ export default function NutritionTracker({
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    if (!dailyLog) return;
+    if (!dailyLog) {
+      // Evita conservar datos del paciente anterior si cambia la sesión/cuenta.
+      setWaterMl('0');
+      setProteinGrams('0');
+      setActivityMinutes('0');
+      setMeals({ breakfast: false, lunch: false, dinner: false, snacks: false });
+      setMessage('');
+      return;
+    }
     setWaterMl(String(dailyLog.waterMl ?? 0));
     setProteinGrams(String(dailyLog.proteinGrams ?? 0));
     setActivityMinutes(String(dailyLog.activityMinutes ?? 0));
@@ -49,6 +57,10 @@ export default function NutritionTracker({
   const handleSubmit = async (event) => {
     event.preventDefault();
     setMessage('');
+    if ([waterMl, proteinGrams, activityMinutes].some((value) => value.trim() === '')) {
+      setMessage('Completa los campos de agua, proteína y actividad antes de guardar.');
+      return;
+    }
     const payload = {
       waterMl: Number(waterMl),
       proteinGrams: Number(proteinGrams),
@@ -70,7 +82,7 @@ export default function NutritionTracker({
     <section className="rounded-3xl border border-[#E9DFC9] bg-white p-5 shadow-[0_8px_28px_rgba(67,49,18,0.045)] sm:p-6">
       <div className="flex items-start gap-3">
         <div className="rounded-2xl bg-[#F7F0E1] p-3 text-[#98732E]"><Activity className="h-5 w-5" /></div>
-        <div><h3 className="font-serif text-xl font-bold text-[#30291F]">Tracker Diario ORIGEN</h3><p className="mt-1 text-xs text-[#8D7D65]">Registro de hoy · America/La_Paz</p></div>
+        <div><h3 className="font-serif text-xl font-bold text-[#30291F]">Tracker Diario ORIGEN</h3><p className="mt-1 text-xs text-[#8D7D65]">Registro del {new Intl.DateTimeFormat('es-BO', { timeZone: 'America/La_Paz', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date())} · hora de Bolivia</p></div>
       </div>
 
       {loading ? <p className="mt-4 text-sm text-[#806126]">Cargando tu registro…</p> : (
@@ -78,15 +90,15 @@ export default function NutritionTracker({
           <div className="grid gap-3 sm:grid-cols-3">
             <label className="block rounded-2xl border border-[#EFE6D5] bg-[#FFFEFC] p-3">
               <span className="flex items-center gap-2 text-xs font-semibold text-[#776A56]"><Droplets className="h-4 w-4 text-[#A17B34]" /> Agua (ml)</span>
-              <input type="number" min="0" max="7000" step="50" value={waterMl} onChange={e => setWaterMl(e.target.value)} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F]" />
+              <input type="number" required min="0" max="7000" step="50" value={waterMl} onChange={e => setWaterMl(e.target.value)} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F]" />
             </label>
             <label className="block rounded-2xl border border-[#EFE6D5] bg-[#FFFEFC] p-3">
               <span className="flex items-center gap-2 text-xs font-semibold text-[#776A56]"><Utensils className="h-4 w-4 text-[#A17B34]" /> Proteína (g)</span>
-              <input type="number" min="0" max="300" step="1" value={proteinGrams} onChange={e => setProteinGrams(e.target.value)} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F]" />
+              <input type="number" required min="0" max="300" step="1" value={proteinGrams} onChange={e => setProteinGrams(e.target.value)} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F]" />
             </label>
             <label className="block rounded-2xl border border-[#EFE6D5] bg-[#FFFEFC] p-3">
               <span className="flex items-center gap-2 text-xs font-semibold text-[#776A56]"><Activity className="h-4 w-4 text-[#A17B34]" /> Actividad (min)</span>
-              <input type="number" min="0" max="1440" step="1" value={activityMinutes} onChange={e => setActivityMinutes(e.target.value)} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F]" />
+              <input type="number" required min="0" max="1440" step="1" value={activityMinutes} onChange={e => setActivityMinutes(e.target.value)} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F]" />
             </label>
           </div>
 
