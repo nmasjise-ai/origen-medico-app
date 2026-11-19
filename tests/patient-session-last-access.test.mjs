@@ -129,3 +129,50 @@ test("unlinked, unverified, or mismatched patients do not record last access", a
     assert.deepEqual(database.updates, []);
   }
 });
+
+
+test("an existing authenticated session is rejected after portal access is suspended", async () => {
+  const user = {
+    uid: "uid_AAAAAAAA",
+    role: "patient",
+    patientId: "patient_AAAAA"
+  };
+  const database = makeDatabase({
+    user,
+    patient: {
+      displayName: "Paciente A",
+      linkedUid: "uid_AAAAAAAA",
+      accountStatus: "linked",
+      status: "active"
+    }
+  });
+  const handler = createPatientSessionHandler({
+    verifyRequestUser: async () => ({
+      uid: "uid_AAAAAAAA",
+      email: "demo.a@example.test",
+      email_verified: true,
+      admin: false
+    }),
+    getAdminFirestore: () => database.db,
+    getPreviewUsersCollection: database.getPreviewUsersCollection,
+    getPreviewPatientsCollection: database.getPreviewPatientsCollection,
+    serverTimestamp: () => ({ sentinel: true })
+  });
+
+  const firstResponse = responseRecorder();
+  await handler({ method: "GET" }, firstResponse);
+  assert.equal(firstResponse.statusCode, 200);
+  assert.equal(firstResponse.body.linked, true);
+  assert.equal(database.updates.length, 1);
+
+  // Keep the same authenticated identity while the access state changes.
+  user.portalAccessStatus = "suspended";
+
+  const nextResponse = responseRecorder();
+  await handler({ method: "GET" }, nextResponse);
+
+  assert.equal(nextResponse.statusCode, 403);
+  assert.equal(nextResponse.body.accessSuspended, true);
+  assert.equal("patient" in nextResponse.body, false);
+  assert.equal(database.updates.length, 1);
+});

@@ -411,3 +411,6 @@ El deployment confirmado corresponde al commit `0a7840803bcec24765fca4c51d685d9c
 - [ ] **Pendiente:** comprobar visualmente la pantalla de acceso suspendido y su comportamiento en móvil/escritorio.
 
 Esta prueba demuestra la revalidación server-side del endpoint de perfil en cada solicitud; no equivale a invalidar el token de Firebase ni sustituye la validación end-to-end en navegador.
+
+
+- [x] Extendida la regresión de sesión abierta al endpoint `/api/patient/session`: el mismo usuario autenticado pasa de respuesta vinculada a HTTP 403 después de la suspensión; no se registra un segundo acceso ni se devuelve información del paciente.
