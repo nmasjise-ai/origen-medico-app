@@ -3042,8 +3042,8 @@ function App() {
           <nav className="flex overflow-x-auto gap-2 pb-1">
             {[
               { id: 'triage', label: 'Semáforo Triage & Bandeja', icon: Activity },
-              { id: 'cloud_patients', label: 'Pacientes en nube (Pruebas)', icon: Users },
-              { id: 'patient_detail', label: 'Expediente Demo', icon: ClipboardCheck },
+              { id: 'cloud_patients', label: 'Expedientes clínicos (Pruebas)', icon: Users },
+              { id: 'patient_detail', label: 'Expediente local (respaldo)', icon: ClipboardCheck },
               { id: 'vademecum', label: 'Vademécum GLP-1 (31 Marcas Bolivia)', icon: BookOpen },
               { id: 'settings', label: 'Configuración Consultorio (Sin Código)', icon: Settings },
               { id: 'finance', label: 'ORIGEN Finanzas', icon: Package }
@@ -3070,8 +3070,19 @@ function App() {
           {doctorTab === 'cloud_patients' && (
             <div className="space-y-5">
               <div className="rounded-3xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
-                <strong className="block font-bold">ENTORNO DE PRUEBAS · NO REGISTRAR PACIENTES REALES</strong>
-                <span>Estos registros se guardarán bajo `previewEnvironments/mejoras-seguridad-origen` dentro de la base actual. No se mezclan con `patients` de producción, no crean un usuario ni habilitan el portal del paciente. Usa exclusivamente nombres ficticios.</span>
+                <strong className="block font-bold">ENTORNO DE PRUEBAS · NO USAR CON PACIENTES REALES</strong>
+                <span>Este es el espacio principal para revisar expedientes ficticios en Preview. Los registros se guardan bajo `previewEnvironments/mejoras-seguridad-origen`; permanecen separados de la colección clínica de producción y no habilitan por sí solos el portal del paciente.</span>
+              </div>
+              <div className="rounded-3xl border border-[#E6D9C0] bg-[#FFFDF9] p-5 space-y-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-[#9A742C]">Expediente clínico · Vista de trabajo</span>
+                <h2 className="font-serif text-2xl font-bold text-[#231F1A]">Expedientes de pacientes de prueba</h2>
+                <p className="text-sm text-[#6F6250]">Selecciona un registro para consultar su resumen, historia clínica básica y evolución antropométrica. Puedes crear controles ficticios y revisar el estado de vinculación sin alterar los datos del expediente local de demostración.</p>
+                <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-[#735318]">
+                  <span className="rounded-full bg-[#FAF6EE] px-3 py-1">Resumen y evolución</span>
+                  <span className="rounded-full bg-[#FAF6EE] px-3 py-1">Historia clínica</span>
+                  <span className="rounded-full bg-[#FAF6EE] px-3 py-1">Antropometría</span>
+                  <span className="rounded-full bg-[#FAF6EE] px-3 py-1">Invitaciones y acceso</span>
+                </div>
               </div>
 
               {cloudPatientsError && (
@@ -3790,6 +3801,10 @@ function App() {
           {/* DOCTOR TAB 2: EXPEDIENTE INDIVIDUAL DEL PACIENTE */}
           {doctorTab === 'patient_detail' && (
             <div className="space-y-6">
+              <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950">
+                <strong className="block">Vista local de demostración conservada</strong>
+                <span>Se mantiene separada para no perder ni sobrescribir los datos ficticios anteriores. Para trabajar con expedientes de prueba guardados en la nube, utiliza «Expedientes clínicos (Pruebas)».</span>
+              </div>
               <div className="bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E6D9C0] pb-4">
                   <div className="flex items-center gap-3">
