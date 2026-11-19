@@ -388,3 +388,16 @@ El deployment confirmado corresponde al commit `0a7840803bcec24765fca4c51d685d9c
 - [ ] Caja, ingresos, egresos, ventas, reportes y cierres.
 - [ ] Roles administrativos diferenciados y permisos de mínimo privilegio.
 - [ ] Validación manual en Preview antes de cualquier uso real.
+
+## Seguimiento de desarrollo — 19/11/2026
+
+- [x] Preview `dpl_Ds3C6oitDCUUvV2foUHfeNchHk94` en estado **READY**, commit `ddbc06b92e53bcab9d36d579bc9329230acf60a5`.
+- [x] GitHub Actions #244 completado en **success**: control de funciones, reglas Firestore en emulador y build frontend aprobados.
+- [x] Carga diferida de Portal Paciente, ORIGEN Finanzas y material educativo para reducir el bundle inicial.
+- [x] Separación visual entre «Expedientes clínicos (Pruebas)» en nube y «Expediente local (respaldo)»; no se migraron ni borraron datos.
+- [ ] QA funcional de invitación, verificación, vinculación, acceso/suspensión y aislamiento A/B en Preview con cuentas ficticias.
+- [ ] Completar expediente clínico de Preview: línea de tiempo de tratamiento, notas clínicas con auditoría e informes PDF; primero diseñar contrato API y pruebas sin exceder 12 funciones Hobby.
+- [ ] Recuperar seguimiento diario solo después de consolidar rutas y probar contratos/autorización; no agregar una 13.ª función.
+- [ ] Conectar interfaz ORIGEN Finanzas al endpoint de catálogo y probar aislamiento financiero con datos ficticios.
+
+**Regla de continuidad:** los cambios recientes de interfaz no escriben ni migran datos. El expediente local sigue conservado como respaldo y los expedientes de nube continúan en el namespace Preview. No usar pacientes reales ni habilitar producción hasta completar QA.

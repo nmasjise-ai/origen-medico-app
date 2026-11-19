@@ -3411,6 +3411,12 @@ function App() {
                             {selectedCloudPatient.patient.ageYears ? ` · ${selectedCloudPatient.patient.ageYears} años` : ''}
                           </p>
                           <p className="text-[10px] text-[#8C7A63] break-all">ID: {selectedCloudPatient.patient.id}</p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${selectedCloudPatient.patient.accountStatus === 'linked' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
+                              {selectedCloudPatient.patient.accountStatus === 'linked' ? 'Cuenta vinculada' : 'Cuenta sin vincular'}
+                            </span>
+                            <span className="rounded-full border border-[#E6D9C0] bg-[#FAF6EE] px-2.5 py-1 text-[10px] font-semibold text-[#6F6250]">Expediente de Preview</span>
+                          </div>
                         </div>
                         <button
                           type="button"
