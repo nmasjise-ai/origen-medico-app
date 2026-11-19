@@ -421,3 +421,17 @@ Esta prueba demuestra la revalidación server-side del endpoint de perfil en cad
 - [x] Actualizadas las acciones del workflow a versiones oficiales vigentes, fijadas por SHA: checkout v7.0.1, setup-node v7.1.0 y setup-java v6.3.0.
 - [x] Se conserva Node.js 22 para instalar dependencias y compilar la aplicación, y Java Temurin 21 para Firebase Emulator.
 - [ ] Validar el workflow completo tras la actualización. No marcar como verificado hasta que el nuevo run termine correctamente.
+
+## ORIGEN NUTRI — Inicio de implementación (19/11/2026)
+
+- [x] Definido alcance V1 y contrato de seguridad en `docs/ORIGEN_NUTRI_V1.md`.
+- [x] Confirmado que el modelo versionado contempla `dailyLogs` y `nutritionPlans`; el portal del paciente aún muestra el seguimiento diario como “en preparación”.
+- [x] Revisadas las reglas actuales: existen reglas para `dailyLogs` en raíz y namespace Preview, con creación propia y sin edición/borrado por paciente; requieren pruebas específicas ampliadas para el esquema V1 antes de conectar la interfaz.
+- [ ] **Etapa 1:** ampliar pruebas de reglas Preview para campos de hidratación, proteína, comidas, actividad, duplicados y aislamiento A/B.
+- [ ] **Etapa 2:** implementar Tracker Diario persistente; las metas solo se mostrarán cuando estén asignadas por profesional.
+- [ ] **Etapa 3:** implementar metas profesionales y planes de 7 días con borrador/revisión/aprobación/publicación.
+- [ ] **Etapa 4:** lista de compras derivada del plan publicado.
+- [ ] **Etapa 5:** evolución, informes PDF y modo GLP-1 educativo.
+- [ ] No añadir una función API número 13 (límite Hobby 12/12); no usar almacenamiento local para datos clínicos; no habilitar producción.
+
+**Nota técnica:** las reglas actuales permiten una estructura acotada de diario con `dateKey`, `proteinGrams`, `waterMl`, `electrolytesTaken` y `createdAt`. La interfaz nueva necesita campos adicionales y pruebas antes de usarlos. No se cambió Firestore, sus reglas ni datos en esta primera entrega documental.
