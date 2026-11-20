@@ -1013,9 +1013,12 @@ function App() {
       if (!response.ok) throw new Error(payload.error || 'No se pudo guardar el registro diario.');
       setPatientDailyLog(payload.dailyLog || null);
       setPatientActivityHistory((current) => {
-        const next = [...current.filter((entry) => entry.dateKey !== payload.dailyLog?.dateKey), {
-          dateKey: payload.dailyLog?.dateKey,
-          activityMinutes: payload.dailyLog?.activityMinutes ?? values.activityMinutes
+        const savedLog = payload.dailyLog || {};
+        const next = [...current.filter((entry) => entry.dateKey !== savedLog.dateKey), {
+          dateKey: savedLog.dateKey,
+          activityMinutes: savedLog.activityMinutes ?? values.activityMinutes,
+          activityDone: savedLog.activityDone ?? values.activityDone,
+          activityType: savedLog.activityType ?? values.activityType ?? null
         }].filter((entry) => entry.dateKey);
         return next.sort((left, right) => left.dateKey.localeCompare(right.dateKey)).slice(-7);
       });
