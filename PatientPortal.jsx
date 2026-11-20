@@ -134,6 +134,7 @@ function ActivityWeekChart({ history = [] }) {
             </div>
             <span className="text-[10px] capitalize text-[#82745F]">{day.label}</span>
             <span className="text-[10px] font-semibold tabular-nums text-[#5F5546]">{day.minutes === null ? '—' : day.minutes + 'm'}</span>
+            {day.activityType ? <span className="max-w-full truncate text-[8px] text-[#82745F]" title={day.activityType}>{day.activityType}</span> : null}
           </div>
         ))}
       </div>
