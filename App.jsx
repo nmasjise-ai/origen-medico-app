@@ -3608,6 +3608,25 @@ function App() {
                               return `${x},${y}`;
                             }).join(' ')
                           : '';
+                        const activityMap = new Map((selectedCloudPatient.activityHistory || []).map((entry) => [entry.dateKey, entry]));
+                        const activityTodayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/La_Paz', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+                        const [activityYear, activityMonth, activityDay] = activityTodayKey.split('-').map(Number);
+                        const activityDays = Array.from({ length: 7 }, (_, index) => {
+                          const date = new Date(Date.UTC(activityYear, activityMonth - 1, activityDay));
+                          date.setUTCDate(date.getUTCDate() - (6 - index));
+                          const dateKey = date.toISOString().slice(0, 10);
+                          const entry = activityMap.get(dateKey);
+                          return {
+                            dateKey,
+                            label: new Date(dateKey + 'T12:00:00-04:00').toLocaleDateString('es-BO', { weekday: 'short' }).replace('.', ''),
+                            minutes: entry && Number.isInteger(entry.activityMinutes) ? entry.activityMinutes : null,
+                            type: entry?.activityType || null
+                          };
+                        });
+                        const activityTotal = activityDays.reduce((sum, day) => sum + (day.minutes || 0), 0);
+                        const activityActiveDays = activityDays.filter((day) => day.minutes > 0).length;
+                        const activityLoggedDays = activityDays.filter((day) => day.minutes !== null).length;
+                        const activityMax = Math.max(30, ...activityDays.map((day) => day.minutes || 0));
                         return (
                           <div className="space-y-3">
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -3649,6 +3668,29 @@ function App() {
                               <p className="text-xs mt-2">Fecha de nacimiento: {selectedCloudPatient.patient.birthDate || 'No registrada'}</p>
                               <p className="text-xs">Sexo biológico: {({ female: 'Femenino', male: 'Masculino', intersex: 'Intersexual', not_specified: 'No especificado' })[selectedCloudPatient.patient.sexAtBirth] || 'No registrado'}</p>
                               <p className="text-xs">Edad: {selectedCloudPatient.patient.ageYears ? `${selectedCloudPatient.patient.ageYears} años` : 'No registrada'}</p>
+                            </div>
+                            <div className="rounded-2xl border border-[#E6D9C0] bg-white p-3 space-y-3">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div><strong className="text-xs">Actividad física · últimos 7 días</strong><p className="text-[10px] text-[#8C7A63] mt-1">Datos enviados desde el portal individual</p></div>
+                                <span className="rounded-full bg-[#F5EFE2] px-2.5 py-1 text-[10px] font-bold text-[#735318]">{activityActiveDays} días activos</span>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div className="rounded-xl bg-[#FAF6EE] p-2"><span className="block text-[10px] text-[#8C7A63]">Minutos</span><strong className="text-lg">{activityTotal}</strong></div>
+                                <div className="rounded-xl bg-[#FAF6EE] p-2"><span className="block text-[10px] text-[#8C7A63]">Días activos</span><strong className="text-lg">{activityActiveDays}/7</strong></div>
+                                <div className="rounded-xl bg-[#FAF6EE] p-2"><span className="block text-[10px] text-[#8C7A63]">Registros</span><strong className="text-lg">{activityLoggedDays}/7</strong></div>
+                              </div>
+                              <div className="grid grid-cols-7 gap-2">
+                                {activityDays.map((day) => (
+                                  <div key={day.dateKey} className="min-w-0 text-center">
+                                    <div className="h-16 rounded-lg bg-[#F7F1E6] p-1 flex items-end">
+                                      <div className={'w-full rounded-md ' + (day.minutes === null ? 'bg-[#DED7CA]' : day.minutes > 0 ? 'bg-[#9A742C]' : 'bg-[#D8C9A8]')} style={{ height: day.minutes === null ? '4px' : Math.max(5, (day.minutes / activityMax) * 100) + '%' }} />
+                                    </div>
+                                    <span className="mt-1 block text-[9px] capitalize text-[#8C7A63]">{day.label}</span>
+                                    <strong className="block text-[9px] text-[#5C4D3C]">{day.minutes === null ? '—' : day.minutes + 'm'}</strong>
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-[10px] text-[#8C7A63]">Los días sin registro no se interpretan como inactividad. Revisa la constancia junto con el contexto clínico y las indicaciones individualizadas.</p>
                             </div>
                           </div>
                         );
