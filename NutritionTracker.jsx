@@ -109,7 +109,7 @@ export default function NutritionTracker({
             </label>
             <label className="block rounded-2xl border border-[#EFE6D5] bg-[#FFFEFC] p-3">
               <span className="flex items-center gap-2 text-xs font-semibold text-[#776A56]"><Activity className="h-4 w-4 text-[#A17B34]" /> Actividad (min)</span>
-              <input type="number" required min="0" max="1440" step="1" value={activityMinutes} onChange={e => setActivityMinutes(e.target.value)} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F]" />
+              <input type="number" required min="0" max="1440" step="1" value={activityMinutes} onChange={e => setActivityMinutes(e.target.value)} disabled={!activityDone} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F] disabled:bg-[#F7F4ED] disabled:text-[#9A907F]" />
             </label>
           </div>
 
