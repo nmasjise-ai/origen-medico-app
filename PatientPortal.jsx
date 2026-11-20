@@ -103,7 +103,8 @@ function ActivityWeekChart({ history = [] }) {
       return {
         dateKey,
         label: new Date(dateKey + 'T12:00:00-04:00').toLocaleDateString('es-BO', { weekday: 'short' }).replace('.', ''),
-        minutes: entry && Number.isInteger(entry.activityMinutes) ? entry.activityMinutes : null
+        minutes: entry && Number.isInteger(entry.activityMinutes) ? entry.activityMinutes : null,
+        activityType: entry?.activityType || null
       };
     });
   }, [history]);
@@ -121,14 +122,14 @@ function ActivityWeekChart({ history = [] }) {
         </div>
         <span className="rounded-full bg-[#F6EFDF] px-3 py-1 text-xs font-semibold text-[#806126]">{activeDays} {activeDays === 1 ? 'día activo' : 'días activos'}</span>
       </div>
-      <div className="mt-5 grid grid-cols-7 gap-2" role="img" aria-label={days.map((day) => day.label + ': ' + (day.minutes === null ? 'sin registro' : day.minutes + ' minutos')).join('; ')}>
+      <div className="mt-5 grid grid-cols-7 gap-2" role="img" aria-label={days.map((day) => day.label + ': ' + (day.minutes === null ? 'sin registro' : day.minutes + ' minutos' + (day.activityType ? ', ' + day.activityType : ''))).join('; ')}>
         {days.map((day) => (
           <div key={day.dateKey} className="flex min-w-0 flex-col items-center gap-2">
             <div className="flex h-24 w-full items-end justify-center rounded-xl bg-[#FBF8F1] p-1.5">
               <div
                 className={'w-full max-w-8 rounded-lg ' + (day.minutes === null ? 'bg-[#E7E0D3]' : day.minutes > 0 ? 'bg-[#A98235]' : 'bg-[#D8C9A8]')}
                 style={{ height: day.minutes === null ? '5px' : Math.max(5, (day.minutes / maxMinutes) * 100) + '%' }}
-                title={day.minutes === null ? 'Sin registro' : day.minutes + ' minutos'}
+                title={day.minutes === null ? 'Sin registro' : day.minutes + ' minutos' + (day.activityType ? ' · ' + day.activityType : '')}
               />
             </div>
             <span className="text-[10px] capitalize text-[#82745F]">{day.label}</span>
