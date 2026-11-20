@@ -186,6 +186,8 @@ test("patient daily log accepts meal check-ins and bounded activity minutes", as
       electrolytesTaken: false,
       meals: { breakfast: true, lunch: true, dinner: false, snacks: true },
       activityMinutes: 35,
+      activityDone: true,
+      activityType: "Caminata",
       createdAt: serverTimestamp()
     })
   );
@@ -210,6 +212,18 @@ test("patient daily log rejects invalid meals, activity and unexpected fields", 
   }));
   await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-11-24"), {
     ...base, dateKey: "2026-11-24", calories: 2000
+  }));
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-11-30"), {
+    ...base, dateKey: "2026-11-30", activityDone: "yes", activityMinutes: 20, activityType: "Caminata"
+  }));
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-12-01"), {
+    ...base, dateKey: "2026-12-01", activityDone: true, activityMinutes: 0, activityType: "Caminata"
+  }));
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-12-02"), {
+    ...base, dateKey: "2026-12-02", activityDone: true, activityMinutes: 20, activityType: "actividad-inventada"
+  }));
+  await assertFails(setDoc(doc(db, "patients/patient-a/dailyLogs/2026-12-03"), {
+    ...base, dateKey: "2026-12-03", activityDone: false, activityMinutes: 20
   }));
 });
 
