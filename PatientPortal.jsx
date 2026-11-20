@@ -5,7 +5,7 @@ import {
   RefreshCw, Scale, ShieldCheck, User, Utensils, Waves
 } from 'lucide-react';
 const NutritionEducation = React.lazy(() => import('./NutritionEducation.jsx'));
-import NutritionTracker from './NutritionTracker.jsx';
+import NutritionTracker, { getBoliviaDateKey } from './NutritionTracker.jsx';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Inicio', icon: Home },
@@ -89,7 +89,64 @@ function WeightChart({ measurements }) {
   );
 }
 
-export default function PatientPortal({ profile, data, loading, error, onRefresh, dailyLog, dailyLogLoading, dailyLogError, dailyLogSaving, onSaveDailyLog }) {
+function ActivityWeekChart({ history = [] }) {
+  const days = useMemo(() => {
+    const todayKey = getBoliviaDateKey();
+    const [year, month, day] = todayKey.split('-').map(Number);
+    const today = new Date(Date.UTC(year, month - 1, day));
+    const byDate = new Map((Array.isArray(history) ? history : []).map((entry) => [entry.dateKey, entry]));
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = new Date(today);
+      date.setUTCDate(date.getUTCDate() - (6 - index));
+      const dateKey = date.toISOString().slice(0, 10);
+      const entry = byDate.get(dateKey);
+      return {
+        dateKey,
+        label: new Date(dateKey + 'T12:00:00-04:00').toLocaleDateString('es-BO', { weekday: 'short' }).replace('.', ''),
+        minutes: entry && Number.isInteger(entry.activityMinutes) ? entry.activityMinutes : null
+      };
+    });
+  }, [history]);
+  const loggedDays = days.filter((day) => day.minutes !== null).length;
+  const activeDays = days.filter((day) => day.minutes > 0).length;
+  const totalMinutes = days.reduce((sum, day) => sum + (day.minutes || 0), 0);
+  const maxMinutes = Math.max(30, ...days.map((day) => day.minutes || 0));
+
+  return (
+    <Card className="p-5 sm:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2"><Activity className="h-5 w-5 text-[#A17B34]" /><h3 className="font-serif text-xl font-bold">Tu actividad de la semana</h3></div>
+          <p className="mt-1 text-xs text-[#8D7D65]">Minutos registrados en los últimos siete días</p>
+        </div>
+        <span className="rounded-full bg-[#F6EFDF] px-3 py-1 text-xs font-semibold text-[#806126]">{activeDays} {activeDays === 1 ? 'día activo' : 'días activos'}</span>
+      </div>
+      <div className="mt-5 grid grid-cols-7 gap-2" role="img" aria-label={days.map((day) => day.label + ': ' + (day.minutes === null ? 'sin registro' : day.minutes + ' minutos')).join('; ')}>
+        {days.map((day) => (
+          <div key={day.dateKey} className="flex min-w-0 flex-col items-center gap-2">
+            <div className="flex h-24 w-full items-end justify-center rounded-xl bg-[#FBF8F1] p-1.5">
+              <div
+                className={'w-full max-w-8 rounded-lg ' + (day.minutes === null ? 'bg-[#E7E0D3]' : day.minutes > 0 ? 'bg-[#A98235]' : 'bg-[#D8C9A8]')}
+                style={{ height: day.minutes === null ? '5px' : Math.max(5, (day.minutes / maxMinutes) * 100) + '%' }}
+                title={day.minutes === null ? 'Sin registro' : day.minutes + ' minutos'}
+              />
+            </div>
+            <span className="text-[10px] capitalize text-[#82745F]">{day.label}</span>
+            <span className="text-[10px] font-semibold tabular-nums text-[#5F5546]">{day.minutes === null ? '—' : day.minutes + 'm'}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-[#EFE6D5] bg-[#FFFEFC] p-3"><p className="text-[10px] text-[#8D7D65]">Tiempo acumulado</p><p className="mt-1 text-xl font-bold text-[#30291F]">{totalMinutes} <span className="text-xs font-normal">min</span></p></div>
+        <div className="rounded-xl border border-[#EFE6D5] bg-[#FFFEFC] p-3"><p className="text-[10px] text-[#8D7D65]">Días con actividad</p><p className="mt-1 text-xl font-bold text-[#30291F]">{activeDays} <span className="text-xs font-normal">de 7</span></p></div>
+        <div className="col-span-2 rounded-xl border border-[#EFE6D5] bg-[#FFFEFC] p-3 sm:col-span-1"><p className="text-[10px] text-[#8D7D65]">Días registrados</p><p className="mt-1 text-xl font-bold text-[#30291F]">{loggedDays} <span className="text-xs font-normal">de 7</span></p></div>
+      </div>
+      <p className="mt-3 text-[11px] leading-relaxed text-[#8D7D65]">Los días sin registro se muestran con un guion y no se interpretan como cero actividad. La gráfica es descriptiva: tu equipo de salud puede ayudarte a definir una meta adecuada.</p>
+    </Card>
+  );
+}
+
+export default function PatientPortal({ profile, data, loading, error, onRefresh, dailyLog, activityHistory = [], dailyLogLoading, dailyLogError, dailyLogSaving, onSaveDailyLog }) {
   const [activeTab, setActiveTab] = useState('home');
   const patient = data?.patient || {};
   const measurements = Array.isArray(data?.measurements) ? data.measurements : [];
@@ -158,6 +215,8 @@ export default function PatientPortal({ profile, data, loading, error, onRefresh
               </Card>
             </div>
 
+            <ActivityWeekChart history={activityHistory} />
+
             <NutritionTracker
               dailyLog={dailyLog}
               loading={dailyLogLoading}
@@ -171,6 +230,7 @@ export default function PatientPortal({ profile, data, loading, error, onRefresh
         {activeTab === 'evolution' ? (
           <div className="space-y-5">
             <Card className="p-5 sm:p-6"><div className="mb-5"><h2 className="font-serif text-xl font-bold">Resumen antropométrico</h2><p className="mt-1 text-xs text-[#8D7D65]">Solo se muestran mediciones registradas en tu expediente.</p></div><div className="grid grid-cols-2 gap-3 lg:grid-cols-4"><Metric label="Peso actual" value={latestWeight} suffix="kg" icon={Scale} /><Metric label="Talla" value={height || null} suffix="cm" icon={Activity} /><Metric label="IMC" value={bmi} icon={HeartPulse} /><Metric label="Cintura" value={latest.waistCm} suffix="cm" icon={Waves} /></div></Card>
+            <ActivityWeekChart history={activityHistory} />
             <Card className="p-5 sm:p-6"><WeightChart measurements={measurements} /></Card>
             <Card className="overflow-hidden"><div className="border-b border-[#EFE6D5] p-5"><h3 className="font-serif text-lg font-bold">Historial de controles</h3><p className="mt-1 text-xs text-[#8D7D65]">Hasta 30 registros disponibles</p></div>{measurements.length ? <div className="overflow-x-auto"><table className="w-full min-w-[520px] text-left text-sm"><thead className="bg-[#FBF8F1] text-[11px] uppercase tracking-wider text-[#8D7D65]"><tr><th className="px-5 py-3">Fecha</th><th className="px-5 py-3">Peso</th><th className="px-5 py-3">IMC</th><th className="px-5 py-3">Cintura</th></tr></thead><tbody>{measurements.map((item) => <tr key={item.id} className="border-t border-[#F1EBDD]"><td className="px-5 py-3 text-[#71634E]">{formatDate(item.recordedAt)}</td><td className="px-5 py-3 font-semibold">{item.weightKg == null ? '—' : item.weightKg + ' kg'}</td><td className="px-5 py-3">{item.bmi ?? '—'}</td><td className="px-5 py-3">{item.waistCm == null ? '—' : item.waistCm + ' cm'}</td></tr>)}</tbody></table></div> : <p className="p-5 text-sm text-[#8D7D65]">Aún no hay controles registrados.</p>}</Card>
           </div>
