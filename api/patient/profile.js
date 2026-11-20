@@ -29,12 +29,17 @@ const getBoliviaDateKey = (date) => new Intl.DateTimeFormat("en-CA", {
 }).format(date);
 
 function validateDailyLog(body = {}) {
-  const allowed = ["waterMl", "proteinGrams", "activityMinutes", "meals"];
+  const allowed = ["waterMl", "proteinGrams", "activityMinutes", "activityDone", "activityType", "meals"];
   if (!body || typeof body !== "object" || Array.isArray(body)) return false;
   if (Object.keys(body).some((key) => !allowed.includes(key))) return false;
   if (!Number.isFinite(body.waterMl) || body.waterMl < 0 || body.waterMl > 7000) return false;
   if (!Number.isFinite(body.proteinGrams) || body.proteinGrams < 0 || body.proteinGrams > 300) return false;
   if (!Number.isInteger(body.activityMinutes) || body.activityMinutes < 0 || body.activityMinutes > 1440) return false;
+  const activityTypes = ["Caminata", "Fuerza / pesas", "Bicicleta", "Natación", "Baile", "Movilidad / estiramiento", "Otra actividad"];
+  if ("activityDone" in body && typeof body.activityDone !== "boolean") return false;
+  if ("activityType" in body && body.activityType !== null && !activityTypes.includes(body.activityType)) return false;
+  if (body.activityDone === true && (body.activityMinutes < 1 || !activityTypes.includes(body.activityType))) return false;
+  if (body.activityDone === false && body.activityMinutes !== 0) return false;
   const meals = body.meals;
   if (!meals || typeof meals !== "object" || Array.isArray(meals)) return false;
   const mealKeys = Object.keys(meals);
@@ -123,6 +128,8 @@ export function createPatientProfileHandler(dependencies = {}) {
             electrolytesTaken: false,
             meals: req.body.meals,
             activityMinutes: req.body.activityMinutes,
+            activityDone: req.body.activityDone ?? req.body.activityMinutes > 0,
+            activityType: req.body.activityDone === true ? req.body.activityType : (req.body.activityMinutes > 0 ? req.body.activityType || null : null),
             createdAt: serverTimestamp()
           };
           await dailyLogRef.create(entry);
@@ -134,7 +141,9 @@ export function createPatientProfileHandler(dependencies = {}) {
               waterMl: entry.waterMl,
               electrolytesTaken: false,
               meals: entry.meals,
-              activityMinutes: entry.activityMinutes
+              activityMinutes: entry.activityMinutes,
+              activityDone: entry.activityDone,
+              activityType: entry.activityType
             }
           });
         } catch (writeError) {
@@ -172,13 +181,17 @@ export function createPatientProfileHandler(dependencies = {}) {
           proteinGrams: dailyLog.proteinGrams,
           waterMl: dailyLog.waterMl,
           meals: dailyLog.meals || null,
-          activityMinutes: dailyLog.activityMinutes ?? null
+          activityMinutes: dailyLog.activityMinutes ?? null,
+          activityDone: dailyLog.activityDone ?? (Number(dailyLog.activityMinutes) > 0),
+          activityType: dailyLog.activityType || null
         } : null,
         activityHistory: activityHistorySnapshot.docs.map((document) => {
           const entry = document.data();
           return {
             dateKey: entry.dateKey || document.id,
-            activityMinutes: Number.isInteger(entry.activityMinutes) ? entry.activityMinutes : null
+            activityMinutes: Number.isInteger(entry.activityMinutes) ? entry.activityMinutes : null,
+            activityDone: typeof entry.activityDone === "boolean" ? entry.activityDone : Number(entry.activityMinutes) > 0,
+            activityType: typeof entry.activityType === "string" ? entry.activityType : null
           };
         })
       });
