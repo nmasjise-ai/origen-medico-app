@@ -3690,6 +3690,7 @@ function App() {
                                     </div>
                                     <span className="mt-1 block text-[9px] capitalize text-[#8C7A63]">{day.label}</span>
                                     <strong className="block text-[9px] text-[#5C4D3C]">{day.minutes === null ? '—' : day.minutes + 'm'}</strong>
+                                    {day.type ? <span className="block truncate text-[8px] text-[#8C7A63]" title={day.type}>{day.type}</span> : null}
                                   </div>
                                 ))}
                               </div>
