@@ -162,7 +162,7 @@ test("patient profile returns today's daily log without internal metadata", asyn
   assert.equal("internalAudit" in res.body.dailyLog, false);
   assert.equal(res.body.dailyLog.activityDone, true);
   assert.equal(res.body.dailyLog.activityType, "Caminata");
-  assert.deepEqual(res.body.activityHistory, [{ dateKey: "2026-11-19", activityMinutes: 30, activityDone: true, activityType: "Caminata" }]);
+  assert.deepEqual(res.body.activityHistory, [{ dateKey: "2026-11-19", activityMinutes: 30, activityDone: true, activityType: "Caminata", waterMl: 2100, proteinGrams: 85, meals: { breakfast: true, lunch: true, dinner: false, snacks: true } }]);
 });
 
 test("daily log API rejects administrator and unverified identities", async () => {
