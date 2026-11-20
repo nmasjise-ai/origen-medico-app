@@ -2,6 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/patient/session",
+      "destination": "/api/patient?mode=session"
+    },
+    {
+      "source": "/api/patient/profile",
+      "destination": "/api/patient?mode=profile"
+    },
+    {
       "source": "/api/health",
       "destination": "/api/auth/session?mode=health"
     }

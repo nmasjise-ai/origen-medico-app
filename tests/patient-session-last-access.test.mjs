@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createPatientSessionHandler } from "../api/patient/session.js";
+import { createPatientSessionHandler } from "../api/_handlers/patient-session.js";
 
 function responseRecorder() {
   return {

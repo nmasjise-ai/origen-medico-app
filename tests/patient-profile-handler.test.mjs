@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createPatientProfileHandler } from "../api/patient/profile.js";
+import { createPatientProfileHandler } from "../api/_handlers/patient-profile.js";
 
 const uidA = "qa-patient-a-uid";
 const patientIdA = "patient_qa_a_123";
