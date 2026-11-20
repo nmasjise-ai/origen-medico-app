@@ -72,6 +72,8 @@ const validBody = {
   waterMl: 2100,
   proteinGrams: 85,
   activityMinutes: 30,
+  activityDone: true,
+  activityType: "Caminata",
   meals: { breakfast: true, lunch: true, dinner: false, snacks: true }
 };
 
@@ -86,6 +88,8 @@ test("patient can create one validated daily log for the Bolivia calendar date",
   assert.equal(res.body.dailyLog.dateKey, "2026-11-19");
   assert.equal(store.size, 1);
   assert.equal(store.get("2026-11-19").electrolytesTaken, false);
+  assert.equal(store.get("2026-11-19").activityDone, true);
+  assert.equal(store.get("2026-11-19").activityType, "Caminata");
 });
 
 test("patient cannot overwrite a daily log already submitted for the day", async () => {
@@ -105,6 +109,9 @@ test("daily log API rejects invalid values, meal fields and extra data", async (
     { ...validBody, waterMl: 7001 },
     { ...validBody, proteinGrams: -1 },
     { ...validBody, activityMinutes: 1441 },
+    { ...validBody, activityDone: "yes" },
+    { ...validBody, activityType: "actividad no permitida" },
+    { ...validBody, activityDone: true, activityMinutes: 0 },
     { ...validBody, meals: { breakfast: true, lunch: true, dinner: "yes" } },
     { ...validBody, patientId: "patient-b" }
   ];
@@ -152,7 +159,9 @@ test("patient profile returns today's daily log without internal metadata", asyn
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.dailyLog.dateKey, "2026-11-19");
   assert.equal("internalAudit" in res.body.dailyLog, false);
-  assert.deepEqual(res.body.activityHistory, [{ dateKey: "2026-11-19", activityMinutes: 30 }]);
+  assert.equal(res.body.dailyLog.activityDone, true);
+  assert.equal(res.body.dailyLog.activityType, "Caminata");
+  assert.deepEqual(res.body.activityHistory, [{ dateKey: "2026-11-19", activityMinutes: 30, activityDone: true, activityType: null }]);
 });
 
 test("daily log API rejects administrator and unverified identities", async () => {
