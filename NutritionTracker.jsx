@@ -102,6 +102,22 @@ export default function NutritionTracker({
             </label>
           </div>
 
+          <aside className="rounded-2xl border border-[#E9DFC9] bg-gradient-to-br from-[#FFFEFC] to-[#F7F1E5] p-4" aria-labelledby="activity-benefits-title">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-white p-2 text-[#98732E]"><Activity className="h-5 w-5" /></div>
+              <div className="min-w-0">
+                <h4 id="activity-benefits-title" className="text-sm font-bold text-[#514634]">Tu movimiento también cuenta</h4>
+                <p className="mt-1 text-xs leading-relaxed text-[#776A56]">Registrar tus minutos de actividad permite reconocer tu constancia y observar tus hábitos a lo largo del tratamiento.</p>
+              </div>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <div className="rounded-xl bg-white/80 p-3"><p className="text-xs font-semibold text-[#806126]">Músculo</p><p className="mt-1 text-[11px] leading-relaxed text-[#776A56]">El ejercicio de fuerza ayuda a preservar la masa muscular durante la pérdida de peso.</p></div>
+              <div className="rounded-xl bg-white/80 p-3"><p className="text-xs font-semibold text-[#806126]">Metabolismo</p><p className="mt-1 text-[11px] leading-relaxed text-[#776A56]">Moverte con regularidad favorece la sensibilidad a la insulina y el control metabólico.</p></div>
+              <div className="rounded-xl bg-white/80 p-3"><p className="text-xs font-semibold text-[#806126]">Salud integral</p><p className="mt-1 text-[11px] leading-relaxed text-[#776A56]">La actividad física contribuye a la salud cardiovascular, el ánimo y la capacidad funcional.</p></div>
+            </div>
+            <p className="mt-3 text-[11px] leading-relaxed text-[#806126]"><strong>Recuerda:</strong> no existe una cantidad diaria única que garantice evitar un estancamiento. La frecuencia, duración e intensidad deben ajustarse a tu evaluación clínica. La constancia y la progresión gradual son más importantes que exigirte de más.</p>
+          </aside>
+
           <fieldset>
             <legend className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#514634]"><CheckCircle2 className="h-4 w-4 text-[#A17B34]" /> Comidas realizadas</legend>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
