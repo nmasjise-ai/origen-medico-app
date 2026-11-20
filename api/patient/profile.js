@@ -15,6 +15,12 @@ import {
 } from "../_lib/patient-portal-data.js";
 
 const MAX_MEASUREMENTS = 30;
+const getWeekStartDateKey = (dateKey) => {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() - 6);
+  return date.toISOString().slice(0, 10);
+};
 const getBoliviaDateKey = (date) => new Intl.DateTimeFormat("en-CA", {
   timeZone: "America/La_Paz",
   year: "numeric",
@@ -139,12 +145,17 @@ export function createPatientProfileHandler(dependencies = {}) {
         }
       }
 
-      const [measurementsSnapshot, dailyLogSnapshot] = await Promise.all([
+      const [measurementsSnapshot, dailyLogSnapshot, activityHistorySnapshot] = await Promise.all([
         patientRef.collection("measurements")
           .orderBy("recordedAt", "desc")
           .limit(MAX_MEASUREMENTS)
           .get(),
-        dailyLogRef.get()
+        dailyLogRef.get(),
+        patientRef.collection("dailyLogs")
+          .where("dateKey", ">=", getWeekStartDateKey(dateKey))
+          .where("dateKey", "<=", dateKey)
+          .orderBy("dateKey", "asc")
+          .get()
       ]);
 
       const dailyLog = dailyLogSnapshot.exists
@@ -162,7 +173,14 @@ export function createPatientProfileHandler(dependencies = {}) {
           waterMl: dailyLog.waterMl,
           meals: dailyLog.meals || null,
           activityMinutes: dailyLog.activityMinutes ?? null
-        } : null
+        } : null,
+        activityHistory: activityHistorySnapshot.docs.map((document) => {
+          const entry = document.data();
+          return {
+            dateKey: entry.dateKey || document.id,
+            activityMinutes: Number.isInteger(entry.activityMinutes) ? entry.activityMinutes : null
+          };
+        })
       });
     } catch (error) {
       const status = error.statusCode || 500;
