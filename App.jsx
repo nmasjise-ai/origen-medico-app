@@ -1016,6 +1016,9 @@ function App() {
         const savedLog = payload.dailyLog || {};
         const next = [...current.filter((entry) => entry.dateKey !== savedLog.dateKey), {
           dateKey: savedLog.dateKey,
+          waterMl: savedLog.waterMl ?? values.waterMl,
+          proteinGrams: savedLog.proteinGrams ?? values.proteinGrams,
+          meals: savedLog.meals ?? values.meals,
           activityMinutes: savedLog.activityMinutes ?? values.activityMinutes,
           activityDone: savedLog.activityDone ?? values.activityDone,
           activityType: savedLog.activityType ?? values.activityType ?? null
