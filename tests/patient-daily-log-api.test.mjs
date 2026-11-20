@@ -92,6 +92,23 @@ test("patient can create one validated daily log for the Bolivia calendar date",
   assert.equal(store.get("2026-11-19").activityType, "Caminata");
 });
 
+test("patient can save a daily log when no exercise was completed", async () => {
+  const { handler, store } = makeHarness();
+  const res = makeResponse();
+
+  await handler({
+    method: "POST",
+    body: { ...validBody, activityMinutes: 0, activityDone: false, activityType: null }
+  }, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(res.body.dailyLog.activityDone, false);
+  assert.equal(res.body.dailyLog.activityMinutes, 0);
+  assert.equal(res.body.dailyLog.activityType, null);
+  assert.equal(store.get("2026-11-19").activityDone, false);
+  assert.equal(store.get("2026-11-19").activityMinutes, 0);
+});
+
 test("patient cannot overwrite a daily log already submitted for the day", async () => {
   const { handler } = makeHarness();
   const first = makeResponse();
