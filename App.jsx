@@ -974,6 +974,7 @@ function App() {
       console.error('No se pudo cargar el expediente del paciente:', err);
       setPatientPortalError(err.message || 'No se pudo cargar tu expediente.');
       setPatientPortalData(null);
+      setPatientActivityHistory([]);
       return null;
     } finally {
       setPatientPortalLoading(false);
@@ -1473,6 +1474,8 @@ function App() {
       loadPatientPortalData(user);
     } else {
       setPatientPortalData(null);
+      setPatientActivityHistory([]);
+      setPatientDailyLog(null);
       setPatientPortalError('');
       setPatientPortalLoading(false);
     }
