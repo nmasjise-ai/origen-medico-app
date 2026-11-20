@@ -251,6 +251,8 @@ test("Preview patient can append a valid daily log only in their own Preview rec
     electrolytesTaken: false,
     meals: { breakfast: true, lunch: true, dinner: false },
     activityMinutes: 20,
+    activityDone: true,
+    activityType: "Caminata",
     createdAt: serverTimestamp()
   };
 
