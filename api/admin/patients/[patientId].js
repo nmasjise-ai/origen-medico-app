@@ -6,6 +6,15 @@ import { validatePatientMeasurement, validatePreviewPatientId } from "../../_lib
 import { normalizePatientProfile } from "../../_lib/patient-validation.js";
 
 const MAX_MEASUREMENTS = 30;
+const getBoliviaDateKey = (date) => new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/La_Paz", year: "numeric", month: "2-digit", day: "2-digit"
+}).format(date);
+const getWeekStartDateKey = (dateKey) => {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() - 6);
+  return date.toISOString().slice(0, 10);
+};
 function asIso(value) {
   return value?.toDate ? value.toDate().toISOString() : null;
 }
@@ -49,10 +58,18 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "GET") {
-      const measurementsSnapshot = await patientRef.collection("measurements")
-        .orderBy("recordedAt", "desc")
-        .limit(MAX_MEASUREMENTS)
-        .get();
+      const todayKey = getBoliviaDateKey(new Date());
+      const [measurementsSnapshot, activitySnapshot] = await Promise.all([
+        patientRef.collection("measurements")
+          .orderBy("recordedAt", "desc")
+          .limit(MAX_MEASUREMENTS)
+          .get(),
+        patientRef.collection("dailyLogs")
+          .where("dateKey", ">=", getWeekStartDateKey(todayKey))
+          .where("dateKey", "<=", todayKey)
+          .orderBy("dateKey", "asc")
+          .get()
+      ]);
 
       const measurements = measurementsSnapshot.docs.map((document) => {
         const data = document.data();
@@ -95,7 +112,16 @@ export default async function handler(req, res) {
           createdAt: asIso(data.createdAt),
           updatedAt: asIso(data.updatedAt)
         },
-        measurements
+        measurements,
+        activityHistory: activitySnapshot.docs.map((document) => {
+          const entry = document.data();
+          return {
+            dateKey: entry.dateKey || document.id,
+            activityMinutes: Number.isInteger(entry.activityMinutes) ? entry.activityMinutes : null,
+            activityDone: typeof entry.activityDone === "boolean" ? entry.activityDone : Number(entry.activityMinutes) > 0,
+            activityType: typeof entry.activityType === "string" ? entry.activityType : null
+          };
+        })
       });
     }
 
