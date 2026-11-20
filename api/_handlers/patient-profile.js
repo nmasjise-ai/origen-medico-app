@@ -1,18 +1,18 @@
 import { FieldValue } from "firebase-admin/firestore";
-import { getAdminFirestore, verifyRequestUser } from "./firebase-admin.js";
+import { getAdminFirestore, verifyRequestUser } from "../_lib/firebase-admin.js";
 import {
   getPreviewPatientsCollection,
   getPreviewUsersCollection
-} from "./staging-firestore.js";
+} from "../_lib/staging-firestore.js";
 import {
   getLinkedPatientId,
   isPatientRecordLinkedToUser
-} from "./patient-session-authorization.js";
-import { getPatientPortalAccessState } from "./patient-portal-access.js";
+} from "../_lib/patient-session-authorization.js";
+import { getPatientPortalAccessState } from "../_lib/patient-portal-access.js";
 import {
   toPatientVisibleProfile,
   toPatientVisibleMeasurement
-} from "./patient-portal-data.js";
+} from "../_lib/patient-portal-data.js";
 
 const MAX_MEASUREMENTS = 30;
 const getWeekStartDateKey = (dateKey) => {

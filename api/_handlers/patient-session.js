@@ -1,14 +1,14 @@
 import { FieldValue } from "firebase-admin/firestore";
-import { getAdminFirestore, verifyRequestUser } from "./firebase-admin.js";
+import { getAdminFirestore, verifyRequestUser } from "../_lib/firebase-admin.js";
 import {
   getPreviewPatientsCollection,
   getPreviewUsersCollection
-} from "./staging-firestore.js";
+} from "../_lib/staging-firestore.js";
 import {
   getLinkedPatientId,
   isPatientRecordLinkedToUser
-} from "./patient-session-authorization.js";
-import { getPatientPortalAccessState } from "./patient-portal-access.js";
+} from "../_lib/patient-session-authorization.js";
+import { getPatientPortalAccessState } from "../_lib/patient-portal-access.js";
 
 export function createPatientSessionHandler(dependencies = {}) {
   const verifyUser = dependencies.verifyRequestUser || verifyRequestUser;
