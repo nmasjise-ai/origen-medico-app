@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Activity, CheckCircle2, Droplets, Utensils, Save, Info } from 'lucide-react';
+import { Activity, CheckCircle2, Droplets, Utensils, Save, Info, Trophy } from 'lucide-react';
 
 const ACTIVITY_TYPES = ['Caminata', 'Fuerza / pesas', 'Bicicleta', 'Natación', 'Baile', 'Movilidad / estiramiento', 'Otra actividad'];
 
@@ -24,7 +24,8 @@ export default function NutritionTracker({
   loading = false,
   error = '',
   onSave,
-  saving = false
+  saving = false,
+  weeklyHistory = []
 }) {
   const [waterMl, setWaterMl] = useState('');
   const [proteinGrams, setProteinGrams] = useState('');
@@ -62,6 +63,18 @@ export default function NutritionTracker({
     setMessage('Tu registro de hoy ya fue enviado. Puedes consultarlo aquí.');
   }, [dailyLog]);
 
+  const weeklySummary = (() => {
+    const entries = (Array.isArray(weeklyHistory) ? weeklyHistory : []).filter((entry) => entry && entry.dateKey);
+    const water = entries.filter((entry) => Number.isFinite(entry.waterMl));
+    const protein = entries.filter((entry) => Number.isFinite(entry.proteinGrams));
+    const activity = entries.filter((entry) => Number.isFinite(entry.activityMinutes));
+    const meals = entries.filter((entry) => entry.meals && typeof entry.meals === 'object');
+    const average = (items, key) => items.length ? Math.round(items.reduce((sum, item) => sum + item[key], 0) / items.length) : null;
+    const activeDays = activity.filter((entry) => entry.activityMinutes > 0).length;
+    const checkedMeals = meals.reduce((sum, entry) => sum + ['breakfast', 'lunch', 'dinner', 'snacks'].filter((key) => entry.meals[key]).length, 0);
+    return { days: entries.length, avgWater: average(water, 'waterMl'), avgProtein: average(protein, 'proteinGrams'), waterDays: water.length, proteinDays: protein.length, activityMinutes: activity.reduce((sum, entry) => sum + entry.activityMinutes, 0), activeDays, mealPercent: meals.length ? Math.round(checkedMeals / (meals.length * 4) * 100) : null };
+  })();
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setMessage('');
@@ -94,6 +107,20 @@ export default function NutritionTracker({
       <div className="flex items-start gap-3">
         <div className="rounded-2xl bg-[#F7F0E1] p-3 text-[#98732E]"><Activity className="h-5 w-5" /></div>
         <div><h3 className="font-serif text-xl font-bold text-[#30291F]">Tracker Diario ORIGEN</h3><p className="mt-1 text-xs text-[#8D7D65]">Registro del {new Intl.DateTimeFormat('es-BO', { timeZone: 'America/La_Paz', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date())} · hora de Bolivia</p></div>
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-[#E9DFC9] bg-[#FBF8F1] p-4">
+        <div className="flex items-center gap-2"><Trophy className="h-5 w-5 text-[#A17B34]" /><h4 className="text-sm font-bold text-[#514634]">Tu resumen de los últimos 7 días</h4></div>
+        {weeklySummary.days === 0 ? <p className="mt-2 text-xs text-[#8D7D65]">Cuando registres tus hábitos, aquí verás tu progreso semanal.</p> : <>
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="rounded-xl bg-white p-3"><p className="text-[10px] text-[#8D7D65]">Agua promedio</p><p className="mt-1 text-lg font-bold text-[#30291F]">{weeklySummary.avgWater ?? '—'} <span className="text-[10px] font-normal">ml/día</span></p><p className="text-[10px] text-[#9A8A72]">{weeklySummary.waterDays} días registrados</p></div>
+            <div className="rounded-xl bg-white p-3"><p className="text-[10px] text-[#8D7D65]">Proteína promedio</p><p className="mt-1 text-lg font-bold text-[#30291F]">{weeklySummary.avgProtein ?? '—'} <span className="text-[10px] font-normal">g/día</span></p><p className="text-[10px] text-[#9A8A72]">{weeklySummary.proteinDays} días registrados</p></div>
+            <div className="rounded-xl bg-white p-3"><p className="text-[10px] text-[#8D7D65]">Actividad</p><p className="mt-1 text-lg font-bold text-[#30291F]">{weeklySummary.activityMinutes} <span className="text-[10px] font-normal">min</span></p><p className="text-[10px] text-[#9A8A72]">{weeklySummary.activeDays} días activos</p></div>
+            <div className="rounded-xl bg-white p-3"><p className="text-[10px] text-[#8D7D65]">Comidas registradas</p><p className="mt-1 text-lg font-bold text-[#30291F]">{weeklySummary.mealPercent == null ? '—' : weeklySummary.mealPercent + '%'} </p><p className="text-[10px] text-[#9A8A72]">De los espacios registrados</p></div>
+          </div>
+          {weeklySummary.days >= 5 ? <p className="mt-3 rounded-xl border border-[#E8D8B5] bg-white p-3 text-xs font-medium text-[#735318]">¡Muy bien! Has registrado tus hábitos en {weeklySummary.days} de los últimos 7 días. La constancia también es un logro.</p> : <p className="mt-3 text-xs text-[#8D7D65]">Cada registro ayuda a conocer mejor tus hábitos. Sigue avanzando a tu ritmo.</p>}
+        </>}
+        <p className="mt-3 text-[10px] leading-relaxed text-[#8D7D65]">Los promedios se calculan solo con días registrados. Este resumen es descriptivo y no determina por sí mismo si una meta clínica se cumplió.</p>
       </div>
 
       {loading ? <p className="mt-4 text-sm text-[#806126]">Cargando tu registro…</p> : (

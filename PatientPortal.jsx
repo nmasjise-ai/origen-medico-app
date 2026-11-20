@@ -148,7 +148,7 @@ function ActivityWeekChart({ history = [] }) {
   );
 }
 
-export default function PatientPortal({ profile, data, loading, error, onRefresh, dailyLog, activityHistory = [], dailyLogLoading, dailyLogError, dailyLogSaving, onSaveDailyLog }) {
+export default function PatientPortal({ profile, data, loading, error, onRefresh, dailyLog, activityHistory = [], dailyLogLoading, dailyLogError, dailyLogSaving, onSaveDailyLog, weeklyHistory = [] }) {
   const [activeTab, setActiveTab] = useState('home');
   const patient = data?.patient || {};
   const measurements = Array.isArray(data?.measurements) ? data.measurements : [];
@@ -225,6 +225,7 @@ export default function PatientPortal({ profile, data, loading, error, onRefresh
               error={dailyLogError}
               saving={dailyLogSaving}
               onSave={onSaveDailyLog}
+              weeklyHistory={weeklyHistory}
             />
           </>
         ) : null}

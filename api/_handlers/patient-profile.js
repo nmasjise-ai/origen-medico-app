@@ -191,7 +191,15 @@ export function createPatientProfileHandler(dependencies = {}) {
             dateKey: entry.dateKey || document.id,
             activityMinutes: Number.isInteger(entry.activityMinutes) ? entry.activityMinutes : null,
             activityDone: typeof entry.activityDone === "boolean" ? entry.activityDone : Number(entry.activityMinutes) > 0,
-            activityType: typeof entry.activityType === "string" ? entry.activityType : null
+            activityType: typeof entry.activityType === "string" ? entry.activityType : null,
+            waterMl: Number.isFinite(entry.waterMl) ? entry.waterMl : null,
+            proteinGrams: Number.isFinite(entry.proteinGrams) ? entry.proteinGrams : null,
+            meals: entry.meals && typeof entry.meals === "object" ? {
+              breakfast: Boolean(entry.meals.breakfast),
+              lunch: Boolean(entry.meals.lunch),
+              dinner: Boolean(entry.meals.dinner),
+              snacks: Boolean(entry.meals.snacks)
+            } : null
           };
         })
       });
