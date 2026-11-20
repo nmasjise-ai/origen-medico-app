@@ -42,7 +42,7 @@ export default function NutritionTracker({
       // Evita conservar datos del paciente anterior si cambia la sesión/cuenta.
       setWaterMl('');
       setProteinGrams('');
-      setActivityMinutes('');
+      setActivityMinutes('0');
       setActivityDone(false);
       setActivityType('Caminata');
       setMeals({ breakfast: false, lunch: false, dinner: false, snacks: false });
