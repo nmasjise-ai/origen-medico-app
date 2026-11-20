@@ -191,6 +191,20 @@ test("patient daily log accepts meal check-ins and bounded activity minutes", as
       createdAt: serverTimestamp()
     })
   );
+
+  await assertSucceeds(
+    setDoc(doc(db, "patients/patient-a/dailyLogs/2026-11-20"), {
+      dateKey: "2026-11-20",
+      proteinGrams: 90,
+      waterMl: 2000,
+      electrolytesTaken: false,
+      meals: { breakfast: true, lunch: true, dinner: false, snacks: false },
+      activityMinutes: 0,
+      activityDone: false,
+      activityType: null,
+      createdAt: serverTimestamp()
+    })
+  );
 });
 
 test("patient daily log rejects invalid meals, activity and unexpected fields", async () => {
