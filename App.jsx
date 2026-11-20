@@ -2632,6 +2632,35 @@ function App() {
                   </div>
                 </div>
               </div>
+
+              {/* ACTIVIDAD SEMANAL: MUESTRA VISUAL DE DEMOSTRACIÓN */}
+              <div className="lg:col-span-12 bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 sm:p-7">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#9A742C]">Movimiento y bienestar</span>
+                    <h2 className="font-serif text-xl sm:text-2xl font-bold">Actividad de la semana</h2>
+                    <p className="text-xs text-[#8C7A63] mt-1">Vista ilustrativa · los datos reales se mostrarán desde el registro individual</p>
+                  </div>
+                  <span className="rounded-full bg-[#F5EFE2] border border-[#E6D9C0] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#735318]">Demo</span>
+                </div>
+                <div className="grid grid-cols-7 gap-2 sm:gap-4 mt-5">
+                  {[
+                    { day: 'Lun', minutes: 20 }, { day: 'Mar', minutes: 35 },
+                    { day: 'Mié', minutes: 0 }, { day: 'Jue', minutes: 25 },
+                    { day: 'Vie', minutes: 40 }, { day: 'Sáb', minutes: 15 },
+                    { day: 'Dom', minutes: 30 }
+                  ].map((entry) => (
+                    <div key={entry.day} className="flex flex-col items-center gap-2 min-w-0">
+                      <div className="h-24 sm:h-28 w-full max-w-12 rounded-xl bg-[#F7F1E6] p-1.5 flex items-end">
+                        <div className="w-full rounded-lg bg-[#9A742C]" style={{ height: Math.max(5, (entry.minutes / 40) * 100) + '%' }} />
+                      </div>
+                      <span className="text-[10px] sm:text-xs text-[#8C7A63]">{entry.day}</span>
+                      <span className="text-[10px] sm:text-xs font-bold text-[#5C4D3C]">{entry.minutes} min</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-4 text-[11px] leading-relaxed text-[#8C7A63]">Estos valores son ficticios y sirven únicamente para mostrar el diseño. No representan actividad registrada ni una meta terapéutica.</p>
+              </div>
             </div>
           )}
 
