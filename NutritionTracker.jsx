@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Activity, CheckCircle2, Droplets, Utensils, Save, Info } from 'lucide-react';
 
+const ACTIVITY_TYPES = ['Caminata', 'Fuerza / pesas', 'Bicicleta', 'Natación', 'Baile', 'Movilidad / estiramiento', 'Otra actividad'];
+
 const MEALS = [
   ['breakfast', 'Desayuno'],
   ['lunch', 'Almuerzo'],
@@ -27,6 +29,8 @@ export default function NutritionTracker({
   const [waterMl, setWaterMl] = useState('');
   const [proteinGrams, setProteinGrams] = useState('');
   const [activityMinutes, setActivityMinutes] = useState('');
+  const [activityDone, setActivityDone] = useState(false);
+  const [activityType, setActivityType] = useState('Caminata');
   const [meals, setMeals] = useState({
     breakfast: false, lunch: false, dinner: false, snacks: false
   });
@@ -38,6 +42,8 @@ export default function NutritionTracker({
       setWaterMl('');
       setProteinGrams('');
       setActivityMinutes('');
+      setActivityDone(false);
+      setActivityType('Caminata');
       setMeals({ breakfast: false, lunch: false, dinner: false, snacks: false });
       setMessage('');
       return;
@@ -45,6 +51,8 @@ export default function NutritionTracker({
     setWaterMl(String(dailyLog.waterMl ?? 0));
     setProteinGrams(String(dailyLog.proteinGrams ?? 0));
     setActivityMinutes(String(dailyLog.activityMinutes ?? 0));
+    setActivityDone(Boolean(dailyLog.activityDone ?? Number(dailyLog.activityMinutes) > 0));
+    setActivityType(ACTIVITY_TYPES.includes(dailyLog.activityType) ? dailyLog.activityType : 'Caminata');
     setMeals({
       breakfast: Boolean(dailyLog.meals?.breakfast),
       lunch: Boolean(dailyLog.meals?.lunch),
@@ -65,11 +73,14 @@ export default function NutritionTracker({
       waterMl: Number(waterMl),
       proteinGrams: Number(proteinGrams),
       activityMinutes: Number(activityMinutes),
+      activityDone,
+      activityType: activityDone ? activityType : null,
       meals
     };
     if (!Number.isFinite(payload.waterMl) || payload.waterMl < 0 || payload.waterMl > 7000
       || !Number.isFinite(payload.proteinGrams) || payload.proteinGrams < 0 || payload.proteinGrams > 300
-      || !Number.isInteger(payload.activityMinutes) || payload.activityMinutes < 0 || payload.activityMinutes > 1440) {
+      || !Number.isInteger(payload.activityMinutes) || payload.activityMinutes < 0 || payload.activityMinutes > 1440
+      || (payload.activityDone && payload.activityMinutes < 1)) {
       setMessage('Revisa los valores: agua 0–7000 ml, proteína 0–300 g y actividad 0–1440 minutos.');
       return;
     }
@@ -99,6 +110,24 @@ export default function NutritionTracker({
             <label className="block rounded-2xl border border-[#EFE6D5] bg-[#FFFEFC] p-3">
               <span className="flex items-center gap-2 text-xs font-semibold text-[#776A56]"><Activity className="h-4 w-4 text-[#A17B34]" /> Actividad (min)</span>
               <input type="number" required min="0" max="1440" step="1" value={activityMinutes} onChange={e => setActivityMinutes(e.target.value)} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F]" />
+            </label>
+          </div>
+
+          <div className="grid gap-3 rounded-2xl border border-[#E9DFC9] bg-[#FBF8F1] p-4 sm:grid-cols-[1fr_1fr]">
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-[#EFE6D5] bg-white p-3">
+              <input type="checkbox" checked={activityDone} onChange={(event) => {
+                const checked = event.target.checked;
+                setActivityDone(checked);
+                if (!checked) setActivityMinutes('0');
+                else if (activityMinutes === '0') setActivityMinutes('30');
+              }} className="h-5 w-5 accent-[#98732E]" />
+              <span><span className="block text-sm font-semibold text-[#514634]">Hoy realicé ejercicio</span><span className="block text-[11px] text-[#8D7D65]">Marca si completaste alguna actividad</span></span>
+            </label>
+            <label className="block rounded-xl border border-[#EFE6D5] bg-white p-3">
+              <span className="mb-2 block text-xs font-semibold text-[#776A56]">Tipo de actividad</span>
+              <select value={activityType} onChange={(event) => setActivityType(event.target.value)} disabled={!activityDone} className="w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-sm text-[#30291F] disabled:cursor-not-allowed disabled:bg-[#F7F4ED] disabled:opacity-60">
+                {ACTIVITY_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+              </select>
             </label>
           </div>
 
