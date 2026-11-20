@@ -36,6 +36,15 @@ function makeHarness({ userData, patientData, decoded, now } = {}) {
             orderBy: () => ({ limit: () => ({ get: async () => ({ docs: [] }) }) })
           };
           if (name === "dailyLogs") return {
+            where: () => ({
+              where: () => ({
+                orderBy: () => ({
+                  get: async () => ({
+                    docs: [...store.entries()].map(([id, value]) => ({ id, data: () => value }))
+                  })
+                })
+              })
+            }),
             doc: (id) => ({
               get: async () => {
                 const value = store.get(id);
@@ -143,6 +152,7 @@ test("patient profile returns today's daily log without internal metadata", asyn
   assert.equal(res.statusCode, 200);
   assert.equal(res.body.dailyLog.dateKey, "2026-11-19");
   assert.equal("internalAudit" in res.body.dailyLog, false);
+  assert.deepEqual(res.body.activityHistory, [{ dateKey: "2026-11-19", activityMinutes: 30 }]);
 });
 
 test("daily log API rejects administrator and unverified identities", async () => {
