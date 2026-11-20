@@ -540,6 +540,7 @@ function App() {
   const [patientPortalLoading, setPatientPortalLoading] = useState(false);
   const [patientPortalError, setPatientPortalError] = useState('');
   const [patientDailyLog, setPatientDailyLog] = useState(null);
+  const [patientActivityHistory, setPatientActivityHistory] = useState([]);
   const [patientDailyLogLoading, setPatientDailyLogLoading] = useState(false);
   const [patientDailyLogSaving, setPatientDailyLogSaving] = useState(false);
   const [patientDailyLogError, setPatientDailyLogError] = useState('');
@@ -966,6 +967,7 @@ function App() {
       setPatientDailyLogLoading(true);
       setPatientDailyLogError('');
       setPatientDailyLog(payload.dailyLog || null);
+      setPatientActivityHistory(Array.isArray(payload.activityHistory) ? payload.activityHistory : []);
       setPatientDailyLogLoading(false);
       return data;
     } catch (err) {
@@ -999,6 +1001,13 @@ function App() {
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'No se pudo guardar el registro diario.');
       setPatientDailyLog(payload.dailyLog || null);
+      setPatientActivityHistory((current) => {
+        const next = [...current.filter((entry) => entry.dateKey !== payload.dailyLog?.dateKey), {
+          dateKey: payload.dailyLog?.dateKey,
+          activityMinutes: payload.dailyLog?.activityMinutes ?? values.activityMinutes
+        }].filter((entry) => entry.dateKey);
+        return next.sort((left, right) => left.dateKey.localeCompare(right.dateKey)).slice(-7);
+      });
       return { ok: true };
     } catch (saveError) {
       const message = saveError.message || 'No se pudo guardar el registro. Inténtalo nuevamente.';
@@ -2141,6 +2150,7 @@ function App() {
             loading={patientPortalLoading}
             error={patientPortalError}
             dailyLog={patientDailyLog}
+            activityHistory={patientActivityHistory}
             dailyLogLoading={patientDailyLogLoading}
             dailyLogError={patientDailyLogError}
             dailyLogSaving={patientDailyLogSaving}
