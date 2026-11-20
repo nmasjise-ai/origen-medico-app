@@ -51,7 +51,7 @@ service cloud.firestore {
         ])
         && request.resource.data.keys().hasOnly([
           'dateKey', 'proteinGrams', 'waterMl', 'electrolytesTaken',
-          'createdAt', 'meals', 'activityMinutes'
+          'createdAt', 'meals', 'activityMinutes', 'activityDone', 'activityType'
         ])
         && request.resource.data.dateKey is string
         && request.resource.data.dateKey.matches('^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$')
@@ -67,6 +67,23 @@ service cloud.firestore {
           || (request.resource.data.activityMinutes is int
             && request.resource.data.activityMinutes >= 0
             && request.resource.data.activityMinutes <= 1440))
+        && (!('activityDone' in request.resource.data)
+          || request.resource.data.activityDone is bool)
+        && (!('activityType' in request.resource.data)
+          || request.resource.data.activityType == null
+          || request.resource.data.activityType in [
+            'Caminata', 'Fuerza / pesas', 'Bicicleta', 'Natación',
+            'Baile', 'Movilidad / estiramiento', 'Otra actividad'
+          ])
+        && (!(request.resource.data.get('activityDone', false) == true)
+          || (request.resource.data.get('activityMinutes', 0) is int
+            && request.resource.data.get('activityMinutes', 0) >= 1
+            && request.resource.data.get('activityType', null) in [
+              'Caminata', 'Fuerza / pesas', 'Bicicleta', 'Natación',
+              'Baile', 'Movilidad / estiramiento', 'Otra actividad'
+            ]))
+        && (!(request.resource.data.get('activityDone', false) == false)
+          || request.resource.data.get('activityMinutes', 0) == 0)
         && request.resource.data.createdAt == request.time;
     }
 
