@@ -581,6 +581,16 @@ function App() {
   const [appMode, setAppMode] = useState(() => patientInvitationToken ? 'activation' : 'public'); // 'public' | 'login' | 'activation' | 'patient_portal' | 'patient' (demo) | 'doctor'
   const [activePatientId, setActivePatientId] = useState('pat-sofia');
   const [patientTab, setPatientTab] = useState('today'); // 'today' | 'meals' | 'symptoms' | 'progress' | 'rx' | 'education'
+  // Tracker interactivo de demostración: estado temporal, sin guardar datos clínicos.
+  const [demoActivityHistory, setDemoActivityHistory] = useState([
+    { day: 'Lun', minutes: 20 }, { day: 'Mar', minutes: 35 },
+    { day: 'Mié', minutes: 0 }, { day: 'Jue', minutes: 25 },
+    { day: 'Vie', minutes: 40 }, { day: 'Sáb', minutes: 15 },
+    { day: 'Dom', minutes: 30 }
+  ]);
+  const [demoActivityDone, setDemoActivityDone] = useState(false);
+  const [demoActivityMinutes, setDemoActivityMinutes] = useState('30');
+  const [demoActivityType, setDemoActivityType] = useState('Caminata');
   const [doctorTab, setDoctorTab] = useState('triage'); // 'triage' | 'patient_detail' | 'vademecum' | 'settings'
   const [selectedDoctorPatientId, setSelectedDoctorPatientId] = useState('pat-sofia');
 
@@ -1587,6 +1597,24 @@ function App() {
       )
     }));
     showToast(`+${ml} ml de hidratación sumados`);
+  };
+
+  const saveDemoActivity = () => {
+    const minutes = Number(demoActivityMinutes);
+    if (!demoActivityDone) {
+      showToast('Marca primero que realizaste actividad física.');
+      return;
+    }
+    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 600) {
+      showToast('Ingresa una duración válida entre 1 y 600 minutos.');
+      return;
+    }
+    const todayIndex = (new Date().getDay() + 6) % 7;
+    const labels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    setDemoActivityHistory((previous) => previous.map((entry, index) =>
+      index === todayIndex ? { ...entry, minutes, type: demoActivityType } : entry
+    ));
+    showToast(`Actividad de demostración registrada: ${demoActivityType}, ${minutes} min. No se guardó en un expediente clínico.`);
   };
 
   const toggleElectrolytes = () => {
@@ -2633,33 +2661,63 @@ function App() {
                 </div>
               </div>
 
-              {/* ACTIVIDAD SEMANAL: MUESTRA VISUAL DE DEMOSTRACIÓN */}
-              <div className="lg:col-span-12 bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 sm:p-7">
+              {/* TRACKER INTERACTIVO DE ACTIVIDAD FÍSICA - DEMO */}
+              <div className="lg:col-span-12 bg-[#FFFDF9] rounded-3xl border border-[#E6D9C0] p-6 sm:p-7 space-y-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <span className="text-xs font-bold uppercase tracking-wider text-[#9A742C]">Movimiento y bienestar</span>
-                    <h2 className="font-serif text-xl sm:text-2xl font-bold">Actividad de la semana</h2>
-                    <p className="text-xs text-[#8C7A63] mt-1">Vista ilustrativa · los datos reales se mostrarán desde el registro individual</p>
+                    <h2 className="font-serif text-xl sm:text-2xl font-bold">Registra tu actividad física</h2>
+                    <p className="text-xs text-[#8C7A63] mt-1">Marca tu ejercicio diario y registra cuánto tiempo te mantuviste en movimiento.</p>
                   </div>
-                  <span className="rounded-full bg-[#F5EFE2] border border-[#E6D9C0] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#735318]">Demo</span>
+                  <span className="rounded-full bg-[#F5EFE2] border border-[#E6D9C0] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#735318]">Modo demostración</span>
                 </div>
-                <div className="grid grid-cols-7 gap-2 sm:gap-4 mt-5">
-                  {[
-                    { day: 'Lun', minutes: 20 }, { day: 'Mar', minutes: 35 },
-                    { day: 'Mié', minutes: 0 }, { day: 'Jue', minutes: 25 },
-                    { day: 'Vie', minutes: 40 }, { day: 'Sáb', minutes: 15 },
-                    { day: 'Dom', minutes: 30 }
-                  ].map((entry) => (
-                    <div key={entry.day} className="flex flex-col items-center gap-2 min-w-0">
-                      <div className="h-24 sm:h-28 w-full max-w-12 rounded-xl bg-[#F7F1E6] p-1.5 flex items-end">
-                        <div className="w-full rounded-lg bg-[#9A742C]" style={{ height: Math.max(5, (entry.minutes / 40) * 100) + '%' }} />
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <label className="rounded-2xl border border-[#E6D9C0] bg-[#FAF6EE] p-4 flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" checked={demoActivityDone} onChange={(event) => setDemoActivityDone(event.target.checked)} className="h-5 w-5 accent-[#9A742C]" />
+                    <span><span className="block text-sm font-bold text-[#3D3325]">Hoy hice ejercicio</span><span className="block text-[11px] text-[#8C7A63]">Marca al completar tu actividad</span></span>
+                  </label>
+                  <label className="rounded-2xl border border-[#E6D9C0] bg-[#FAF6EE] p-4">
+                    <span className="block text-xs font-bold text-[#735318] mb-2">Tipo de actividad</span>
+                    <select value={demoActivityType} onChange={(event) => setDemoActivityType(event.target.value)} className="w-full rounded-xl border border-[#E2D4B7] bg-white px-3 py-2 text-sm text-[#3D3325]">
+                      <option>Caminata</option><option>Fuerza / pesas</option><option>Bicicleta</option><option>Natación</option><option>Baile</option><option>Movilidad / estiramiento</option><option>Otra actividad</option>
+                    </select>
+                  </label>
+                  <label className="rounded-2xl border border-[#E6D9C0] bg-[#FAF6EE] p-4">
+                    <span className="block text-xs font-bold text-[#735318] mb-2">Duración (minutos)</span>
+                    <input type="number" min="1" max="600" step="1" value={demoActivityMinutes} onChange={(event) => setDemoActivityMinutes(event.target.value)} className="w-full rounded-xl border border-[#E2D4B7] bg-white px-3 py-2 text-sm text-[#3D3325]" />
+                  </label>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button type="button" onClick={saveDemoActivity} className="inline-flex items-center gap-2 rounded-xl bg-[#9A742C] px-5 py-3 text-sm font-bold text-white hover:bg-[#7D5C1E]">
+                    <CheckCircle2 className="h-4 w-4" /> Registrar actividad de hoy
+                  </button>
+                  <span className="text-[11px] text-[#8C7A63]">En esta demostración, el registro es temporal y se reinicia al recargar.</span>
+                </div>
+
+                <div className="border-t border-[#EFE6D5] pt-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div><h3 className="font-serif text-lg font-bold">Tu actividad de la semana</h3><p className="text-xs text-[#8C7A63]">Minutos de ejemplo por día · cambia al registrar la actividad de hoy</p></div>
+                    <span className="rounded-full bg-[#F5EFE2] px-3 py-1 text-xs font-semibold text-[#806126]">{demoActivityHistory.filter((entry) => entry.minutes > 0).length} días activos</span>
+                  </div>
+                  <div className="grid grid-cols-7 gap-2 sm:gap-4 mt-4">
+                    {demoActivityHistory.map((entry) => (
+                      <div key={entry.day} className="flex flex-col items-center gap-2 min-w-0">
+                        <div className="h-24 sm:h-28 w-full max-w-12 rounded-xl bg-[#F7F1E6] p-1.5 flex items-end">
+                          <div className="w-full rounded-lg bg-[#9A742C] transition-all" style={{ height: Math.max(5, (entry.minutes / Math.max(40, ...demoActivityHistory.map((item) => item.minutes))) * 100) + '%' }} />
+                        </div>
+                        <span className="text-[10px] sm:text-xs text-[#8C7A63]">{entry.day}</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-[#5C4D3C]">{entry.minutes} min</span>
                       </div>
-                      <span className="text-[10px] sm:text-xs text-[#8C7A63]">{entry.day}</span>
-                      <span className="text-[10px] sm:text-xs font-bold text-[#5C4D3C]">{entry.minutes} min</span>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  <div className="mt-4 rounded-2xl border border-[#E6D9C0] bg-[#FAF6EE] p-4">
+                    <h4 className="text-sm font-bold text-[#735318]">¿Por qué conviene moverse con regularidad?</h4>
+                    <p className="mt-1 text-xs leading-relaxed text-[#5C4D3C]">La actividad física adaptada ayuda a conservar fuerza y masa muscular durante la pérdida de peso, mejora la sensibilidad a la insulina, la capacidad cardiovascular, el sueño y el bienestar. Combinar ejercicios de fuerza con actividad aeróbica puede favorecer una evolución más saludable. La constancia importa más que hacer sesiones intensas de forma ocasional.</p>
+                    <p className="mt-2 text-[11px] leading-relaxed text-[#8C7A63]">La frecuencia, duración e intensidad deben individualizarse según la condición física, edad, síntomas y criterio del equipo de salud. No garantiza evitar una meseta de peso; ayuda a proteger la salud y a sostener hábitos. Si aparecen dolor torácico, mareo intenso o falta de aire inusual, detén la actividad y solicita valoración.</p>
+                  </div>
                 </div>
-                <p className="mt-4 text-[11px] leading-relaxed text-[#8C7A63]">Estos valores son ficticios y sirven únicamente para mostrar el diseño. No representan actividad registrada ni una meta terapéutica.</p>
+                <p className="text-[11px] leading-relaxed text-[#8C7A63]">Los datos de esta vista son ficticios y solo prueban la interacción. Todavía no se guardan en la cuenta ni en el expediente clínico individual.</p>
               </div>
             </div>
           )}
