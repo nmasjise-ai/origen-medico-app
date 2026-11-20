@@ -45,6 +45,25 @@ function makeDatabase({ users, patients, measurements = {} }) {
         collection(name) {
           if (name === "dailyLogs") {
             return {
+              where(field, operator, value) {
+                assert.equal(field, "dateKey");
+                assert.ok([">=", "<="].includes(operator));
+                assert.match(value, /^\\d{4}-\\d{2}-\\d{2}$/);
+                return {
+                  where(nextField, nextOperator, nextValue) {
+                    assert.equal(nextField, "dateKey");
+                    assert.ok([">=", "<="].includes(nextOperator));
+                    assert.match(nextValue, /^\\d{4}-\\d{2}-\\d{2}$/);
+                    return {
+                      orderBy(orderField, direction) {
+                        assert.equal(orderField, "dateKey");
+                        assert.equal(direction, "asc");
+                        return { async get() { return { docs: [] }; } };
+                      }
+                    };
+                  }
+                };
+              },
               doc(logId) {
                 return {
                   async get() {
