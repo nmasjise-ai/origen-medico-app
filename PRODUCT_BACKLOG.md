@@ -451,3 +451,17 @@ Esta prueba demuestra la revalidación server-side del endpoint de perfil en cad
 - [ ] No añadir una función API número 13 (límite Hobby 12/12); no usar almacenamiento local para datos clínicos; no habilitar producción.
 
 **Nota técnica:** las reglas Firestore actuales permiten una estructura acotada de diario con `dateKey`, `proteinGrams`, `waterMl`, `electrolytesTaken`, `createdAt` y los campos opcionales validados `meals` y `activityMinutes`. La persistencia del portal se realiza mediante la API existente y Admin SDK dentro del namespace Preview. No se desplegaron reglas ni se modificaron datos reales.
+
+
+## Inicio de implementación — Calendario inteligente y Push (21/11/2026)
+- [x] Crear rama aislada `feature/calendario-inteligente-push` desde `mejoras-seguridad-origen`; no modificar `main` ni producción.
+- [x] Documentar alcance, modelo propuesto, privacidad, arquitectura Push y criterios de aceptación en `docs/SMART_CALENDAR_PUSH_SPEC.md`.
+- [ ] Inspeccionar y confirmar el modelo actual de roles, permisos y datos del paciente antes de crear endpoints.
+- [ ] Implementar agenda de citas y eventos de tratamiento en namespace Preview.
+- [ ] Implementar confirmación de asistencia y solicitud/aprobación de reprogramación.
+- [ ] Implementar interfaz calendario del paciente y agenda del consultorio.
+- [ ] Integrar FCM, Service Worker, consentimiento y preferencias de Push.
+- [ ] Implementar proceso programado idempotente para recordatorios 24 horas antes.
+- [ ] Ejecutar pruebas de autorización A/B, idempotencia, cambios/cancelaciones y zona horaria `America/La_Paz`.
+- [ ] Validar Push en Android y iPhone/iPad compatibles; comprobar alternativa cuando Push no esté disponible.
+- [ ] Mantener solo datos ficticios en Preview; no fusionar ni publicar a producción hasta superar QA y revisión de seguridad.
