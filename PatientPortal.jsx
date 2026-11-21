@@ -220,6 +220,8 @@ export default function PatientPortal({ profile, data, loading, error, onRefresh
             <ActivityWeekChart history={activityHistory} />
 
             <NutritionTracker
+              waterGoalMl={patient.waterGoalMl}
+              proteinGoalGrams={patient.proteinGoalGrams}
               dailyLog={dailyLog}
               loading={dailyLogLoading}
               error={dailyLogError}
