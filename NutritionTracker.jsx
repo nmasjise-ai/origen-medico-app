@@ -25,7 +25,9 @@ export default function NutritionTracker({
   error = '',
   onSave,
   saving = false,
-  weeklyHistory = []
+  weeklyHistory = [],
+  waterGoalMl = null,
+  proteinGoalGrams = null
 }) {
   const [waterMl, setWaterMl] = useState('');
   const [proteinGrams, setProteinGrams] = useState('');
@@ -153,6 +155,39 @@ export default function NutritionTracker({
               <span className="flex items-center gap-2 text-xs font-semibold text-[#776A56]"><Activity className="h-4 w-4 text-[#A17B34]" /> Actividad (min)</span>
               <input type="number" required min="0" max="1440" step="1" value={activityMinutes} onChange={e => setActivityMinutes(e.target.value)} disabled={!activityDone} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F] disabled:bg-[#F7F4ED] disabled:text-[#9A907F]" />
             </label>
+          </div>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-2" aria-live="polite">
+            {[
+              { key: 'water', label: 'Progreso de hidratación', value: Number(waterMl) || 0, unit: 'ml', goal: Number(waterGoalMl), color: 'bg-sky-500', icon: Droplets },
+              { key: 'protein', label: 'Progreso de proteína', value: Number(proteinGrams) || 0, unit: 'g', goal: Number(proteinGoalGrams), color: 'bg-[#A17B34]', icon: Utensils }
+            ].map((item) => {
+              const hasGoal = Number.isFinite(item.goal) && item.goal > 0;
+              const percent = hasGoal ? Math.min(100, Math.round((item.value / item.goal) * 100)) : null;
+              const Icon = item.icon;
+              return (
+                <div key={item.key} className="rounded-2xl border border-[#EFE6D5] bg-white p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2 text-xs font-semibold text-[#776A56]"><Icon className="h-4 w-4" />{item.label}</span>
+                    <strong className="text-sm tabular-nums text-[#30291F]">{item.value.toLocaleString('es-BO')} {item.unit}</strong>
+                  </div>
+                  <div
+                    className="mt-3 h-2.5 overflow-hidden rounded-full bg-[#F0EADF]"
+                    role={hasGoal ? 'progressbar' : 'img'}
+                    aria-label={hasGoal ? item.label : item.label + ': meta no registrada'}
+                    aria-valuemin={hasGoal ? 0 : undefined}
+                    aria-valuemax={hasGoal ? 100 : undefined}
+                    aria-valuenow={hasGoal ? percent : undefined}
+                  >
+                    <div className={'h-full rounded-full transition-all duration-300 ' + (hasGoal ? item.color : 'bg-[#D8D0C2]')} style={{ width: hasGoal ? percent + '%' : '0%' }} />
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-[#8D7D65]">
+                    {hasGoal ? <><span>Meta indicada: {item.goal.toLocaleString('es-BO')} {item.unit}</span><strong className="text-[#735318]">{percent}%</strong></> : <span>Meta individual no registrada por el equipo médico</span>}
+                  </div>
+                  {hasGoal && item.value > item.goal ? <p className="mt-1 text-[10px] text-[#8D7D65]">Has superado la referencia registrada; consulta con tu profesional si tienes dudas.</p> : null}
+                </div>
+              );
+            })}
           </div>
 
           <div className="grid gap-3 rounded-2xl border border-[#E9DFC9] bg-[#FBF8F1] p-4 sm:grid-cols-[1fr_1fr]">
