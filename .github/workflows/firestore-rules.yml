@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - mejoras-seguridad-origen
+      - feature/calendario-inteligente-push
   pull_request:
     branches:
       - main
+      - mejoras-seguridad-origen
 
 permissions:
   contents: read
