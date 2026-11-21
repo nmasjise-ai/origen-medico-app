@@ -118,7 +118,22 @@ export default function NutritionTracker({
             <div className="rounded-xl bg-white p-3"><p className="text-[10px] text-[#8D7D65]">Actividad</p><p className="mt-1 text-lg font-bold text-[#30291F]">{weeklySummary.activityMinutes} <span className="text-[10px] font-normal">min</span></p><p className="text-[10px] text-[#9A8A72]">{weeklySummary.activeDays} días activos</p></div>
             <div className="rounded-xl bg-white p-3"><p className="text-[10px] text-[#8D7D65]">Comidas registradas</p><p className="mt-1 text-lg font-bold text-[#30291F]">{weeklySummary.mealPercent == null ? '—' : weeklySummary.mealPercent + '%'} </p><p className="text-[10px] text-[#9A8A72]">De los espacios registrados</p></div>
           </div>
-          {weeklySummary.days >= 5 ? <p className="mt-3 rounded-xl border border-[#E8D8B5] bg-white p-3 text-xs font-medium text-[#735318]">¡Muy bien! Has registrado tus hábitos en {weeklySummary.days} de los últimos 7 días. La constancia también es un logro.</p> : <p className="mt-3 text-xs text-[#8D7D65]">Cada registro ayuda a conocer mejor tus hábitos. Sigue avanzando a tu ritmo.</p>}
+          {weeklySummary.days >= 7 ? (
+            <div role="status" className="mt-3 rounded-xl border border-[#E8D8B5] bg-white p-3">
+              <p className="text-xs font-bold text-[#735318]">🏆 ¡Semana completa!</p>
+              <p className="mt-1 text-xs text-[#776A56]">Registraste tus hábitos los 7 días. Tu constancia merece reconocimiento.</p>
+            </div>
+          ) : weeklySummary.days >= 5 ? (
+            <div role="status" className="mt-3 rounded-xl border border-[#E8D8B5] bg-white p-3">
+              <p className="text-xs font-bold text-[#735318]">✨ ¡Muy buena constancia!</p>
+              <p className="mt-1 text-xs text-[#776A56]">Llevas {weeklySummary.days} de 7 días con registros. Sigue avanzando a tu ritmo.</p>
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-[#8D7D65]">Llevas {weeklySummary.days} {weeklySummary.days === 1 ? 'día registrado' : 'días registrados'}. Cada registro ayuda a conocer mejor tus hábitos.</p>
+          )}
+          {weeklySummary.activeDays >= 3 ? (
+            <p role="status" className="mt-2 rounded-xl bg-white px-3 py-2 text-xs text-[#735318]">💪 ¡Buen trabajo! Registraste actividad física en {weeklySummary.activeDays} días esta semana.</p>
+          ) : null}
         </>}
         <p className="mt-3 text-[10px] leading-relaxed text-[#8D7D65]">Los promedios se calculan solo con días registrados. Este resumen es descriptivo y no determina por sí mismo si una meta clínica se cumplió.</p>
       </div>
