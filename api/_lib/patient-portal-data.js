@@ -20,6 +20,8 @@ export function toPatientVisibleProfile(data, id) {
       ? data.sexAtBirth
       : null,
     heightCm,
+    proteinGoalGrams: Number.isFinite(data?.proteinGoalGrams) && data.proteinGoalGrams > 0 ? data.proteinGoalGrams : null,
+    waterGoalMl: Number.isFinite(data?.waterGoalMl) && data.waterGoalMl > 0 ? data.waterGoalMl : null,
     activeDiagnoses: typeof data?.activeDiagnoses === "string" ? data.activeDiagnoses : "",
     medicalHistory: typeof data?.medicalHistory === "string" ? data.medicalHistory : "",
     surgicalHistory: typeof data?.surgicalHistory === "string" ? data.surgicalHistory : "",
