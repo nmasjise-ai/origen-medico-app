@@ -109,16 +109,22 @@ test("patient can save a daily log when no exercise was completed", async () => 
   assert.equal(store.get("2026-11-19").activityMinutes, 0);
 });
 
-test("patient cannot overwrite a daily log already submitted for the day", async () => {
-  const { handler } = makeHarness();
+test("patient can update today's daily log without creating a second entry", async () => {
+  const { handler, store } = makeHarness();
   const first = makeResponse();
   const second = makeResponse();
 
   await handler({ method: "POST", body: validBody }, first);
-  await handler({ method: "POST", body: { ...validBody, waterMl: 2500 } }, second);
+  await handler({ method: "POST", body: { ...validBody, waterMl: 2500, proteinGrams: 100, activityMinutes: 45 } }, second);
 
   assert.equal(first.statusCode, 201);
-  assert.equal(second.statusCode, 409);
+  assert.equal(second.statusCode, 200);
+  assert.equal(second.body.saved, true);
+  assert.equal(second.body.updated, true);
+  assert.equal(store.size, 1);
+  assert.equal(store.get("2026-11-19").waterMl, 2500);
+  assert.equal(store.get("2026-11-19").proteinGrams, 100);
+  assert.equal(store.get("2026-11-19").activityMinutes, 45);
 });
 
 test("daily log API rejects invalid values, meal fields and extra data", async () => {
