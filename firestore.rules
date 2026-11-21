@@ -200,14 +200,16 @@ service cloud.firestore {
     // Isolated Preview namespace. This mirrors the production data model while
     // keeping Preview users and patient records separate from root collections.
     function ownsPreviewPatient(environmentId, patientId) {
+      let userPath = /databases/$(database)/documents/previewEnvironments/$(environmentId)/users/$(request.auth.uid);
+      let patientPath = /databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId);
+      let userData = get(userPath).data;
+      let patientData = get(patientPath).data;
       return signedIn()
-        && get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/users/$(request.auth.uid)).data.patientId == patientId
-        && get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data.linkedUid == request.auth.uid
-        && get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data.accountStatus == 'linked'
-        && (!('portalAccessStatus' in get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/users/$(request.auth.uid)).data)
-          || get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/users/$(request.auth.uid)).data.portalAccessStatus == 'enabled')
-        && (!('portalAccessStatus' in get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data)
-          || get(/databases/$(database)/documents/previewEnvironments/$(environmentId)/patients/$(patientId)).data.portalAccessStatus == 'enabled');
+        && userData.get('patientId', null) == patientId
+        && patientData.get('linkedUid', null) == request.auth.uid
+        && patientData.get('accountStatus', null) == 'linked'
+        && userData.get('portalAccessStatus', 'enabled') == 'enabled'
+        && patientData.get('portalAccessStatus', 'enabled') == 'enabled';
     }
 
     function canReadPreviewPatient(environmentId, patientId) {
