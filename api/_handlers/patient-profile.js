@@ -121,18 +121,19 @@ export function createPatientProfileHandler(dependencies = {}) {
         }
 
         try {
+          const existingLog = await dailyLogRef.get();
+          const previousLog = existingLog.exists ? existingLog.data() : {};
           const entry = {
             dateKey,
             proteinGrams: req.body.proteinGrams,
             waterMl: req.body.waterMl,
-            electrolytesTaken: false,
+            electrolytesTaken: previousLog.electrolytesTaken === true,
             meals: req.body.meals,
             activityMinutes: req.body.activityMinutes,
             activityDone: req.body.activityDone ?? req.body.activityMinutes > 0,
             activityType: req.body.activityDone === true ? req.body.activityType : (req.body.activityMinutes > 0 ? req.body.activityType || null : null),
-              updatedAt: serverTimestamp()
+            updatedAt: serverTimestamp()
           };
-          const existingLog = await dailyLogRef.get();
           if (!existingLog.exists) entry.createdAt = serverTimestamp();
           await dailyLogRef.set(entry, { merge: true });
           return res.status(existingLog.exists ? 200 : 201).json({
