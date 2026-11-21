@@ -120,12 +120,16 @@ test("patient can update today's daily log without creating a second entry", asy
   const second = makeResponse();
 
   await handler({ method: "POST", body: validBody }, first);
+  // Un campo clínico preexistente debe sobrevivir a la edición y reflejarse en la respuesta.
+  store.set("2026-11-19", { ...store.get("2026-11-19"), electrolytesTaken: true });
   await handler({ method: "POST", body: { ...validBody, waterMl: 2500, proteinGrams: 100, activityMinutes: 45 } }, second);
 
   assert.equal(first.statusCode, 201);
   assert.equal(second.statusCode, 200);
   assert.equal(second.body.saved, true);
   assert.equal(second.body.updated, true);
+  assert.equal(second.body.dailyLog.electrolytesTaken, true);
+  assert.equal(store.get("2026-11-19").electrolytesTaken, true);
   assert.equal(store.size, 1);
   assert.equal(store.get("2026-11-19").waterMl, 2500);
   assert.equal(store.get("2026-11-19").proteinGrams, 100);

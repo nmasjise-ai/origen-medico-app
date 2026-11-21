@@ -143,7 +143,7 @@ export function createPatientProfileHandler(dependencies = {}) {
               dateKey,
               proteinGrams: entry.proteinGrams,
               waterMl: entry.waterMl,
-              electrolytesTaken: false,
+              electrolytesTaken: entry.electrolytesTaken,
               meals: entry.meals,
               activityMinutes: entry.activityMinutes,
               activityDone: entry.activityDone,
