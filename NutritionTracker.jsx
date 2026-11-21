@@ -236,8 +236,8 @@ export default function NutritionTracker({
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="flex items-start gap-2 text-[11px] leading-relaxed text-[#8D7D65]"><Info className="mt-0.5 h-4 w-4 shrink-0" />Registro descriptivo. Las metas de agua y proteína deben ser indicadas por tu profesional.</p>
-            <button type="submit" disabled={saving || Boolean(dailyLog)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#806126] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
-              <Save className="h-4 w-4" /> {saving ? 'Guardando…' : dailyLog ? 'Registro enviado' : 'Guardar registro'}
+            <button type="submit" disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#806126] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">
+              <Save className="h-4 w-4" /> {saving ? 'Guardando…' : dailyLog ? 'Actualizar registro de hoy' : 'Guardar registro'}
             </button>
           </div>
           {error ? <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p> : null}
