@@ -130,11 +130,14 @@ export function createPatientProfileHandler(dependencies = {}) {
             activityMinutes: req.body.activityMinutes,
             activityDone: req.body.activityDone ?? req.body.activityMinutes > 0,
             activityType: req.body.activityDone === true ? req.body.activityType : (req.body.activityMinutes > 0 ? req.body.activityType || null : null),
-            createdAt: serverTimestamp()
+              updatedAt: serverTimestamp()
           };
-          await dailyLogRef.create(entry);
-          return res.status(201).json({
+          const existingLog = await dailyLogRef.get();
+          if (!existingLog.exists) entry.createdAt = serverTimestamp();
+          await dailyLogRef.set(entry, { merge: true });
+          return res.status(existingLog.exists ? 200 : 201).json({
             saved: true,
+            updated: existingLog.exists,
             dailyLog: {
               dateKey,
               proteinGrams: entry.proteinGrams,
