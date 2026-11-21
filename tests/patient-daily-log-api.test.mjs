@@ -50,6 +50,11 @@ function makeHarness({ userData, patientData, decoded, now } = {}) {
                 const value = store.get(id);
                 return { exists: Boolean(value), id, data: () => value };
               },
+              set: async (value, options = {}) => {
+                store.set(id, options.merge && store.has(id)
+                  ? { ...store.get(id), ...value }
+                  : value);
+              },
               create: async (value) => {
                 if (store.has(id)) {
                   const error = new Error("Already exists");
