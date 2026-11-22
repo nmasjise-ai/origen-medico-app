@@ -1569,8 +1569,11 @@ function App() {
   };
 
   // Acciones rápidas del Paciente
+  // La vista Mi Día GLP-1 usa pacientes ficticios de demostración.
+  // Actualizamos el estado React en memoria para que las barras respondan al toque,
+  // sin pasar por persistState ni guardar datos clínicos durante la migración.
   const addProtein = (grams) => {
-    persistState((prev) => ({
+    setClinicData((prev) => ({
       ...prev,
       patients: prev.patients.map((p) =>
         p.id === currentPatient.id
@@ -1578,17 +1581,17 @@ function App() {
               ...p,
               dailyLog: {
                 ...p.dailyLog,
-                proteinConsumed: Math.min(250, p.dailyLog.proteinConsumed + grams)
+                proteinConsumed: Math.min(250, (Number(p.dailyLog?.proteinConsumed) || 0) + grams)
               }
             }
           : p
       )
     }));
-    showToast(`+${grams}g de proteína registrados en Mi Día GLP-1`);
+    showToast(`+${grams}g de proteína sumados en la demostración. No se guardó en un expediente clínico.`);
   };
 
   const addWater = (ml) => {
-    persistState((prev) => ({
+    setClinicData((prev) => ({
       ...prev,
       patients: prev.patients.map((p) =>
         p.id === currentPatient.id
@@ -1596,13 +1599,13 @@ function App() {
               ...p,
               dailyLog: {
                 ...p.dailyLog,
-                waterConsumed: Math.min(5000, p.dailyLog.waterConsumed + ml)
+                waterConsumed: Math.min(5000, (Number(p.dailyLog?.waterConsumed) || 0) + ml)
               }
             }
           : p
       )
     }));
-    showToast(`+${ml} ml de hidratación sumados`);
+    showToast(`+${ml} ml de hidratación sumados en la demostración. No se guardó en un expediente clínico.`);
   };
 
   const saveDemoActivity = () => {
