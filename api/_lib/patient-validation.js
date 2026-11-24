@@ -49,6 +49,7 @@ export function normalizePatientProfile(input) {
   }
   const allowedKeys = new Set([
     "displayName", "phone", "ageYears", "birthDate", "sexAtBirth", "heightCm",
+    "waterGoalMl", "proteinGoalGrams",
     "activeDiagnoses", "medicalHistory", "surgicalHistory", "familyHistory", "allergies",
     "concomitantMedications"
   ]);
@@ -89,6 +90,9 @@ export function normalizePatientProfile(input) {
   }
 
   const heightCm = optionalNumber(input.heightCm, "talla", 80, 250);
+  // Individual targets are entered by the clinician, never inferred automatically.
+  const waterGoalMl = optionalNumber(input.waterGoalMl, "meta de agua", 250, 7000, true);
+  const proteinGoalGrams = optionalNumber(input.proteinGoalGrams, "meta de proteína", 1, 300);
   return {
     displayName,
     phoneE164,
@@ -96,6 +100,8 @@ export function normalizePatientProfile(input) {
     birthDate,
     sexAtBirth,
     heightCm: heightCm ?? null,
+    waterGoalMl: waterGoalMl ?? null,
+    proteinGoalGrams: proteinGoalGrams ?? null,
     activeDiagnoses: optionalText(input.activeDiagnoses, "diagnósticos activos", 2000),
     medicalHistory: optionalText(input.medicalHistory, "antecedentes médicos", 3000),
     surgicalHistory: optionalText(input.surgicalHistory, "antecedentes quirúrgicos", 2000),
