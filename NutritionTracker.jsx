@@ -146,10 +146,18 @@ export default function NutritionTracker({
             <label className="block rounded-2xl border border-[#EFE6D5] bg-[#FFFEFC] p-3">
               <span className="flex items-center gap-2 text-xs font-semibold text-[#776A56]"><Droplets className="h-4 w-4 text-[#A17B34]" /> Agua (ml)</span>
               <input type="number" required min="0" max="7000" step="50" value={waterMl} onChange={e => setWaterMl(e.target.value)} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F]" />
+              <span className="mt-2 flex gap-2">
+                <button type="button" onClick={() => setWaterMl(String(Math.min(7000, (Number(waterMl) || 0) + 250)))} className="flex-1 rounded-lg border border-[#D9E8F0] bg-[#F3FAFD] px-2 py-1.5 text-[10px] font-semibold text-[#28617A]">+250 ml</button>
+                <button type="button" onClick={() => setWaterMl(String(Math.min(7000, (Number(waterMl) || 0) + 500)))} className="flex-1 rounded-lg border border-[#D9E8F0] bg-[#F3FAFD] px-2 py-1.5 text-[10px] font-semibold text-[#28617A]">+500 ml</button>
+              </span>
             </label>
             <label className="block rounded-2xl border border-[#EFE6D5] bg-[#FFFEFC] p-3">
               <span className="flex items-center gap-2 text-xs font-semibold text-[#776A56]"><Utensils className="h-4 w-4 text-[#A17B34]" /> Proteína (g)</span>
               <input type="number" required min="0" max="300" step="1" value={proteinGrams} onChange={e => setProteinGrams(e.target.value)} className="mt-2 w-full rounded-xl border border-[#E9DFC9] bg-white px-3 py-2 text-lg font-semibold text-[#30291F]" />
+              <span className="mt-2 flex gap-2">
+                <button type="button" onClick={() => setProteinGrams(String(Math.min(300, (Number(proteinGrams) || 0) + 10)))} className="flex-1 rounded-lg border border-[#E9DFC9] bg-[#FBF8F1] px-2 py-1.5 text-[10px] font-semibold text-[#735318]">+10 g</button>
+                <button type="button" onClick={() => setProteinGrams(String(Math.min(300, (Number(proteinGrams) || 0) + 20)))} className="flex-1 rounded-lg border border-[#E9DFC9] bg-[#FBF8F1] px-2 py-1.5 text-[10px] font-semibold text-[#735318]">+20 g</button>
+              </span>
             </label>
             <label className="block rounded-2xl border border-[#EFE6D5] bg-[#FFFEFC] p-3">
               <span className="flex items-center gap-2 text-xs font-semibold text-[#776A56]"><Activity className="h-4 w-4 text-[#A17B34]" /> Actividad (min)</span>

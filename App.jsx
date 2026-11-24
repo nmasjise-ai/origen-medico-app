@@ -562,6 +562,7 @@ function App() {
   const [cloudRecordTab, setCloudRecordTab] = useState('summary');
   const [cloudProfileForm, setCloudProfileForm] = useState({
     displayName: '', phone: '', ageYears: '', birthDate: '', sexAtBirth: '', heightCm: '',
+    waterGoalMl: '', proteinGoalGrams: '',
     activeDiagnoses: '', medicalHistory: '', surgicalHistory: '', familyHistory: '', allergies: '',
     concomitantMedications: ''
   });
@@ -832,6 +833,8 @@ function App() {
         birthDate: payload.patient?.birthDate || '',
         sexAtBirth: payload.patient?.sexAtBirth || '',
         heightCm: payload.patient?.heightCm ?? '',
+        waterGoalMl: payload.patient?.waterGoalMl ?? '',
+        proteinGoalGrams: payload.patient?.proteinGoalGrams ?? '',
         activeDiagnoses: payload.patient?.activeDiagnoses || '',
         medicalHistory: payload.patient?.medicalHistory || '',
         surgicalHistory: payload.patient?.surgicalHistory || '',
@@ -3731,6 +3734,18 @@ function App() {
                             <label className="text-[10px] font-bold">Talla (cm)
                               <input type="number" min="80" max="250" step="0.1" value={cloudProfileForm.heightCm} onChange={(e) => setCloudProfileForm((p) => ({ ...p, heightCm: e.target.value }))} className="mt-1 w-full px-3 py-2 rounded-lg bg-[#FAF6EE] border border-[#E6D9C0] text-xs" />
                             </label>
+                          </div>
+                          <div className="rounded-xl border border-[#E6D9C0] bg-[#FBF8F1] p-3 space-y-2">
+                            <strong className="block text-[11px] text-[#735318]">Metas individuales del Tracker Diario</strong>
+                            <p className="text-[10px] leading-relaxed text-[#8C7A63]">Configura únicamente las metas indicadas tras la valoración clínica. Si quedan vacías, el portal no mostrará un porcentaje de cumplimiento.</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <label className="text-[10px] font-bold">Meta diaria de agua (ml)
+                                <input type="number" min="250" max="7000" step="50" value={cloudProfileForm.waterGoalMl} onChange={(e) => setCloudProfileForm((p) => ({ ...p, waterGoalMl: e.target.value }))} placeholder="Sin meta asignada" className="mt-1 w-full px-3 py-2 rounded-lg bg-white border border-[#E6D9C0] text-xs" />
+                              </label>
+                              <label className="text-[10px] font-bold">Meta diaria de proteína (g)
+                                <input type="number" min="1" max="300" step="1" value={cloudProfileForm.proteinGoalGrams} onChange={(e) => setCloudProfileForm((p) => ({ ...p, proteinGoalGrams: e.target.value }))} placeholder="Sin meta asignada" className="mt-1 w-full px-3 py-2 rounded-lg bg-white border border-[#E6D9C0] text-xs" />
+                              </label>
+                            </div>
                           </div>
                           {[
                             ['activeDiagnoses', 'Diagnósticos activos / problemas vigentes', '2000'],

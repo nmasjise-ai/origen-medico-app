@@ -101,6 +101,8 @@ export default async function handler(req, res) {
           birthDate: demographics.birthDate,
           sexAtBirth: data.sexAtBirth || null,
           heightCm: data.heightCm ?? null,
+          waterGoalMl: data.waterGoalMl ?? null,
+          proteinGoalGrams: data.proteinGoalGrams ?? null,
           activeDiagnoses: data.activeDiagnoses || "",
           medicalHistory: data.medicalHistory || "",
           surgicalHistory: data.surgicalHistory || "",

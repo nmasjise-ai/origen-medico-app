@@ -82,6 +82,8 @@ export default async function handler(req, res) {
       birthDate: patientInput.birthDate,
       sexAtBirth: patientInput.sexAtBirth,
       heightCm: patientInput.heightCm,
+      waterGoalMl: patientInput.waterGoalMl,
+      proteinGoalGrams: patientInput.proteinGoalGrams,
       activeDiagnoses: patientInput.activeDiagnoses,
       medicalHistory: patientInput.medicalHistory,
       surgicalHistory: patientInput.surgicalHistory,
@@ -125,6 +127,8 @@ export default async function handler(req, res) {
         birthDate: patientInput.birthDate,
         sexAtBirth: patientInput.sexAtBirth,
         heightCm: patientInput.heightCm,
+        waterGoalMl: patientInput.waterGoalMl,
+        proteinGoalGrams: patientInput.proteinGoalGrams,
         status: "pending_account",
         accountStatus: "unlinked"
       },
